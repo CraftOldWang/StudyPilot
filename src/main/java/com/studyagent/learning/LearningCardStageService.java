@@ -123,7 +123,8 @@ public class LearningCardStageService {
             var current = contexts.selectById(sessionId);
             var state = AgentState.fromJsonString(current.getAgentStateJson());
             var reduced = compactPoint ? LearningCompactionPolicy.replacePoint(state.getContext(), pointId,
-                    LearningContextMessages.summary(current.getPendingSummaryText(), pointId, "POINT")) : state.getContext();
+                    LearningContextMessages.summary("知识点 " + point.getSequenceNo() + "：" + point.getTopic() + "\n"
+                            + current.getPendingSummaryText(), pointId, "POINT")) : state.getContext();
             LearningContextMessages.requirePaired(reduced);
             contexts.update(null, Wrappers.<LearningContext>update().eq("session_id", sessionId)
                     .set("agent_state_json", LearningContextMessages.stateJson(state.getUserId(), state.getSessionId(), reduced))

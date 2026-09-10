@@ -10,7 +10,7 @@ import requests
 
 sys.stdout.reconfigure(encoding="utf-8")
 parser = argparse.ArgumentParser()
-parser.add_argument("stage", choices=["plan", "learn", "report"])
+parser.add_argument("stage", choices=["plan", "learn", "report", "repeat-local"])
 args = parser.parse_args()
 root = Path("output/current-learning-comparison")
 root.mkdir(parents=True, exist_ok=True)
@@ -124,9 +124,20 @@ def learn(mode):
     print(mode, "FIVE POINTS COMPLETED", flush=True)
 
 
+if args.stage == "repeat-local":
+    mode = "LOCAL_LABELLED"
+    if mode not in state:
+        replica = api("POST", f'/api/eval/learning/sessions/{state["sourceSessionId"]}/replica')
+        state[mode] = {"sessionId": replica["id"]}
+        write(root / f"{mode}-initial.json", replica)
+        write(state_path, state)
+    configured = api("POST", f'/api/eval/learning/sessions/{state[mode]["sessionId"]}/compression', json={"strategy": "LOCAL"})
+    state["activeLocalMode"] = mode
+    write(state_path, state)
+
 if args.stage == "learn":
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
-        futures = [pool.submit(learn, mode) for mode in ["NONE", "LOCAL"]]
+        futures = [pool.submit(learn, mode) for mode in ["NONE", state.get("activeLocalMode", "LOCAL")]]
         for future in futures:
             future.result()
 
@@ -135,11 +146,40 @@ if args.stage == "report":
     usage = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(usage)
     events = [json.loads(line) for line in Path(".eval/model-calls.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]
-    result = {mode: usage.summarize(events, state[mode]["sessionId"]) for mode in ["NONE", "LOCAL"]}
+    groups = {"NONE": "NONE", "LOCAL": state.get("activeLocalMode", "LOCAL")}
+    result = {mode: usage.summarize(events, state[group]["sessionId"]) for mode, group in groups.items()}
     for mode in result:
-        result[mode]["completedPoints"] = sum(p["status"] == "COMPLETED" for p in api("GET", f'/api/learning/sessions/{state[mode]["sessionId"]}')["plan"])
+        result[mode]["completedPoints"] = sum(p["status"] == "COMPLETED" for p in api("GET", f'/api/learning/sessions/{state[groups[mode]]["sessionId"]}')["plan"])
+        folder = root / groups[mode]
+        history_path = folder / "history.json"
+        if history_path.exists():
+            history = json.loads(history_path.read_text(encoding="utf-8"))
+            initial = json.loads((root / f"{groups[mode]}-initial.json").read_text(encoding="utf-8"))
+            turn_points = {str(t["id"]): str(t["knowledgePointId"]) for t in history}
+            starts = {e["callId"]: e for e in events if e["status"] == "STARTED" and e["callId"] in result[mode]["callIds"]}
+            ends = {e["callId"]: e for e in events if e["status"] != "STARTED"}
+            by_point = []
+            cumulative = 0
+            for point in initial["plan"][:5]:
+                selected = []
+                for cid, start in starts.items():
+                    parts = start["operation"].split("/")
+                    point_id = turn_points.get(parts[2]) if parts[0] == "LEARNING" else parts[3] if len(parts) == 4 and parts[2] == "POINT" else None
+                    if point_id == str(point["id"]):
+                        selected.append(ends[cid])
+                total = sum(int(e.get("totalTokens") or 0) for e in selected)
+                cumulative += total
+                by_point.append({"topic": point["topic"], "calls": len(selected), "inputTokens": sum(int(e.get("inputTokens") or 0) for e in selected),
+                                 "totalTokens": total, "cumulativeTotalTokens": cumulative})
+            result[mode]["perPoint"] = by_point
     if all(result[m]["combined"]["usageComplete"] and result[m]["completedPoints"] == 5 for m in result):
         result["reductionPercent"] = {field: (1-result["LOCAL"]["combined"][field]/result["NONE"]["combined"][field])*100
                                       for field in ["knownInputTokens", "knownTotalTokens"]}
+    planning_ids = {e["callId"] for e in events if e["status"] == "STARTED" and e.get("operation", "").startswith(f'PLAN/{state["runId"]}/')}
+    planning_ends = [e for e in events if e["callId"] in planning_ids and e["status"] != "STARTED"]
+    result["planning"] = {"runId": state["runId"], "attempts": len(planning_ids),
+        "usageComplete": len(planning_ends) == len(planning_ids) and all(e.get("usageAvailable") for e in planning_ends),
+        **{field: sum(int(e.get(field) or 0) for e in planning_ends) for field in ["inputTokens", "outputTokens", "totalTokens", "cachedInputTokens"]},
+        "scope": "One shared outline, including unsuccessful validation attempts; excluded from learning-only reduction."}
     write(root / "usage.json", result)
     print(json.dumps(result, ensure_ascii=False, indent=2))
