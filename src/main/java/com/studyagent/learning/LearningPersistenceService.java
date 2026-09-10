@@ -66,6 +66,23 @@ public class LearningPersistenceService {
         return session;
     }
 
+    @Transactional
+    public LearningSession createEvaluationReplica(Long userId, Long sessionId) {
+        var original = requireSession(userId, sessionId);
+        var originalPlan = planMapper.selectOne(com.baomidou.mybatisplus.core.toolkit.Wrappers.<LearningPlan>query()
+                .eq("session_id", sessionId).eq("user_id", userId));
+        List<PlanningData.Task> source;
+        try { source = objectMapper.readValue(originalPlan.getPlanJson(), new com.fasterxml.jackson.core.type.TypeReference<>() { }); }
+        catch (JsonProcessingException e) { throw new BusinessException("实验副本需要当前规划接口生成的大纲"); }
+        // A replica shares the generated curriculum, but never the original progress or point IDs.
+        var tasks = source.stream().map(t -> new PlanningData.Task(com.baomidou.mybatisplus.core.toolkit.IdWorker.getId(),
+                t.chapterId(), t.chapterTitle(), t.topic(), t.subtopics(), t.sourceChunkIds(), t.priority(),
+                t.estimatedMinutes(), t.reason())).toList();
+        var items = tasks.stream().map(t -> new LearningPlanItem(t.topic(), t.subtopics(), t.estimatedMinutes())).toList();
+        return createRecords(userId, original.getKnowledgeBaseId(), original.getLearningGoal(),
+                java.util.UUID.randomUUID().toString(), items, tasks);
+    }
+
     private LearningSession createRecords(Long userId, Long knowledgeBaseId, String learningGoal,
             String agentScopeSessionId, List<LearningPlanItem> items, List<PlanningData.Task> tasks) {
         if (items == null || items.isEmpty()) {

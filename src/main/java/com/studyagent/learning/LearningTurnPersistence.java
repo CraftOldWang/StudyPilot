@@ -89,7 +89,7 @@ public class LearningTurnPersistence {
 
     @Transactional
     public LearningContext configureStrategy(Long userId, Long sessionId, String strategy) {
-        if (!List.of("THRESHOLD", "WHOLE_HISTORY", "LOCAL").contains(strategy)) { throw new BusinessException("未知压缩策略"); }
+        if (!List.of("NONE", "THRESHOLD", "WHOLE_HISTORY", "LOCAL").contains(strategy)) { throw new BusinessException("未知压缩策略"); }
         LearningSession session = lockSession(userId, sessionId);
         if (turns.selectCount(Wrappers.<LearningTurn>query().eq("session_id", sessionId)) > 0) {
             throw new BusinessException("压缩策略必须在第一条消息前冻结");

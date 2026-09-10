@@ -54,7 +54,8 @@ public class LearningConversationCompactor {
         LearningContextMessages.requirePaired(messages);
         int before = LearningCompactionPolicy.tokens(messages);
         String strategy = context.getCompressionStrategy();
-        if (!List.of("THRESHOLD", "WHOLE_HISTORY", "LOCAL").contains(strategy)) { throw new BusinessException("未知压缩策略"); }
+        if (!List.of("NONE", "THRESHOLD", "WHOLE_HISTORY", "LOCAL").contains(strategy)) { throw new BusinessException("未知压缩策略"); }
+        if ("NONE".equals(strategy)) { return turn.getPreparedContextJson(); }
         if (context.getPendingPointId() != null && context.getPendingPointId().equals(turn.getKnowledgePointId())) {
             return turn.getPreparedContextJson();
         }
@@ -83,7 +84,7 @@ public class LearningConversationCompactor {
         var responses = model.stream(List.of(Msg.builder().role(MsgRole.SYSTEM).textContent(SYSTEM).build(),
                         Msg.builder().role(MsgRole.USER).textContent(prompt).build()), List.of(),
                         GenerateOptions.builder().temperature(0.0).maxTokens(properties.summaryTokens()).stream(false).build())
-                .contextWrite(c -> c.put(ModelCallScope.class, new ModelCallScope(traceId, "COMPACTION/POINT/" + pointId)))
+                .contextWrite(c -> c.put(ModelCallScope.class, new ModelCallScope(traceId, "COMPACTION/" + session.getId() + "/POINT/" + pointId)))
                 .collectList().block(Duration.ofSeconds(properties.leaseSeconds() - 20L));
         if (responses == null) { throw new BusinessException("摘要未返回，原上下文已保留"); }
         String text = responses.stream().filter(r -> r.getContent() != null).flatMap(r -> r.getContent().stream())

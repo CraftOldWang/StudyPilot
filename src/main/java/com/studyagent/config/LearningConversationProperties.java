@@ -15,7 +15,7 @@ public record LearningConversationProperties(
         if (thresholdTokens < 1000 || summaryTokens < 100 || replyTokens < 500 || maxIterations < 1 || leaseSeconds < 60) {
             throw new IllegalArgumentException("Invalid learning conversation budget");
         }
-        if (!java.util.Set.of("THRESHOLD", "WHOLE_HISTORY", "LOCAL").contains(compressionStrategy)) {
+        if (!java.util.Set.of("NONE", "THRESHOLD", "WHOLE_HISTORY", "LOCAL").contains(compressionStrategy)) {
             throw new IllegalArgumentException("Unsupported compression strategy");
         }
     }

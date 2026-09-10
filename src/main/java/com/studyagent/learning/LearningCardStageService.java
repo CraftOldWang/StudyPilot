@@ -50,6 +50,7 @@ public class LearningCardStageService {
         var running = jobs.get(session.getId());
         if (running != null && !running.isDone()) { return running; }
         var context = contexts.selectById(session.getId());
+        if ("NONE".equals(context.getCompressionStrategy())) { return CompletableFuture.completedFuture(null); }
         if ("READY".equals(context.getPendingSummaryStatus())) { return CompletableFuture.completedFuture(null); }
         if (context.getPendingPointId() == null || context.getPendingSummaryInput() == null) {
             throw new BusinessException("缺少写卡前的学习上下文，不能确认此旧版知识点");
@@ -110,7 +111,8 @@ public class LearningCardStageService {
         if ("COMPLETED".equals(points.selectById(pointId).getStatus())) { return; }
         startSummary(session).join();
         var prepared = contexts.selectById(sessionId);
-        if (!"READY".equals(prepared.getPendingSummaryStatus())) {
+        boolean compactPoint = !"NONE".equals(prepared.getCompressionStrategy());
+        if (compactPoint && !"READY".equals(prepared.getPendingSummaryStatus())) {
             throw new BusinessException("学习摘要未完成：" + prepared.getPendingSummaryError() + "；可重试确认，原上下文保留");
         }
         for (var card : list(userId, pointId)) { anki.export(userId, card.getId()); }
@@ -120,8 +122,8 @@ public class LearningCardStageService {
             if ("COMPLETED".equals(point.getStatus())) { return; }
             var current = contexts.selectById(sessionId);
             var state = AgentState.fromJsonString(current.getAgentStateJson());
-            var reduced = LearningCompactionPolicy.replacePoint(state.getContext(), pointId,
-                    LearningContextMessages.summary(current.getPendingSummaryText(), pointId, "POINT"));
+            var reduced = compactPoint ? LearningCompactionPolicy.replacePoint(state.getContext(), pointId,
+                    LearningContextMessages.summary(current.getPendingSummaryText(), pointId, "POINT")) : state.getContext();
             LearningContextMessages.requirePaired(reduced);
             contexts.update(null, Wrappers.<LearningContext>update().eq("session_id", sessionId)
                     .set("agent_state_json", LearningContextMessages.stateJson(state.getUserId(), state.getSessionId(), reduced))

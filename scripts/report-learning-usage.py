@@ -26,7 +26,8 @@ def summarize(events, session_id, turn_ids=()):
     for call in calls.values():
         operation = call["start"].get("operation", "")
         parts = operation.split("/")
-        if operation.startswith(prefix) or (len(parts) >= 3 and parts[0] == "COMPACTION" and parts[1] in ids):
+        if (operation.startswith(prefix) or operation.startswith(f"COMPACTION/{session_id}/POINT/")
+                or (len(parts) >= 3 and parts[0] == "COMPACTION" and parts[1] in ids)):
             selected.append(call)
 
     def totals(group):

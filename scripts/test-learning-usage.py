@@ -15,6 +15,14 @@ def end(call, status="SUCCEEDED", known=True):
 
 
 class AccountingTest(unittest.TestCase):
+    def test_async_point_summary_belongs_to_session(self):
+        events = [start("a", "LEARNING/12/5"), end("a"),
+                  start("b", "COMPACTION/12/POINT/20"), end("b"),
+                  start("c", "COMPACTION/123/POINT/21"), end("c")]
+        result = usage.summarize(events, "12")
+        self.assertEqual(result["combined"]["knownTotalTokens"], 240)
+        self.assertEqual(result["compaction"]["attempts"], 1)
+
     def test_retries_summaries_and_isolation(self):
         events = [start("a", "LEARNING/12/5"), end("a", "FAILED", False),
                   start("b", "LEARNING/12/5"), end("b"), start("c", "COMPACTION/5/POINT"), end("c"),
