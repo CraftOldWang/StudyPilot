@@ -47,7 +47,9 @@ public final class PlanningValidation {
         }
         List<Uncovered> uncovered = new ArrayList<>();
         Set<String> noted = new HashSet<>();
-        for (JsonNode node : array(root, "uncovered")) {
+        // No omitted sources is a valid result; the coverage check below still rejects actual omissions.
+        Iterable<JsonNode> uncoveredNodes = root.has("uncovered") ? array(root, "uncovered") : List.of();
+        for (JsonNode node : uncoveredNodes) {
             String id = text(node, "sourceChunkId");
             // One retrieval parent may contain both useful prose and unparsed image placeholders.
             require(allowed.contains(id) && noted.add(id), "未提取说明必须属于本批次且不得重复");

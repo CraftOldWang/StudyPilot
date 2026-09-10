@@ -107,7 +107,8 @@ def learn(mode):
         count = len(view["currentQuiz"]["questions"])
         assert count == 2, f"{mode} {i}: expected 2 questions, got {count}"
         # Same answer positions in both groups; no answer-key injection into the conversation.
-        step(f"{i}-submit", "POST", prefix + "/quiz/submit", {"answers": ["A", "B"]})
+        questions = view["currentQuiz"]["questions"]
+        step(f"{i}-submit", "POST", prefix + "/quiz/submit", {"answers": [questions[0]["options"][0], questions[1]["options"][1]]})
         feedback = "请解释我本次做错的题；如果全对，就指出一个解题时容易忽略的条件。约200字，先不要写卡片。"
         if i == 5:
             feedback += "另外请回顾：我在第一个知识点学习时明确说过自己有什么误区，你当时如何纠正？如果记不清请直接说明。"
