@@ -1,0 +1,94 @@
+<div id="os-chunk-review">
+  <div class="viz-controls">
+    <label class="form-label">问题<select class="form-select" data-role="question"></select></label>
+    <label class="form-label">对照<select class="form-select" data-role="comparison">
+      <option value="paired">RRF 子块 ↔ 父块回填（共享排名）</option>
+      <option value="retrieval">纯向量 ↔ RRF 子块</option>
+      <option value="keyword">关键词 ↔ 纯向量</option>
+    </select></label>
+  </div>
+  <p data-role="scope" class="text-small text-muted"></p>
+  <details><summary>你提供的参考页 · 原课件提取文本</summary><div data-role="pages"></div></details>
+  <details><summary>之前的判读备注 · Codex 阅读判断，未由你确认</summary><p data-role="note"></p></details>
+  <hr>
+  <div data-role="relation"></div>
+  <p data-role="legend" class="text-small"></p>
+  <div class="review-columns">
+    <section><h3 data-role="left-title"></h3><p data-role="left-stat" class="tabular-nums"></p><div data-role="left"></div></section>
+    <section><h3 data-role="right-title"></h3><p data-role="right-stat" class="tabular-nums"></p><div data-role="right"></div></section>
+  </div>
+</div>
+<style>
+#os-chunk-review .review-columns{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+#os-chunk-review section{min-width:0}
+#os-chunk-review .chunk-text{white-space:pre-wrap;overflow-wrap:anywhere;margin-block:12px}
+#os-chunk-review details{margin-block:12px}
+#os-chunk-review summary{cursor:pointer;overflow-wrap:anywhere}
+#os-chunk-review mark{background:color-mix(in srgb,var(--blue) 18%,transparent);color:var(--foreground)}
+#os-chunk-review .meta{overflow-wrap:anywhere}
+@media(max-width:650px){#os-chunk-review .review-columns{grid-template-columns:1fr}}
+</style>
+<script>
+(() => {
+  const root=document.getElementById('os-chunk-review');
+  const data="__REVIEW_DATA__";
+  const el=role=>root.querySelector('[data-role="'+role+'"]');
+  const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const clean=s=>s.replace(/\n[\t \r]*\n(?:[\t \r]*\n)+/g,'\n\n');
+  const short=cid=>cid.slice(0,10);
+  const names={BM25:'关键词（BM25）子块',VECTOR:'纯向量子块',RRF:'RRF 子块',PARENT:'实际返回的父块'};
+  const range=c=>c.loc.startOffset+'–'+c.loc.endOffset;
+  function body(cid,ranked){
+    const c=data.chunks[cid];
+    const intervals=[];
+    for(const [i,childId] of ranked.entries()){
+      const child=data.chunks[childId];
+      if(child.parent!==cid)continue;
+      const needle=child.text.trim(),start=c.text.indexOf(needle);
+      if(start>=0)intervals.push({start,end:start+needle.length,rank:i+1});
+    }
+    intervals.sort((a,b)=>a.start-b.start);
+    let pos=0,html='';
+    for(const x of intervals){
+      if(x.start<pos)continue;
+      html+=escape(clean(c.text.slice(pos,x.start)))+'<mark>'+escape(clean(c.text.slice(x.start,x.end)))+'</mark>';
+      pos=x.end;
+    }
+    return html+escape(clean(c.text.slice(pos)));
+  }
+  function card(cid,label,ranked,open=false){
+    const c=data.chunks[cid];
+    const parentLabel=c.parent?' · 父块 '+short(c.parent):'';
+    return '<details'+(open?' open':'')+'><summary>'+escape(label)+' · '+escape(c.title)+'</summary>'+
+      '<p class="text-small meta">块 '+short(cid)+parentLabel+' · 文本偏移 '+range(c)+' · '+c.text.length+' 字符</p>'+
+      '<div class="chunk-text">'+body(cid,ranked)+'</div></details>';
+  }
+  function render(){
+    const q=data.questions.find(q=>q.id===el('question').value);
+    const comparison=el('comparison').value;
+    const [left,right]=comparison==='paired'?['RRF','PARENT']:comparison==='retrieval'?['VECTOR','RRF']:['BM25','VECTOR'];
+    const ranked=q.modes.RRF.ranked;
+    const parents=[...new Set(ranked.map(cid=>data.chunks[cid].parent).filter(Boolean))];
+    el('scope').textContent='完整操作系统课件18份 · 187子块 / 61父块 · 子块800 / 父块2400 / overlap 0 · 正文预算4096 token · 仅以原问题检索，参考页未传入';
+    el('pages').innerHTML='<p>'+escape(q.sourceTitle)+'</p>'+q.pages.map(p=>'<h3>第 '+p.page+' 页</h3><div class="chunk-text">'+escape(clean(p.text))+'</div>').join('');
+    el('note').textContent='旧口径：有部分实质答案依据即可计命中，不等于完整答案或回答正确率。'+q.note;
+    el('relation').innerHTML=comparison==='paired'?'<div class="table-responsive"><table class="table table-sm"><thead><tr><th>同属一个父块的已召回子块</th><th>父块</th><th>实际回填</th></tr></thead><tbody>'+parents.map(pid=>'<tr><td>'+ranked.map((cid,i)=>data.chunks[cid].parent===pid?'第 '+(i+1)+' 条（'+short(cid)+'）':null).filter(Boolean).join('、')+'</td><td>'+short(pid)+'</td><td>'+(q.modes.PARENT.hits.includes(pid)?'保留':'未放入预算')+'</td></tr>').join('')+'</tbody></table></div>':'';
+    el('legend').textContent=comparison==='paired'?'父块高亮部分＝同一次 RRF 已召回的子块；其余部分＝新增上下文，不代表新增答案依据。展开可读完整正文（仅合并连续空白行）。':'左、右均为同一问题的历史真实返回。展开可读原文；没有重新检索或改写问题。';
+    for(const [side,mode] of [['left',left],['right',right]]){
+      const m=q.modes[mode];
+      el(side+'-title').textContent=names[mode];
+      el(side+'-stat').textContent=m.tokens+' / 4096 token · 返回 '+m.hits.length+' 块';
+      el(side).innerHTML=m.hits.map((cid,i)=>card(cid,'第 '+(i+1)+' 条',mode==='PARENT'?ranked:[],false)).join('');
+    }
+    if(comparison==='paired'){
+      const skipped=parents.filter(pid=>!q.modes.PARENT.hits.includes(pid));
+      if(skipped.length)el('right').innerHTML+='<hr><details><summary>未进入实际上下文的父块（'+skipped.length+'）</summary><p class="text-small">以下正文来自现有索引的只读补查，不是当时返回给模型的内容。</p>'+skipped.map(pid=>card(pid,'预算未容纳',ranked)).join('')+'</details>';
+    }
+  }
+  el('question').innerHTML=data.questions.map(q=>'<option value="'+q.id+'">'+Number(q.id.split('-').pop())+'. '+escape(q.query)+'</option>').join('');
+  el('question').value='os-human-15';
+  el('question').addEventListener('change',render);
+  el('comparison').addEventListener('change',render);
+  render();
+})();
+</script>
