@@ -1,0 +1,1928 @@
+{
+  "knowledgeBase": {
+    "id": "2098021244222922753",
+    "name": "操作系统 · 2024完整课件",
+    "createdAt": "2026-09-10T20:10:19",
+    "updatedAt": "2026-09-10T20:10:19"
+  },
+  "courseDocuments": 18,
+  "chunkCounts": {
+    "CHILD": 187,
+    "PARENT": 61
+  },
+  "parameters": {
+    "childSize": 800,
+    "childOverlap": 0,
+    "parentSize": 2400,
+    "parentOverlap": 0,
+    "topK": 5,
+    "candidateSizePerRoute": 30,
+    "rrfK": 60,
+    "contextBudget": 4096
+  },
+  "date": "2026-09-11",
+  "newRequests": 72,
+  "reusedRequests": 40,
+  "method": "28 user-authored OS questions. Reuse original 10 responses; run remaining 18 through real search API, 4 modes each. OpenHarmony wording explicitly updated by user. Same KB and parameters; no re-embedding documents. Codex read retrieved content against user page references; any substantive partial answer evidence counts, topic mention alone does not. Not full answer coverage or answer accuracy. No new answer generation. RRF/PARENT child IDs and order equal within each pair in all 28 questions.",
+  "rawResponseDirectories": [
+    "output/os-pilot-10",
+    "output/os-remaining-18"
+  ],
+  "metrics": {
+    "BM25": {
+      "answerEvidenceHits": 26,
+      "questions": 28,
+      "new18Hits": 16,
+      "meanContextTokens": 3904.1428571428573,
+      "missedQuestionNumbers": [
+        2,
+        13
+      ]
+    },
+    "VECTOR": {
+      "answerEvidenceHits": 27,
+      "questions": 28,
+      "new18Hits": 18,
+      "meanContextTokens": 3784.6428571428573,
+      "missedQuestionNumbers": [
+        1
+      ]
+    },
+    "RRF": {
+      "answerEvidenceHits": 27,
+      "questions": 28,
+      "new18Hits": 17,
+      "meanContextTokens": 3919.1785714285716,
+      "missedQuestionNumbers": [
+        2
+      ]
+    },
+    "PARENT": {
+      "answerEvidenceHits": 25,
+      "questions": 28,
+      "new18Hits": 16,
+      "meanContextTokens": 2557.1428571428573,
+      "missedQuestionNumbers": [
+        1,
+        2,
+        13
+      ]
+    }
+  },
+  "questions": [
+    {
+      "id": "os-human-01",
+      "query": "课程评分标准是什么？",
+      "documentPath": "操作系统/课件/1.OS_Introduction-2024.pptx",
+      "userPages": [
+        24
+      ],
+      "status": "draft",
+      "note": "大作业50%，期末考试50%；VECTOR未检出，RRF第3条检出；父块预算筛除该来源。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3900,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "a4b29074ac35dba8ab576b03f4ff87325c13e04a5ebf9be4a5422e98f0eccbdc",
+            "ad25396bf0551012b719f495401073eb65834b4f3bd24d07ddd721cc82dcd397",
+            "5633fca460b689802ff793dde7d693b912bd4d434b6614d7763e25340a804cd7",
+            "6c8b5984ee6c34102ca8a5b889d9c29f0b6673a3fea3bde928b06b7b3d4fccda",
+            "a846708c902a9a35b8ba450c04575ea4eb1c0cffaf398d0e0f9f54d3b5a4ace5"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": false,
+          "contextTokens": 3919,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "e80b5902ef64091adf3a910f81cb5d11e1342088eeef4bca0d35f373bc2aaf92",
+            "5633fca460b689802ff793dde7d693b912bd4d434b6614d7763e25340a804cd7",
+            "a0256230e7adc2e90f049410712f3a4de8f1de4b71e0a050f296893e70aa9e3b",
+            "3b587ea29abf0b90c81a40a7181f74bbe46e68f5b99dece91e37ff4aeeb308c3",
+            "ca3361708690db684dafc28ca5c8d3a415394dd07ab438cfe78f8417a2c41731"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3726,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "5633fca460b689802ff793dde7d693b912bd4d434b6614d7763e25340a804cd7",
+            "e80b5902ef64091adf3a910f81cb5d11e1342088eeef4bca0d35f373bc2aaf92",
+            "a4b29074ac35dba8ab576b03f4ff87325c13e04a5ebf9be4a5422e98f0eccbdc",
+            "e5ccb23085db34d108d7be9c1b76fc0c83899629198f7330ea1ba0f535d5bef8",
+            "0d2758365922adae771ba8bf86c67ba14b5bcd7d6bfe7ab296df0af7478f8a76"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": false,
+          "contextTokens": 2375,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "759a9eaa5d3d12dc727aa25ededc5c6e5cdc8d0c577f3ed7dbc662f46e90c659"
+          ]
+        }
+      },
+      "batch": "2026-09-10 original 10 (saved responses reused)"
+    },
+    {
+      "id": "os-human-02",
+      "query": "课程有什么推荐的课本吗？",
+      "documentPath": "操作系统/课件/1.OS_Introduction-2024.pptx",
+      "userPages": [
+        25,
+        26,
+        27
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "VECTOR第1块包含教材及参考书单；BM25/RRF/PARENT均未包含书单。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": false,
+          "contextTokens": 3881,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "6c8b5984ee6c34102ca8a5b889d9c29f0b6673a3fea3bde928b06b7b3d4fccda",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17",
+            "a0256230e7adc2e90f049410712f3a4de8f1de4b71e0a050f296893e70aa9e3b",
+            "0d2758365922adae771ba8bf86c67ba14b5bcd7d6bfe7ab296df0af7478f8a76",
+            "03b9dfbebd83e60de01d03d045326d05db47fff3500d69b16d1344b418ab1ca0"
+          ],
+          "representativeEvidenceChunkIds": []
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 1637,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "67fa9cc223956d00a393f61a539b2e21d41bcbd55306cadac817a6065e812b15",
+            "a18127122b35df035baec4bf6887f937c542e15a9238a6aa1a691ef51fb4bd0c",
+            "711901e0c8c912c95edd338fbbb7392c7073a3780d6809f79dcee162dd0fe839",
+            "e05b840d83112a4801a955fe5f16fe72431aadb08577a920be2ad042cb3dfd98",
+            "a9641559d2883e8d0538d95d21d0d30303084ec60ac5544be6a083756915aab8"
+          ],
+          "representativeEvidenceChunkIds": [
+            "67fa9cc223956d00a393f61a539b2e21d41bcbd55306cadac817a6065e812b15"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": false,
+          "contextTokens": 3930,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "6c8b5984ee6c34102ca8a5b889d9c29f0b6673a3fea3bde928b06b7b3d4fccda",
+            "a0256230e7adc2e90f049410712f3a4de8f1de4b71e0a050f296893e70aa9e3b",
+            "a9641559d2883e8d0538d95d21d0d30303084ec60ac5544be6a083756915aab8",
+            "a4b29074ac35dba8ab576b03f4ff87325c13e04a5ebf9be4a5422e98f0eccbdc",
+            "5cb043e656b7cd414548961754649c6eee530034c4df129be35ccd06c9957969"
+          ],
+          "representativeEvidenceChunkIds": []
+        },
+        "PARENT": {
+          "hasAnswerEvidence": false,
+          "contextTokens": 3642,
+          "returnedChunks": 2,
+          "chunkIds": [
+            "11fcae7917a4892cec3e89b7566bdba46563bc45607365f1f369c0a4928ed23d",
+            "a768beb3f82e27881385f7d29b764eca33a0060dc492c0726f8896220e76e9f4"
+          ],
+          "representativeEvidenceChunkIds": []
+        }
+      }
+    },
+    {
+      "id": "os-human-03",
+      "query": "OpenHarmony在哪些领域有应用？",
+      "documentPath": "操作系统/课件/1.OS_Introduction-2024.pptx",
+      "userPages": [
+        49
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "用户将鸿蒙修正为OpenHarmony；三路均含行业应用实例或领域列表，父块包含该页。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3978,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "4bd179b61b4484ffec89b0f8176ddc691c05b25e808112c94512edb729194ee2",
+            "1f4b2191b36f764f4e9f63ebabd49e5e24275bc1bb40fae8f8827583602f78ae",
+            "c1ee0eb1dc41c486899a1edddc4e310f2ca7bc4e5182cc8f7038abc7ca6b1de1",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17",
+            "eedd95747eccab410d8223e93e94f07df5e116c38ac19345fda405af2ac2b51b"
+          ],
+          "representativeEvidenceChunkIds": [
+            "4bd179b61b4484ffec89b0f8176ddc691c05b25e808112c94512edb729194ee2"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3962,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "55ce846dc29944287609eb4058c63ad5a4a983b58f09e6f88c9a9495a9269897",
+            "4bd179b61b4484ffec89b0f8176ddc691c05b25e808112c94512edb729194ee2",
+            "1f4b2191b36f764f4e9f63ebabd49e5e24275bc1bb40fae8f8827583602f78ae",
+            "8d01977c4c88e4852d5769447d344c1f8110a738f3675495e4225ce06fa63cd9",
+            "6c8b5984ee6c34102ca8a5b889d9c29f0b6673a3fea3bde928b06b7b3d4fccda"
+          ],
+          "representativeEvidenceChunkIds": [
+            "55ce846dc29944287609eb4058c63ad5a4a983b58f09e6f88c9a9495a9269897",
+            "4bd179b61b4484ffec89b0f8176ddc691c05b25e808112c94512edb729194ee2"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3957,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "4bd179b61b4484ffec89b0f8176ddc691c05b25e808112c94512edb729194ee2",
+            "1f4b2191b36f764f4e9f63ebabd49e5e24275bc1bb40fae8f8827583602f78ae",
+            "8d01977c4c88e4852d5769447d344c1f8110a738f3675495e4225ce06fa63cd9",
+            "39b3c3d3f07af17052a7ea951fd32d199b348545d5e8566250c569303210f8ec",
+            "55ce846dc29944287609eb4058c63ad5a4a983b58f09e6f88c9a9495a9269897"
+          ],
+          "representativeEvidenceChunkIds": [
+            "4bd179b61b4484ffec89b0f8176ddc691c05b25e808112c94512edb729194ee2"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2385,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "11fcae7917a4892cec3e89b7566bdba46563bc45607365f1f369c0a4928ed23d"
+          ],
+          "representativeEvidenceChunkIds": [
+            "11fcae7917a4892cec3e89b7566bdba46563bc45607365f1f369c0a4928ed23d"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-04",
+      "query": "OS方面的顶级会议有什么？",
+      "documentPath": "操作系统/课件/1.OS_Introduction-2024.pptx",
+      "userPages": [
+        57
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "三路第1块及对应父块均包含SOSP和OSDI。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3857,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "6c8b5984ee6c34102ca8a5b889d9c29f0b6673a3fea3bde928b06b7b3d4fccda",
+            "8a96f144107a6c13c6f6a33db286c72ea1f335bb26731f597cecb101abefe2fe",
+            "78a915491b4cfd94759ceb0b7680384000f351fe409e11278d1f550549b09e8c",
+            "e8d7745d701cf775399bbac41336a66c5991989c1cc52332f6c39adec041d2e6",
+            "03b9dfbebd83e60de01d03d045326d05db47fff3500d69b16d1344b418ab1ca0"
+          ],
+          "representativeEvidenceChunkIds": [
+            "6c8b5984ee6c34102ca8a5b889d9c29f0b6673a3fea3bde928b06b7b3d4fccda"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3978,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "6c8b5984ee6c34102ca8a5b889d9c29f0b6673a3fea3bde928b06b7b3d4fccda",
+            "1f4b2191b36f764f4e9f63ebabd49e5e24275bc1bb40fae8f8827583602f78ae",
+            "7da46e1211eaf49b62797f2a135df62508d5157f320cc39c3157abccaf5baeaa",
+            "a11bf28b853fa265bc43620c93ac246205ee7be4724db6e6b5e7a1b997fa0869",
+            "67fa9cc223956d00a393f61a539b2e21d41bcbd55306cadac817a6065e812b15"
+          ],
+          "representativeEvidenceChunkIds": [
+            "6c8b5984ee6c34102ca8a5b889d9c29f0b6673a3fea3bde928b06b7b3d4fccda"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3956,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "6c8b5984ee6c34102ca8a5b889d9c29f0b6673a3fea3bde928b06b7b3d4fccda",
+            "1efbcac5fe8d75eadfe96b07bd1ff40ff1a6118dfc7c27bfe1f62989c0931359",
+            "1f4b2191b36f764f4e9f63ebabd49e5e24275bc1bb40fae8f8827583602f78ae",
+            "e8d7745d701cf775399bbac41336a66c5991989c1cc52332f6c39adec041d2e6",
+            "56b2b35558e85d6831a04ef33837c48753908ec39a080fe166666d67428be4ad"
+          ],
+          "representativeEvidenceChunkIds": [
+            "6c8b5984ee6c34102ca8a5b889d9c29f0b6673a3fea3bde928b06b7b3d4fccda"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2385,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "11fcae7917a4892cec3e89b7566bdba46563bc45607365f1f369c0a4928ed23d"
+          ],
+          "representativeEvidenceChunkIds": [
+            "11fcae7917a4892cec3e89b7566bdba46563bc45607365f1f369c0a4928ed23d"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-05",
+      "query": "ENIAC有多大、多贵？",
+      "documentPath": "操作系统/课件/3.1.OS_ProcessManagement-进程的上下文切换-2024.pptx",
+      "userPages": [
+        3
+      ],
+      "status": "draft",
+      "note": "ENIAC尺寸、面积和48万美元造价；三路均首条检出。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3886,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "9059a0086010b22535dfcd651975634c63b81e96d655699c32820fab89b3eb6a",
+            "223e2c5896192b31966ab2e76ac9104cf772716a0e677980781d811ca9d21b47",
+            "0d2758365922adae771ba8bf86c67ba14b5bcd7d6bfe7ab296df0af7478f8a76",
+            "57b71d0f8f9dcf5c7b1ed9fda6883def4b2434e70a21a242c54f219343c2e3a0",
+            "2872d91f7d460a8ec5007c96e1f10a648424b38eec2cbb8acb6b701ee1fb87e0"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3956,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "9059a0086010b22535dfcd651975634c63b81e96d655699c32820fab89b3eb6a",
+            "70cc840a487c524cf46a5e2978a04d6e734ed0d22510200eff882b059db00b2f",
+            "d547ae922d42516bda8098953fa2b0cbda585f042369905c8280984a37d67cb0",
+            "67fa9cc223956d00a393f61a539b2e21d41bcbd55306cadac817a6065e812b15",
+            "2872d91f7d460a8ec5007c96e1f10a648424b38eec2cbb8acb6b701ee1fb87e0"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3964,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "9059a0086010b22535dfcd651975634c63b81e96d655699c32820fab89b3eb6a",
+            "2872d91f7d460a8ec5007c96e1f10a648424b38eec2cbb8acb6b701ee1fb87e0",
+            "223e2c5896192b31966ab2e76ac9104cf772716a0e677980781d811ca9d21b47",
+            "d547ae922d42516bda8098953fa2b0cbda585f042369905c8280984a37d67cb0",
+            "279e890df78e5946d6274b6e3206b7af617a15e79a73a5cb8b3443c54a7bbfbf"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2352,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "8c6b2c67c6374f69511621895ad987d341cccf54065f41a2b37066106a5d824b"
+          ]
+        }
+      },
+      "batch": "2026-09-10 original 10 (saved responses reused)"
+    },
+    {
+      "id": "os-human-06",
+      "query": "并发的意义在哪里？明明没有更多的计算资源使用？",
+      "documentPath": "操作系统/课件/3.1.OS_ProcessManagement-进程的上下文切换-2024.pptx",
+      "userPages": [
+        7
+      ],
+      "status": "draft",
+      "note": "程序交替使用硬件资源，提高利用率；三路均首条含说明和示例。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3874,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "9059a0086010b22535dfcd651975634c63b81e96d655699c32820fab89b3eb6a",
+            "a4b29074ac35dba8ab576b03f4ff87325c13e04a5ebf9be4a5422e98f0eccbdc",
+            "12d46667f84739ffc2f24679075e164c418f26b5d5f6c7d3bcd0e00459327467",
+            "deae94c87d20786ce2d3dd5ca5cc637e659c7faa4eb5168bd5388084fc4c98c0",
+            "96cbc50d9dbfce789e266e9bc8e95a025f4ecd220c2b93ca9e0b8bdfa23ac28c"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3917,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "9059a0086010b22535dfcd651975634c63b81e96d655699c32820fab89b3eb6a",
+            "462d40cc8de2c099fc13ee77153f8c3e2d0b36c9ce9716daf3ebc58bb1cf7a2a",
+            "1f53df2bca7624255ae27c8c13a8c6b991577893a6387f45efb0eb9d4d1182e2",
+            "a7506d90b8de30bb291a420a41fa9d9e2a8bdbf3547977a8e79158e286a659e6",
+            "5633fca460b689802ff793dde7d693b912bd4d434b6614d7763e25340a804cd7"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3948,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "9059a0086010b22535dfcd651975634c63b81e96d655699c32820fab89b3eb6a",
+            "5633fca460b689802ff793dde7d693b912bd4d434b6614d7763e25340a804cd7",
+            "12d46667f84739ffc2f24679075e164c418f26b5d5f6c7d3bcd0e00459327467",
+            "565252124601343d7b950cc008ddec9b61ec3447d7d3835e502ac22f2b188545",
+            "1f53df2bca7624255ae27c8c13a8c6b991577893a6387f45efb0eb9d4d1182e2"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2352,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "8c6b2c67c6374f69511621895ad987d341cccf54065f41a2b37066106a5d824b"
+          ]
+        }
+      },
+      "batch": "2026-09-10 original 10 (saved responses reused)"
+    },
+    {
+      "id": "os-human-07",
+      "query": "进程切换的流程是怎样的？",
+      "documentPath": "操作系统/课件/3.1.OS_ProcessManagement-进程的上下文切换-2024.pptx",
+      "userPages": [
+        31
+      ],
+      "status": "draft",
+      "note": "保存当前进程状态、选择并恢复另一进程；3.2前情提要也提供有效证据，不能仅认3.1指定页。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3861,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "0d2758365922adae771ba8bf86c67ba14b5bcd7d6bfe7ab296df0af7478f8a76",
+            "2b39571cc0ed24867c26e1e6750246451981bf8e5682a5cdf4f12b988fba0370",
+            "1efbcac5fe8d75eadfe96b07bd1ff40ff1a6118dfc7c27bfe1f62989c0931359",
+            "2860f8014d74bd9013bf4a77ea79bb766db2ba872674f46e0a729ef2365cf4e5",
+            "a36e886df5b473e413d3bba780707813881b2f55460e7a5db438bd01c0b86cf3"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3950,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "06c1314aa760f06e028c5d68bd6c1b3aa3fe5fa6a4d001e30b5208b49e959e65",
+            "2860f8014d74bd9013bf4a77ea79bb766db2ba872674f46e0a729ef2365cf4e5",
+            "6db3d797b68952d7c13cab6b6ed06ae93967102eb80ce0cfac3c215cf8e9afa6",
+            "6abb15c877a7c49387043c2923e4369a94f79cb1f3bfea7736b9ebace5cdd876",
+            "235fad978341d5f922a3e35467eef00d2d332c6a68dd152c1a6fcdb84bedf9d7"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3831,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "2860f8014d74bd9013bf4a77ea79bb766db2ba872674f46e0a729ef2365cf4e5",
+            "6db3d797b68952d7c13cab6b6ed06ae93967102eb80ce0cfac3c215cf8e9afa6",
+            "0d2758365922adae771ba8bf86c67ba14b5bcd7d6bfe7ab296df0af7478f8a76",
+            "1efbcac5fe8d75eadfe96b07bd1ff40ff1a6118dfc7c27bfe1f62989c0931359",
+            "12d46667f84739ffc2f24679075e164c418f26b5d5f6c7d3bcd0e00459327467"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2386,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "36d6635ebdc10cf0851e45108f398531ab815ef94b2c0e248a2bffc30660ba5b"
+          ]
+        }
+      },
+      "batch": "2026-09-10 original 10 (saved responses reused)"
+    },
+    {
+      "id": "os-human-08",
+      "query": "RISCV有几个特权等级？",
+      "documentPath": "操作系统/课件/3.1.OS_ProcessManagement-进程的上下文切换-2024.pptx",
+      "userPages": [
+        43
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "三路第1块及父块均明确写RISCV有三个特权等级。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3785,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "e5ccb23085db34d108d7be9c1b76fc0c83899629198f7330ea1ba0f535d5bef8",
+            "1868b6a13aa3c7ee11b4f91df6f33951350a63c5e7998e93bacf516fac061e4e",
+            "8a96f144107a6c13c6f6a33db286c72ea1f335bb26731f597cecb101abefe2fe",
+            "81076798b4731271ba023156ba344fc869d85d8bb6c815e79be5229920d9f1e4",
+            "78a915491b4cfd94759ceb0b7680384000f351fe409e11278d1f550549b09e8c"
+          ],
+          "representativeEvidenceChunkIds": [
+            "e5ccb23085db34d108d7be9c1b76fc0c83899629198f7330ea1ba0f535d5bef8"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3771,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "e5ccb23085db34d108d7be9c1b76fc0c83899629198f7330ea1ba0f535d5bef8",
+            "1868b6a13aa3c7ee11b4f91df6f33951350a63c5e7998e93bacf516fac061e4e",
+            "56b2b35558e85d6831a04ef33837c48753908ec39a080fe166666d67428be4ad",
+            "0c8882ff533b83a7407d25b1f734c5cc71cdfa60b98309d87271930d3c1f1cc8",
+            "8a96f144107a6c13c6f6a33db286c72ea1f335bb26731f597cecb101abefe2fe"
+          ],
+          "representativeEvidenceChunkIds": [
+            "e5ccb23085db34d108d7be9c1b76fc0c83899629198f7330ea1ba0f535d5bef8"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3796,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "e5ccb23085db34d108d7be9c1b76fc0c83899629198f7330ea1ba0f535d5bef8",
+            "1868b6a13aa3c7ee11b4f91df6f33951350a63c5e7998e93bacf516fac061e4e",
+            "8a96f144107a6c13c6f6a33db286c72ea1f335bb26731f597cecb101abefe2fe",
+            "56b2b35558e85d6831a04ef33837c48753908ec39a080fe166666d67428be4ad",
+            "78a915491b4cfd94759ceb0b7680384000f351fe409e11278d1f550549b09e8c"
+          ],
+          "representativeEvidenceChunkIds": [
+            "e5ccb23085db34d108d7be9c1b76fc0c83899629198f7330ea1ba0f535d5bef8"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2285,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "5c81e9c309e44135ea6d29e48f1698950b45565fd3327b06bea603a0ffdc5e14"
+          ],
+          "representativeEvidenceChunkIds": [
+            "5c81e9c309e44135ea6d29e48f1698950b45565fd3327b06bea603a0ffdc5e14"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-09",
+      "query": "五状态进程模型有几种状态，是什么？",
+      "documentPath": "操作系统/课件/3.1.OS_ProcessManagement-进程的上下文切换-2024.pptx",
+      "userPages": [
+        49
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "三路和父块均列出创建、就绪、运行、等待、退出。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3863,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "e5ccb23085db34d108d7be9c1b76fc0c83899629198f7330ea1ba0f535d5bef8",
+            "9fde0220d669d9381e0896a5d516b456d873ca1eb8edd40eb7627a63e8d2d69b",
+            "2860f8014d74bd9013bf4a77ea79bb766db2ba872674f46e0a729ef2365cf4e5",
+            "5b6a27d77cf6edf3efa63d24ebefee687ce52e46694994808f6d29e2bf8d3ccd",
+            "565252124601343d7b950cc008ddec9b61ec3447d7d3835e502ac22f2b188545"
+          ],
+          "representativeEvidenceChunkIds": [
+            "e5ccb23085db34d108d7be9c1b76fc0c83899629198f7330ea1ba0f535d5bef8",
+            "9fde0220d669d9381e0896a5d516b456d873ca1eb8edd40eb7627a63e8d2d69b"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3957,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "9fde0220d669d9381e0896a5d516b456d873ca1eb8edd40eb7627a63e8d2d69b",
+            "5b6a27d77cf6edf3efa63d24ebefee687ce52e46694994808f6d29e2bf8d3ccd",
+            "83f174cefdc3b0d188406f9f00333741e113a1d480f63c7fc995dce077b2a25e",
+            "f8629b6294ab3abe9e2b7040c6cfcae9ac963ce3c48fb89b6458141caf691ed7",
+            "1f53df2bca7624255ae27c8c13a8c6b991577893a6387f45efb0eb9d4d1182e2"
+          ],
+          "representativeEvidenceChunkIds": [
+            "9fde0220d669d9381e0896a5d516b456d873ca1eb8edd40eb7627a63e8d2d69b"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3863,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "9fde0220d669d9381e0896a5d516b456d873ca1eb8edd40eb7627a63e8d2d69b",
+            "5b6a27d77cf6edf3efa63d24ebefee687ce52e46694994808f6d29e2bf8d3ccd",
+            "e5ccb23085db34d108d7be9c1b76fc0c83899629198f7330ea1ba0f535d5bef8",
+            "1f53df2bca7624255ae27c8c13a8c6b991577893a6387f45efb0eb9d4d1182e2",
+            "2860f8014d74bd9013bf4a77ea79bb766db2ba872674f46e0a729ef2365cf4e5"
+          ],
+          "representativeEvidenceChunkIds": [
+            "9fde0220d669d9381e0896a5d516b456d873ca1eb8edd40eb7627a63e8d2d69b"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2392,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "fcbbbe24383da600ca104173ff4b48d63cf1ac8064610adca436dbf1e5ec2dff"
+          ],
+          "representativeEvidenceChunkIds": [
+            "fcbbbe24383da600ca104173ff4b48d63cf1ac8064610adca436dbf1e5ec2dff"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-10",
+      "query": "多级反馈队列算法是什么？有什么特征？",
+      "documentPath": "操作系统/课件/3.2.OS_ProcessManagement-进程的调度策略-2024.pptx",
+      "userPages": [
+        25
+      ],
+      "status": "draft",
+      "note": "多级队列间移动、时间片/优先级调整、CPU与IO密集型特征；三路均首条检出。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3974,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "471c973f70b76431fa9e00e882696276816c675edbe67675df17946339465921",
+            "cca68247ae56885b5c54e17060f8fe0119c46247188be96ffbb2ef77f7610f5a",
+            "6abb15c877a7c49387043c2923e4369a94f79cb1f3bfea7736b9ebace5cdd876",
+            "5633fca460b689802ff793dde7d693b912bd4d434b6614d7763e25340a804cd7",
+            "1f7f4e8a6276000f3fbe75fa7133df88db587170cddee1fa36e5128ee0ef684b"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3975,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "471c973f70b76431fa9e00e882696276816c675edbe67675df17946339465921",
+            "b6a8d30b6eecd5788f8f8cd866216636f4be75d7e0f4cb2638d5f6042ae43b52",
+            "5633fca460b689802ff793dde7d693b912bd4d434b6614d7763e25340a804cd7",
+            "c82777549625a5f38f096aaeb0cfa173714a1df1ded5d74eb84c40cfc0060240",
+            "6abb15c877a7c49387043c2923e4369a94f79cb1f3bfea7736b9ebace5cdd876"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3973,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "471c973f70b76431fa9e00e882696276816c675edbe67675df17946339465921",
+            "5633fca460b689802ff793dde7d693b912bd4d434b6614d7763e25340a804cd7",
+            "6abb15c877a7c49387043c2923e4369a94f79cb1f3bfea7736b9ebace5cdd876",
+            "cca68247ae56885b5c54e17060f8fe0119c46247188be96ffbb2ef77f7610f5a",
+            "b6a8d30b6eecd5788f8f8cd866216636f4be75d7e0f4cb2638d5f6042ae43b52"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2375,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "759a9eaa5d3d12dc727aa25ededc5c6e5cdc8d0c577f3ed7dbc662f46e90c659"
+          ]
+        }
+      },
+      "batch": "2026-09-10 original 10 (saved responses reused)"
+    },
+    {
+      "id": "os-human-11",
+      "query": "衡量调度算法的指标有什么？",
+      "documentPath": "操作系统/课件/3.2.OS_ProcessManagement-进程的调度策略-2024.pptx",
+      "userPages": [
+        32
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "三路均检出周转、吞吐、等待、响应、CPU使用率；父块保留完整列表。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3903,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "1bce412665547e7eeb50bd60a0c0635e20fd0c4262b504b6f5be0d6a450ac196",
+            "5633fca460b689802ff793dde7d693b912bd4d434b6614d7763e25340a804cd7",
+            "471c973f70b76431fa9e00e882696276816c675edbe67675df17946339465921",
+            "ad25396bf0551012b719f495401073eb65834b4f3bd24d07ddd721cc82dcd397",
+            "4782f36c1ced169f75c85a40df9a8ad59cb440ebb6741c3610740cb15ef83d01"
+          ],
+          "representativeEvidenceChunkIds": [
+            "5633fca460b689802ff793dde7d693b912bd4d434b6614d7763e25340a804cd7"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3901,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "5633fca460b689802ff793dde7d693b912bd4d434b6614d7763e25340a804cd7",
+            "4782f36c1ced169f75c85a40df9a8ad59cb440ebb6741c3610740cb15ef83d01",
+            "b6a8d30b6eecd5788f8f8cd866216636f4be75d7e0f4cb2638d5f6042ae43b52",
+            "12d46667f84739ffc2f24679075e164c418f26b5d5f6c7d3bcd0e00459327467",
+            "6abb15c877a7c49387043c2923e4369a94f79cb1f3bfea7736b9ebace5cdd876"
+          ],
+          "representativeEvidenceChunkIds": [
+            "5633fca460b689802ff793dde7d693b912bd4d434b6614d7763e25340a804cd7"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3911,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "5633fca460b689802ff793dde7d693b912bd4d434b6614d7763e25340a804cd7",
+            "4782f36c1ced169f75c85a40df9a8ad59cb440ebb6741c3610740cb15ef83d01",
+            "1bce412665547e7eeb50bd60a0c0635e20fd0c4262b504b6f5be0d6a450ac196",
+            "471c973f70b76431fa9e00e882696276816c675edbe67675df17946339465921",
+            "6abb15c877a7c49387043c2923e4369a94f79cb1f3bfea7736b9ebace5cdd876"
+          ],
+          "representativeEvidenceChunkIds": [
+            "5633fca460b689802ff793dde7d693b912bd4d434b6614d7763e25340a804cd7"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2375,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "759a9eaa5d3d12dc727aa25ededc5c6e5cdc8d0c577f3ed7dbc662f46e90c659"
+          ],
+          "representativeEvidenceChunkIds": [
+            "759a9eaa5d3d12dc727aa25ededc5c6e5cdc8d0c577f3ed7dbc662f46e90c659"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-12",
+      "query": "基于EAS的调度是什么？",
+      "documentPath": "操作系统/课件/3.2.OS_ProcessManagement-进程的调度策略-2024.pptx",
+      "userPages": [
+        65,
+        66,
+        67,
+        68
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "BM25第3块含EAS目标，VECTOR第2/3/4块含案例、能耗选择规则及目标；RRF与PARENT保留迁移节能案例，但未保留完整目标/选择规则，按部分实质依据计命中。原65–68页是案例，概念在61–64页。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3777,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "0d2758365922adae771ba8bf86c67ba14b5bcd7d6bfe7ab296df0af7478f8a76",
+            "ad25396bf0551012b719f495401073eb65834b4f3bd24d07ddd721cc82dcd397",
+            "ca3361708690db684dafc28ca5c8d3a415394dd07ab438cfe78f8417a2c41731",
+            "eedd95747eccab410d8223e93e94f07df5e116c38ac19345fda405af2ac2b51b",
+            "e5ccb23085db34d108d7be9c1b76fc0c83899629198f7330ea1ba0f535d5bef8"
+          ],
+          "representativeEvidenceChunkIds": [
+            "ca3361708690db684dafc28ca5c8d3a415394dd07ab438cfe78f8417a2c41731"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3850,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "0d2758365922adae771ba8bf86c67ba14b5bcd7d6bfe7ab296df0af7478f8a76",
+            "350d1d007c29a1e70f5fa16ad87cc4bb0f957caf95432b4fa300e47fdd06c29b",
+            "2e3b788f701db5c181fb4f7be186ba20157fd34f3bd7b0ec7bdb70f2f5b5a5ca",
+            "ca3361708690db684dafc28ca5c8d3a415394dd07ab438cfe78f8417a2c41731",
+            "e80b5902ef64091adf3a910f81cb5d11e1342088eeef4bca0d35f373bc2aaf92"
+          ],
+          "representativeEvidenceChunkIds": [
+            "350d1d007c29a1e70f5fa16ad87cc4bb0f957caf95432b4fa300e47fdd06c29b",
+            "2e3b788f701db5c181fb4f7be186ba20157fd34f3bd7b0ec7bdb70f2f5b5a5ca",
+            "ca3361708690db684dafc28ca5c8d3a415394dd07ab438cfe78f8417a2c41731"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3868,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "0d2758365922adae771ba8bf86c67ba14b5bcd7d6bfe7ab296df0af7478f8a76",
+            "ca3361708690db684dafc28ca5c8d3a415394dd07ab438cfe78f8417a2c41731",
+            "e80b5902ef64091adf3a910f81cb5d11e1342088eeef4bca0d35f373bc2aaf92",
+            "350d1d007c29a1e70f5fa16ad87cc4bb0f957caf95432b4fa300e47fdd06c29b",
+            "2860f8014d74bd9013bf4a77ea79bb766db2ba872674f46e0a729ef2365cf4e5"
+          ],
+          "representativeEvidenceChunkIds": [
+            "350d1d007c29a1e70f5fa16ad87cc4bb0f957caf95432b4fa300e47fdd06c29b"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3237,
+          "returnedChunks": 2,
+          "chunkIds": [
+            "526f6af5e409fcc08a3e546670d7c42270bf8d959d35c9a0b90f0b674ed428a9",
+            "04ea663e2ae0045c9f8fbb6cea5f66f2d28e2a3422ca436e8b09e088262d789b"
+          ],
+          "representativeEvidenceChunkIds": [
+            "04ea663e2ae0045c9f8fbb6cea5f66f2d28e2a3422ca436e8b09e088262d789b"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-13",
+      "query": "内存分配算法主要做什么工作？",
+      "documentPath": "操作系统/课件/4.1OS_MemoryManagement-上古时期的内存管理-2024.pptx",
+      "userPages": [
+        20
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "VECTOR/RRF第3块直接说明寻找足够空闲分区、分割并标记；BM25只返回其他内存管理主题，父块回填也丢失该分配依据。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": false,
+          "contextTokens": 3864,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "8a96f144107a6c13c6f6a33db286c72ea1f335bb26731f597cecb101abefe2fe",
+            "2860f8014d74bd9013bf4a77ea79bb766db2ba872674f46e0a729ef2365cf4e5",
+            "a846708c902a9a35b8ba450c04575ea4eb1c0cffaf398d0e0f9f54d3b5a4ace5",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6",
+            "9bea1869cb271f0bb1127554a98406bba58dda334b2f0cb531c098d0d02f7ff9"
+          ],
+          "representativeEvidenceChunkIds": []
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3927,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "8b2d18557b4678ede9c26f93b59d75c85256206be53269ba1004cd67672cde85",
+            "1bce412665547e7eeb50bd60a0c0635e20fd0c4262b504b6f5be0d6a450ac196",
+            "8821466ea184a36426c56b6f25e0959e54d4199827b98f7198e4e72d0385c887",
+            "1da4d6c5cdaebeaad222620e614d70c14d9e32c33ac5679b11640e3a90e79491",
+            "da4ac0dda960c546907f6e3649f7579b3e22af5db8522881611663d090f2627e"
+          ],
+          "representativeEvidenceChunkIds": [
+            "8821466ea184a36426c56b6f25e0959e54d4199827b98f7198e4e72d0385c887"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3886,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17",
+            "8821466ea184a36426c56b6f25e0959e54d4199827b98f7198e4e72d0385c887",
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221",
+            "6ed6cc1036a735f0938181c834f944dfe3aec232f6c4bdec3464e47cbd3ecda0"
+          ],
+          "representativeEvidenceChunkIds": [
+            "8821466ea184a36426c56b6f25e0959e54d4199827b98f7198e4e72d0385c887"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": false,
+          "contextTokens": 2399,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "581839c07164626d9031c35e57fafcedecd3ac0a7a24183634e3899d895be7be"
+          ],
+          "representativeEvidenceChunkIds": []
+        }
+      }
+    },
+    {
+      "id": "os-human-14",
+      "query": "课上讲到几种内存分配算法？",
+      "documentPath": "操作系统/课件/4.1OS_MemoryManagement-上古时期的内存管理-2024.pptx",
+      "userPages": [
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27
+      ],
+      "status": "draft",
+      "note": "最先、最佳、最坏、下次四种匹配；BM25第4条汇总可支持数量，VECTOR/RRF含两段详细描述。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3968,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "ff9f1a530bdf9cf943d375970305e5f1c86361afbef595a96f2ca74ba81ff070",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17",
+            "266091d1333105db5f546d42fab7fc303fbece789dcbb40124e11e075836fc33",
+            "8b2d18557b4678ede9c26f93b59d75c85256206be53269ba1004cd67672cde85",
+            "565252124601343d7b950cc008ddec9b61ec3447d7d3835e502ac22f2b188545"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3933,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "8821466ea184a36426c56b6f25e0959e54d4199827b98f7198e4e72d0385c887",
+            "1bce412665547e7eeb50bd60a0c0635e20fd0c4262b504b6f5be0d6a450ac196",
+            "8b2d18557b4678ede9c26f93b59d75c85256206be53269ba1004cd67672cde85",
+            "1da4d6c5cdaebeaad222620e614d70c14d9e32c33ac5679b11640e3a90e79491",
+            "ea3714ada7de13a08b82c2d508b1ffc179895938871dfd4a8447983277bc4ba7"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3924,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "8821466ea184a36426c56b6f25e0959e54d4199827b98f7198e4e72d0385c887",
+            "8b2d18557b4678ede9c26f93b59d75c85256206be53269ba1004cd67672cde85",
+            "1bce412665547e7eeb50bd60a0c0635e20fd0c4262b504b6f5be0d6a450ac196",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17",
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3887,
+          "returnedChunks": 2,
+          "chunkIds": [
+            "89ba7ce374e65084f3adb5ed9a00d71ac0d7ba0a9b64d28b901170c6ee3537be",
+            "9c00d7cc30cde0099bcf7383863b11f65b2c3fef1a612b9404d2012618583711"
+          ]
+        }
+      },
+      "batch": "2026-09-10 original 10 (saved responses reused)"
+    },
+    {
+      "id": "os-human-15",
+      "query": "伙伴系统是什么，怎么实现的？",
+      "documentPath": "操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+      "userPages": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "status": "draft",
+      "note": "按2的幂分割与伙伴合并；BM25有分割/合并依据，但缺少前一块的数据结构与最小可用块说明；VECTOR/RRF已经含两块。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3744,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "1da4d6c5cdaebeaad222620e614d70c14d9e32c33ac5679b11640e3a90e79491",
+            "8a96f144107a6c13c6f6a33db286c72ea1f335bb26731f597cecb101abefe2fe",
+            "e8d7745d701cf775399bbac41336a66c5991989c1cc52332f6c39adec041d2e6",
+            "0d2758365922adae771ba8bf86c67ba14b5bcd7d6bfe7ab296df0af7478f8a76",
+            "a846708c902a9a35b8ba450c04575ea4eb1c0cffaf398d0e0f9f54d3b5a4ace5"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3926,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "1da4d6c5cdaebeaad222620e614d70c14d9e32c33ac5679b11640e3a90e79491",
+            "1bce412665547e7eeb50bd60a0c0635e20fd0c4262b504b6f5be0d6a450ac196",
+            "ea3714ada7de13a08b82c2d508b1ffc179895938871dfd4a8447983277bc4ba7",
+            "da4ac0dda960c546907f6e3649f7579b3e22af5db8522881611663d090f2627e",
+            "8821466ea184a36426c56b6f25e0959e54d4199827b98f7198e4e72d0385c887"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3841,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "1da4d6c5cdaebeaad222620e614d70c14d9e32c33ac5679b11640e3a90e79491",
+            "1bce412665547e7eeb50bd60a0c0635e20fd0c4262b504b6f5be0d6a450ac196",
+            "e8d7745d701cf775399bbac41336a66c5991989c1cc52332f6c39adec041d2e6",
+            "8a96f144107a6c13c6f6a33db286c72ea1f335bb26731f597cecb101abefe2fe",
+            "eedd95747eccab410d8223e93e94f07df5e116c38ac19345fda405af2ac2b51b"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2386,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "cb45c9b54d97a3a5afaa3777ed6388c49c1b339628e0d1b6d3578d4f14c94ff1"
+          ]
+        }
+      },
+      "batch": "2026-09-10 original 10 (saved responses reused)"
+    },
+    {
+      "id": "os-human-16",
+      "query": "虚拟内存的基本思想是什么？",
+      "documentPath": "操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+      "userPages": [
+        19
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "三路第1块及父块均直接包含虚拟存储基本思想。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3930,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "7ae9571672546801c1b8f34b6dadeae5b52e334af8979b5c426f5c1d9441b2a0",
+            "6cc49060f54aa6a6db300ff1c118b008af7b1777f6f7727142edd32c838653f9",
+            "eedd95747eccab410d8223e93e94f07df5e116c38ac19345fda405af2ac2b51b",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6"
+          ],
+          "representativeEvidenceChunkIds": [
+            "7ae9571672546801c1b8f34b6dadeae5b52e334af8979b5c426f5c1d9441b2a0"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3965,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "7ae9571672546801c1b8f34b6dadeae5b52e334af8979b5c426f5c1d9441b2a0",
+            "4ed55e8f29da325a35702b1a35d7da454c97a8e4ae79a5e9e394d217858ab50d",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6",
+            "223e2c5896192b31966ab2e76ac9104cf772716a0e677980781d811ca9d21b47",
+            "ea3714ada7de13a08b82c2d508b1ffc179895938871dfd4a8447983277bc4ba7"
+          ],
+          "representativeEvidenceChunkIds": [
+            "7ae9571672546801c1b8f34b6dadeae5b52e334af8979b5c426f5c1d9441b2a0"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3958,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "7ae9571672546801c1b8f34b6dadeae5b52e334af8979b5c426f5c1d9441b2a0",
+            "4ed55e8f29da325a35702b1a35d7da454c97a8e4ae79a5e9e394d217858ab50d",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6",
+            "eedd95747eccab410d8223e93e94f07df5e116c38ac19345fda405af2ac2b51b",
+            "34006b9a2ae90f4e9c2781cdbf9ab140fe0cf8e972184864f4d9ef1ebdbbb1dd"
+          ],
+          "representativeEvidenceChunkIds": [
+            "7ae9571672546801c1b8f34b6dadeae5b52e334af8979b5c426f5c1d9441b2a0"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2393,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "974133b4b8ace4256a1ea835362b62874541a501fbaaf3d207a7ca44eee67962"
+          ],
+          "representativeEvidenceChunkIds": [
+            "974133b4b8ace4256a1ea835362b62874541a501fbaaf3d207a7ca44eee67962"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-17",
+      "query": "缺页异常的处理流程？",
+      "documentPath": "操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+      "userPages": [
+        32
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "三路含4.2的部分流程及4.3/8的扩展流程；父块含4.2按需加载和缺页全过程。用户所列第32页本身标明部分。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3932,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "3ae95213370547da72e594ace9a1e1a29c7c9450754668ca1633fb51e46c6a20",
+            "aaba3e3d86655a2a6225c35e8fb187ed0503f2755ebf80ac2dfeef2b662c86ca",
+            "13c1619bcaf5dff08a4b0ee94ed6fbdbc7c60acb9e061d045904b53ff9b533df",
+            "755135f0aeb67eeb93032f2f50eaf706c9d4499114bb6809998431a8cb9640b9",
+            "1868b6a13aa3c7ee11b4f91df6f33951350a63c5e7998e93bacf516fac061e4e"
+          ],
+          "representativeEvidenceChunkIds": [
+            "aaba3e3d86655a2a6225c35e8fb187ed0503f2755ebf80ac2dfeef2b662c86ca",
+            "13c1619bcaf5dff08a4b0ee94ed6fbdbc7c60acb9e061d045904b53ff9b533df",
+            "755135f0aeb67eeb93032f2f50eaf706c9d4499114bb6809998431a8cb9640b9"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3829,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "13c1619bcaf5dff08a4b0ee94ed6fbdbc7c60acb9e061d045904b53ff9b533df",
+            "3ae95213370547da72e594ace9a1e1a29c7c9450754668ca1633fb51e46c6a20",
+            "aaba3e3d86655a2a6225c35e8fb187ed0503f2755ebf80ac2dfeef2b662c86ca",
+            "8a96f144107a6c13c6f6a33db286c72ea1f335bb26731f597cecb101abefe2fe",
+            "755135f0aeb67eeb93032f2f50eaf706c9d4499114bb6809998431a8cb9640b9"
+          ],
+          "representativeEvidenceChunkIds": [
+            "13c1619bcaf5dff08a4b0ee94ed6fbdbc7c60acb9e061d045904b53ff9b533df",
+            "aaba3e3d86655a2a6225c35e8fb187ed0503f2755ebf80ac2dfeef2b662c86ca",
+            "755135f0aeb67eeb93032f2f50eaf706c9d4499114bb6809998431a8cb9640b9"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3829,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "3ae95213370547da72e594ace9a1e1a29c7c9450754668ca1633fb51e46c6a20",
+            "13c1619bcaf5dff08a4b0ee94ed6fbdbc7c60acb9e061d045904b53ff9b533df",
+            "aaba3e3d86655a2a6225c35e8fb187ed0503f2755ebf80ac2dfeef2b662c86ca",
+            "755135f0aeb67eeb93032f2f50eaf706c9d4499114bb6809998431a8cb9640b9",
+            "8a96f144107a6c13c6f6a33db286c72ea1f335bb26731f597cecb101abefe2fe"
+          ],
+          "representativeEvidenceChunkIds": [
+            "13c1619bcaf5dff08a4b0ee94ed6fbdbc7c60acb9e061d045904b53ff9b533df",
+            "aaba3e3d86655a2a6225c35e8fb187ed0503f2755ebf80ac2dfeef2b662c86ca",
+            "755135f0aeb67eeb93032f2f50eaf706c9d4499114bb6809998431a8cb9640b9"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2391,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "52e20e76b4db699a588f199de907ed318ba038dc2388a3e7abf8a0f599bc03a7"
+          ],
+          "representativeEvidenceChunkIds": [
+            "52e20e76b4db699a588f199de907ed318ba038dc2388a3e7abf8a0f599bc03a7"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-18",
+      "query": "快表是什么？",
+      "documentPath": "操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+      "userPages": [
+        56
+      ],
+      "status": "draft",
+      "note": "TLB缓存近期页表项，关联存储快速访问；三路均首条检出。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3971,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "01f088270a14cde1823f9fb9981a2c21ed41cefc40009e8c20e37c2b027e69e0",
+            "ad25396bf0551012b719f495401073eb65834b4f3bd24d07ddd721cc82dcd397",
+            "223e2c5896192b31966ab2e76ac9104cf772716a0e677980781d811ca9d21b47",
+            "279e890df78e5946d6274b6e3206b7af617a15e79a73a5cb8b3443c54a7bbfbf",
+            "1f7f4e8a6276000f3fbe75fa7133df88db587170cddee1fa36e5128ee0ef684b"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3923,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "01f088270a14cde1823f9fb9981a2c21ed41cefc40009e8c20e37c2b027e69e0",
+            "d547ae922d42516bda8098953fa2b0cbda585f042369905c8280984a37d67cb0",
+            "96cbc50d9dbfce789e266e9bc8e95a025f4ecd220c2b93ca9e0b8bdfa23ac28c",
+            "81076798b4731271ba023156ba344fc869d85d8bb6c815e79be5229920d9f1e4",
+            "c82777549625a5f38f096aaeb0cfa173714a1df1ded5d74eb84c40cfc0060240"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3950,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "01f088270a14cde1823f9fb9981a2c21ed41cefc40009e8c20e37c2b027e69e0",
+            "81076798b4731271ba023156ba344fc869d85d8bb6c815e79be5229920d9f1e4",
+            "d547ae922d42516bda8098953fa2b0cbda585f042369905c8280984a37d67cb0",
+            "3805642f07765032e8d87d002dc192a69e7b409341eb1b48a8b397052d3f51fa",
+            "a4ece4c63d31a16342363596c574e8feedbba3ba7e290b8f7d80166fc77c682d"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2376,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "fe1b7e0a108ba5ca472dbace41ee551e66f299bf6be76e52d57535ad9b30b664"
+          ]
+        }
+      },
+      "batch": "2026-09-10 original 10 (saved responses reused)"
+    },
+    {
+      "id": "os-human-19",
+      "query": "物理内存不够的两种应对办法是什么？",
+      "documentPath": "操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+      "userPages": [
+        16,
+        17,
+        18,
+        19
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "按用户16–19页解释为覆盖与虚拟存储；VECTOR含两者直接说明，BM25/RRF有覆盖示例和分页/虚拟存储依据。PARENT只保留覆盖与分区对换，缺少第19页虚拟存储说明，按部分依据计命中。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3850,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "e8d7745d701cf775399bbac41336a66c5991989c1cc52332f6c39adec041d2e6",
+            "da4ac0dda960c546907f6e3649f7579b3e22af5db8522881611663d090f2627e",
+            "ea3714ada7de13a08b82c2d508b1ffc179895938871dfd4a8447983277bc4ba7",
+            "eedd95747eccab410d8223e93e94f07df5e116c38ac19345fda405af2ac2b51b",
+            "8a96f144107a6c13c6f6a33db286c72ea1f335bb26731f597cecb101abefe2fe"
+          ],
+          "representativeEvidenceChunkIds": [
+            "da4ac0dda960c546907f6e3649f7579b3e22af5db8522881611663d090f2627e",
+            "ea3714ada7de13a08b82c2d508b1ffc179895938871dfd4a8447983277bc4ba7"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3980,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "da4ac0dda960c546907f6e3649f7579b3e22af5db8522881611663d090f2627e",
+            "ea3714ada7de13a08b82c2d508b1ffc179895938871dfd4a8447983277bc4ba7",
+            "7ae9571672546801c1b8f34b6dadeae5b52e334af8979b5c426f5c1d9441b2a0",
+            "1da4d6c5cdaebeaad222620e614d70c14d9e32c33ac5679b11640e3a90e79491",
+            "46835712f4a265e81b0542272359a2f5a4bc12dd96418866431e8ad2320033a8"
+          ],
+          "representativeEvidenceChunkIds": [
+            "da4ac0dda960c546907f6e3649f7579b3e22af5db8522881611663d090f2627e",
+            "7ae9571672546801c1b8f34b6dadeae5b52e334af8979b5c426f5c1d9441b2a0"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3952,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "da4ac0dda960c546907f6e3649f7579b3e22af5db8522881611663d090f2627e",
+            "ea3714ada7de13a08b82c2d508b1ffc179895938871dfd4a8447983277bc4ba7",
+            "eedd95747eccab410d8223e93e94f07df5e116c38ac19345fda405af2ac2b51b",
+            "1da4d6c5cdaebeaad222620e614d70c14d9e32c33ac5679b11640e3a90e79491",
+            "4ed55e8f29da325a35702b1a35d7da454c97a8e4ae79a5e9e394d217858ab50d"
+          ],
+          "representativeEvidenceChunkIds": [
+            "da4ac0dda960c546907f6e3649f7579b3e22af5db8522881611663d090f2627e",
+            "ea3714ada7de13a08b82c2d508b1ffc179895938871dfd4a8447983277bc4ba7",
+            "4ed55e8f29da325a35702b1a35d7da454c97a8e4ae79a5e9e394d217858ab50d"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2386,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "cb45c9b54d97a3a5afaa3777ed6388c49c1b339628e0d1b6d3578d4f14c94ff1"
+          ],
+          "representativeEvidenceChunkIds": [
+            "cb45c9b54d97a3a5afaa3777ed6388c49c1b339628e0d1b6d3578d4f14c94ff1"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-20",
+      "query": "置换算法是做什么用的？",
+      "documentPath": "操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+      "userPages": [
+        10
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "VECTOR第2块直接含功能目标；其他方案有具体换出/Clock选择页面的实质规则，按部分依据计命中，不等于完整目的说明。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3870,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "8a96f144107a6c13c6f6a33db286c72ea1f335bb26731f597cecb101abefe2fe",
+            "e6a58f4d37888b7411b0b6d73e4edb241bd308ee8c11f51ab8516093bfb0a9d1",
+            "2860f8014d74bd9013bf4a77ea79bb766db2ba872674f46e0a729ef2365cf4e5",
+            "eedd95747eccab410d8223e93e94f07df5e116c38ac19345fda405af2ac2b51b",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17"
+          ],
+          "representativeEvidenceChunkIds": [
+            "e6a58f4d37888b7411b0b6d73e4edb241bd308ee8c11f51ab8516093bfb0a9d1"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3898,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221",
+            "4ed55e8f29da325a35702b1a35d7da454c97a8e4ae79a5e9e394d217858ab50d",
+            "da4ac0dda960c546907f6e3649f7579b3e22af5db8522881611663d090f2627e",
+            "0bca48c83c967f4976fed5d689cce2659bf8a0bd0692a53ec7565fa4df0b775c",
+            "6ed6cc1036a735f0938181c834f944dfe3aec232f6c4bdec3464e47cbd3ecda0"
+          ],
+          "representativeEvidenceChunkIds": [
+            "4ed55e8f29da325a35702b1a35d7da454c97a8e4ae79a5e9e394d217858ab50d"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3969,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "e6a58f4d37888b7411b0b6d73e4edb241bd308ee8c11f51ab8516093bfb0a9d1",
+            "0bca48c83c967f4976fed5d689cce2659bf8a0bd0692a53ec7565fa4df0b775c",
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17",
+            "a0a70cc7df959fe2840e3e6ff7c876f3d8b73dedcce1ef6e1ad2571185aca207"
+          ],
+          "representativeEvidenceChunkIds": [
+            "0bca48c83c967f4976fed5d689cce2659bf8a0bd0692a53ec7565fa4df0b775c",
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2396,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "6ae776dfd343621f45379ecd6a9f23e400c5b607752ad2c9968345a46dace8c2"
+          ],
+          "representativeEvidenceChunkIds": [
+            "6ae776dfd343621f45379ecd6a9f23e400c5b607752ad2c9968345a46dace8c2"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-21",
+      "query": "OPT置换算法是什么？",
+      "documentPath": "操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+      "userPages": [
+        13
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "三路第1块及父块含OPT未来最久不用、不可预知未来的限制。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3935,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "0bca48c83c967f4976fed5d689cce2659bf8a0bd0692a53ec7565fa4df0b775c",
+            "e6a58f4d37888b7411b0b6d73e4edb241bd308ee8c11f51ab8516093bfb0a9d1",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17",
+            "6cc49060f54aa6a6db300ff1c118b008af7b1777f6f7727142edd32c838653f9",
+            "6abb15c877a7c49387043c2923e4369a94f79cb1f3bfea7736b9ebace5cdd876"
+          ],
+          "representativeEvidenceChunkIds": [
+            "0bca48c83c967f4976fed5d689cce2659bf8a0bd0692a53ec7565fa4df0b775c"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3913,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "0bca48c83c967f4976fed5d689cce2659bf8a0bd0692a53ec7565fa4df0b775c",
+            "a0a70cc7df959fe2840e3e6ff7c876f3d8b73dedcce1ef6e1ad2571185aca207",
+            "f934054cd2941c9fa5115acb028b043b14a59e3a35e4798578ec3608ac4de19b",
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221",
+            "6ed6cc1036a735f0938181c834f944dfe3aec232f6c4bdec3464e47cbd3ecda0"
+          ],
+          "representativeEvidenceChunkIds": [
+            "0bca48c83c967f4976fed5d689cce2659bf8a0bd0692a53ec7565fa4df0b775c"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3941,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "0bca48c83c967f4976fed5d689cce2659bf8a0bd0692a53ec7565fa4df0b775c",
+            "e6a58f4d37888b7411b0b6d73e4edb241bd308ee8c11f51ab8516093bfb0a9d1",
+            "a0a70cc7df959fe2840e3e6ff7c876f3d8b73dedcce1ef6e1ad2571185aca207",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17",
+            "6ed6cc1036a735f0938181c834f944dfe3aec232f6c4bdec3464e47cbd3ecda0"
+          ],
+          "representativeEvidenceChunkIds": [
+            "0bca48c83c967f4976fed5d689cce2659bf8a0bd0692a53ec7565fa4df0b775c"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2379,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "141090edfa94d5fae0b924583901a481a8f01b6bf8774a518adeb307401ed084"
+          ],
+          "representativeEvidenceChunkIds": [
+            "141090edfa94d5fae0b924583901a481a8f01b6bf8774a518adeb307401ed084"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-22",
+      "query": "什么是Belady现象？",
+      "documentPath": "操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+      "userPages": [
+        18
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "三路第1块及父块含物理页数增加而缺页次数上升。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3980,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "c82777549625a5f38f096aaeb0cfa173714a1df1ded5d74eb84c40cfc0060240",
+            "15c8acfbc7e899ed00562f9515fe9ea7088fbf6b0b7cc87e9f1fabd2eb45ad31",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6",
+            "279e890df78e5946d6274b6e3206b7af617a15e79a73a5cb8b3443c54a7bbfbf"
+          ],
+          "representativeEvidenceChunkIds": [
+            "c82777549625a5f38f096aaeb0cfa173714a1df1ded5d74eb84c40cfc0060240"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3981,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "c82777549625a5f38f096aaeb0cfa173714a1df1ded5d74eb84c40cfc0060240",
+            "15c8acfbc7e899ed00562f9515fe9ea7088fbf6b0b7cc87e9f1fabd2eb45ad31",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6",
+            "46835712f4a265e81b0542272359a2f5a4bc12dd96418866431e8ad2320033a8",
+            "1bce412665547e7eeb50bd60a0c0635e20fd0c4262b504b6f5be0d6a450ac196"
+          ],
+          "representativeEvidenceChunkIds": [
+            "c82777549625a5f38f096aaeb0cfa173714a1df1ded5d74eb84c40cfc0060240"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3975,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "c82777549625a5f38f096aaeb0cfa173714a1df1ded5d74eb84c40cfc0060240",
+            "15c8acfbc7e899ed00562f9515fe9ea7088fbf6b0b7cc87e9f1fabd2eb45ad31",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17",
+            "d547ae922d42516bda8098953fa2b0cbda585f042369905c8280984a37d67cb0"
+          ],
+          "representativeEvidenceChunkIds": [
+            "c82777549625a5f38f096aaeb0cfa173714a1df1ded5d74eb84c40cfc0060240"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2379,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "141090edfa94d5fae0b924583901a481a8f01b6bf8774a518adeb307401ed084"
+          ],
+          "representativeEvidenceChunkIds": [
+            "141090edfa94d5fae0b924583901a481a8f01b6bf8774a518adeb307401ed084"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-23",
+      "query": "影响缺页率的因素有什么？",
+      "documentPath": "操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+      "userPages": [
+        45
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "三路第1块及父块含全部四个因素。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3935,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221",
+            "46835712f4a265e81b0542272359a2f5a4bc12dd96418866431e8ad2320033a8",
+            "3ae95213370547da72e594ace9a1e1a29c7c9450754668ca1633fb51e46c6a20",
+            "2fe2db757486189f86d1ce9ecd6d63fc1e245c114f76de32a974d689f98ded5b",
+            "755135f0aeb67eeb93032f2f50eaf706c9d4499114bb6809998431a8cb9640b9"
+          ],
+          "representativeEvidenceChunkIds": [
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3948,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221",
+            "4ed55e8f29da325a35702b1a35d7da454c97a8e4ae79a5e9e394d217858ab50d",
+            "46835712f4a265e81b0542272359a2f5a4bc12dd96418866431e8ad2320033a8",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6",
+            "2872d91f7d460a8ec5007c96e1f10a648424b38eec2cbb8acb6b701ee1fb87e0"
+          ],
+          "representativeEvidenceChunkIds": [
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3955,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221",
+            "46835712f4a265e81b0542272359a2f5a4bc12dd96418866431e8ad2320033a8",
+            "755135f0aeb67eeb93032f2f50eaf706c9d4499114bb6809998431a8cb9640b9",
+            "2872d91f7d460a8ec5007c96e1f10a648424b38eec2cbb8acb6b701ee1fb87e0",
+            "13c1619bcaf5dff08a4b0ee94ed6fbdbc7c60acb9e061d045904b53ff9b533df"
+          ],
+          "representativeEvidenceChunkIds": [
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2399,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "581839c07164626d9031c35e57fafcedecd3ac0a7a24183634e3899d895be7be"
+          ],
+          "representativeEvidenceChunkIds": [
+            "581839c07164626d9031c35e57fafcedecd3ac0a7a24183634e3899d895be7be"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-24",
+      "query": "什么是常驻集？",
+      "documentPath": "操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+      "userPages": [
+        41
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "三路第1块及父块含当前实际驻留页面集合定义。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3942,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "3805642f07765032e8d87d002dc192a69e7b409341eb1b48a8b397052d3f51fa",
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221",
+            "46835712f4a265e81b0542272359a2f5a4bc12dd96418866431e8ad2320033a8",
+            "e8d7745d701cf775399bbac41336a66c5991989c1cc52332f6c39adec041d2e6",
+            "01f088270a14cde1823f9fb9981a2c21ed41cefc40009e8c20e37c2b027e69e0"
+          ],
+          "representativeEvidenceChunkIds": [
+            "3805642f07765032e8d87d002dc192a69e7b409341eb1b48a8b397052d3f51fa"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3145,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "3805642f07765032e8d87d002dc192a69e7b409341eb1b48a8b397052d3f51fa",
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221",
+            "6ed6cc1036a735f0938181c834f944dfe3aec232f6c4bdec3464e47cbd3ecda0",
+            "1976ff9bf36d38d10ab258d9891b00e56487dd0a5899ac26d5512383e680b3ff",
+            "711901e0c8c912c95edd338fbbb7392c7073a3780d6809f79dcee162dd0fe839"
+          ],
+          "representativeEvidenceChunkIds": [
+            "3805642f07765032e8d87d002dc192a69e7b409341eb1b48a8b397052d3f51fa"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3925,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "3805642f07765032e8d87d002dc192a69e7b409341eb1b48a8b397052d3f51fa",
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221",
+            "acbc3cbd9a01a8c7aeec9cb340e91b694b3ee79cd44fe7fceef6298cc5bc8b9c",
+            "01f088270a14cde1823f9fb9981a2c21ed41cefc40009e8c20e37c2b027e69e0",
+            "c82777549625a5f38f096aaeb0cfa173714a1df1ded5d74eb84c40cfc0060240"
+          ],
+          "representativeEvidenceChunkIds": [
+            "3805642f07765032e8d87d002dc192a69e7b409341eb1b48a8b397052d3f51fa"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2343,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "4742e8ba5d22c97f629104afeaeeef9e807d2e7e3e0ceadbeee4e7b6a54b9672"
+          ],
+          "representativeEvidenceChunkIds": [
+            "4742e8ba5d22c97f629104afeaeeef9e807d2e7e3e0ceadbeee4e7b6a54b9672"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-25",
+      "query": "段式地址管理中，进程的地址空间被分为哪些段？",
+      "documentPath": "操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+      "userPages": [
+        56
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "BM25/VECTOR/PARENT含程序数据、堆栈、堆、代码的图示文字，按部分列表计命中；RRF第3块额外带回第56页完整段列表，包括子模块、公用库、初始化数据、符号表。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3964,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "ea3714ada7de13a08b82c2d508b1ffc179895938871dfd4a8447983277bc4ba7",
+            "2d84e4ab701fa151b7777270a26a45471a5f9e339dee07c6312963ec0452d6f4",
+            "742afb76930aaec1c96b036f2892ea84f0f093c8acbb1caa4be16aaceba5d907",
+            "a846708c902a9a35b8ba450c04575ea4eb1c0cffaf398d0e0f9f54d3b5a4ace5",
+            "eedd95747eccab410d8223e93e94f07df5e116c38ac19345fda405af2ac2b51b"
+          ],
+          "representativeEvidenceChunkIds": [
+            "2d84e4ab701fa151b7777270a26a45471a5f9e339dee07c6312963ec0452d6f4"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3006,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "2d84e4ab701fa151b7777270a26a45471a5f9e339dee07c6312963ec0452d6f4",
+            "d44f03409614c25468a0543ee9e452604496a187d48351348fcd7217dcd3e8e0",
+            "cde406023080a305c5bbae8d18412186de78696a7e87a3646a41351b4b23bd69",
+            "c94eab73832a07ff0721c9109e08f01b510ef8cf3d274ef00c9f2bff0f78ad3c",
+            "ea3714ada7de13a08b82c2d508b1ffc179895938871dfd4a8447983277bc4ba7"
+          ],
+          "representativeEvidenceChunkIds": [
+            "2d84e4ab701fa151b7777270a26a45471a5f9e339dee07c6312963ec0452d6f4",
+            "d44f03409614c25468a0543ee9e452604496a187d48351348fcd7217dcd3e8e0"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3976,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "2d84e4ab701fa151b7777270a26a45471a5f9e339dee07c6312963ec0452d6f4",
+            "ea3714ada7de13a08b82c2d508b1ffc179895938871dfd4a8447983277bc4ba7",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6",
+            "f1f1bb0b9ef23a2b583c1a17803db2e92dad0c4621531a23f03dffbb9eb84207",
+            "c94eab73832a07ff0721c9109e08f01b510ef8cf3d274ef00c9f2bff0f78ad3c"
+          ],
+          "representativeEvidenceChunkIds": [
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3757,
+          "returnedChunks": 2,
+          "chunkIds": [
+            "e90bad50faf6270fd47facfcfa290e6ffa5d50026f2e06c0ff96ab2bca9911e7",
+            "6105670d96bdbd783ee47fd0322ed53018cbf085100bab42df41d4c0bbdb7923"
+          ],
+          "representativeEvidenceChunkIds": [
+            "e90bad50faf6270fd47facfcfa290e6ffa5d50026f2e06c0ff96ab2bca9911e7"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-26",
+      "query": "内存置换的Clock算法是什么？",
+      "documentPath": "操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+      "userPages": [
+        29,
+        30
+      ],
+      "status": "draft",
+      "note": "基本Clock的环形链表、访问位和扫描规则；VECTOR第1条是改进Clock，第2条为基本算法，RRF将基本算法排第1。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3940,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "e6a58f4d37888b7411b0b6d73e4edb241bd308ee8c11f51ab8516093bfb0a9d1",
+            "a0a70cc7df959fe2840e3e6ff7c876f3d8b73dedcce1ef6e1ad2571185aca207",
+            "fd5c6cf99fceeb8912ed87f5f5e5a88f368d63b6b764a20e58aaed503b710833",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17",
+            "6cc49060f54aa6a6db300ff1c118b008af7b1777f6f7727142edd32c838653f9"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3921,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "a0a70cc7df959fe2840e3e6ff7c876f3d8b73dedcce1ef6e1ad2571185aca207",
+            "e6a58f4d37888b7411b0b6d73e4edb241bd308ee8c11f51ab8516093bfb0a9d1",
+            "3b587ea29abf0b90c81a40a7181f74bbe46e68f5b99dece91e37ff4aeeb308c3",
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3977,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "e6a58f4d37888b7411b0b6d73e4edb241bd308ee8c11f51ab8516093bfb0a9d1",
+            "a0a70cc7df959fe2840e3e6ff7c876f3d8b73dedcce1ef6e1ad2571185aca207",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17",
+            "b5c278884e8965cba7f7c57125e9eff18bf6ab5e7a56e9974b75cc6ae6a05221",
+            "fd5c6cf99fceeb8912ed87f5f5e5a88f368d63b6b764a20e58aaed503b710833"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2396,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "6ae776dfd343621f45379ecd6a9f23e400c5b607752ad2c9968345a46dace8c2"
+          ]
+        }
+      },
+      "batch": "2026-09-10 original 10 (saved responses reused)"
+    },
+    {
+      "id": "os-human-27",
+      "query": "LRU可以如何实现？",
+      "documentPath": "操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+      "userPages": [
+        21
+      ],
+      "status": "draft",
+      "batch": "2026-09-11 remaining 18 (new API calls)",
+      "note": "三路均含页面栈和链表的明确实现步骤；PARENT保留用栈的例图和最近使用顺序说明，但缺少前一子块中的栈/链表完整操作步骤，按部分依据计命中。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3972,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "15c8acfbc7e899ed00562f9515fe9ea7088fbf6b0b7cc87e9f1fabd2eb45ad31",
+            "fd5c6cf99fceeb8912ed87f5f5e5a88f368d63b6b764a20e58aaed503b710833",
+            "f934054cd2941c9fa5115acb028b043b14a59e3a35e4798578ec3608ac4de19b",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6",
+            "ad25396bf0551012b719f495401073eb65834b4f3bd24d07ddd721cc82dcd397"
+          ],
+          "representativeEvidenceChunkIds": [
+            "f934054cd2941c9fa5115acb028b043b14a59e3a35e4798578ec3608ac4de19b"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3929,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "f934054cd2941c9fa5115acb028b043b14a59e3a35e4798578ec3608ac4de19b",
+            "15c8acfbc7e899ed00562f9515fe9ea7088fbf6b0b7cc87e9f1fabd2eb45ad31",
+            "3b587ea29abf0b90c81a40a7181f74bbe46e68f5b99dece91e37ff4aeeb308c3",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6",
+            "e6a58f4d37888b7411b0b6d73e4edb241bd308ee8c11f51ab8516093bfb0a9d1"
+          ],
+          "representativeEvidenceChunkIds": [
+            "f934054cd2941c9fa5115acb028b043b14a59e3a35e4798578ec3608ac4de19b"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3976,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "15c8acfbc7e899ed00562f9515fe9ea7088fbf6b0b7cc87e9f1fabd2eb45ad31",
+            "f934054cd2941c9fa5115acb028b043b14a59e3a35e4798578ec3608ac4de19b",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6",
+            "e6a58f4d37888b7411b0b6d73e4edb241bd308ee8c11f51ab8516093bfb0a9d1",
+            "2086f4560e756edef2fbfff4cb09fb9c642c457d891d6587d796c76a356d8726"
+          ],
+          "representativeEvidenceChunkIds": [
+            "f934054cd2941c9fa5115acb028b043b14a59e3a35e4798578ec3608ac4de19b"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2396,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "6ae776dfd343621f45379ecd6a9f23e400c5b607752ad2c9968345a46dace8c2"
+          ],
+          "representativeEvidenceChunkIds": [
+            "6ae776dfd343621f45379ecd6a9f23e400c5b607752ad2c9968345a46dace8c2"
+          ]
+        }
+      }
+    },
+    {
+      "id": "os-human-28",
+      "query": "LRU可能出现Belady现象吗？",
+      "documentPath": "操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+      "userPages": [
+        23
+      ],
+      "status": "draft",
+      "note": "LRU不会出现Belady，页框增多后的驻留页面为原集合的超集；三路均首条检出。",
+      "modes": {
+        "BM25": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3980,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "15c8acfbc7e899ed00562f9515fe9ea7088fbf6b0b7cc87e9f1fabd2eb45ad31",
+            "c82777549625a5f38f096aaeb0cfa173714a1df1ded5d74eb84c40cfc0060240",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17",
+            "f934054cd2941c9fa5115acb028b043b14a59e3a35e4798578ec3608ac4de19b"
+          ]
+        },
+        "VECTOR": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3973,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "15c8acfbc7e899ed00562f9515fe9ea7088fbf6b0b7cc87e9f1fabd2eb45ad31",
+            "c82777549625a5f38f096aaeb0cfa173714a1df1ded5d74eb84c40cfc0060240",
+            "f934054cd2941c9fa5115acb028b043b14a59e3a35e4798578ec3608ac4de19b",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6",
+            "0bca48c83c967f4976fed5d689cce2659bf8a0bd0692a53ec7565fa4df0b775c"
+          ]
+        },
+        "RRF": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 3980,
+          "returnedChunks": 5,
+          "chunkIds": [
+            "15c8acfbc7e899ed00562f9515fe9ea7088fbf6b0b7cc87e9f1fabd2eb45ad31",
+            "c82777549625a5f38f096aaeb0cfa173714a1df1ded5d74eb84c40cfc0060240",
+            "af67e7a9b1fed54c6f2b7ea278a0dd1909a6af278d584ab99a0b0d18dc99dcf6",
+            "f934054cd2941c9fa5115acb028b043b14a59e3a35e4798578ec3608ac4de19b",
+            "a15296f3e2652c959f1deaf7543a90820d57ae496129d9da4e54ff265cb53d17"
+          ]
+        },
+        "PARENT": {
+          "hasAnswerEvidence": true,
+          "contextTokens": 2396,
+          "returnedChunks": 1,
+          "chunkIds": [
+            "6ae776dfd343621f45379ecd6a9f23e400c5b607752ad2c9968345a46dace8c2"
+          ]
+        }
+      },
+      "batch": "2026-09-10 original 10 (saved responses reused)"
+    }
+  ],
+  "observedIndexCounts": {
+    "types": [
+      {
+        "key": "CHILD",
+        "doc_count": 187
+      },
+      {
+        "key": "PARENT",
+        "doc_count": 61
+      }
+    ],
+    "documents": 18
+  }
+}

@@ -1,6 +1,6 @@
 {"id": "os-human-01", "query": "课程评分标准是什么？", "documentPath": "操作系统/课件/1.OS_Introduction-2024.pptx", "userPages": [24], "status": "draft"}
 {"id": "os-human-02", "query": "课程有什么推荐的课本吗？", "documentPath": "操作系统/课件/1.OS_Introduction-2024.pptx", "userPages": [25, 26, 27], "status": "draft"}
-{"id": "os-human-03", "query": "鸿蒙操作系统在哪些领域有应用？", "documentPath": "操作系统/课件/1.OS_Introduction-2024.pptx", "userPages": [49], "status": "draft"}
+{"id": "os-human-03", "query": "OpenHarmony在哪些领域有应用？", "documentPath": "操作系统/课件/1.OS_Introduction-2024.pptx", "userPages": [49], "status": "draft"}
 {"id": "os-human-04", "query": "OS方面的顶级会议有什么？", "documentPath": "操作系统/课件/1.OS_Introduction-2024.pptx", "userPages": [57], "status": "draft"}
 {"id": "os-human-05", "query": "ENIAC有多大、多贵？", "documentPath": "操作系统/课件/3.1.OS_ProcessManagement-进程的上下文切换-2024.pptx", "userPages": [3], "status": "draft"}
 {"id": "os-human-06", "query": "并发的意义在哪里？明明没有更多的计算资源使用？", "documentPath": "操作系统/课件/3.1.OS_ProcessManagement-进程的上下文切换-2024.pptx", "userPages": [7], "status": "draft"}
