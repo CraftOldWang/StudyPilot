@@ -1,0 +1,297 @@
+{
+  "date": "2026-09-11",
+  "budget": 8192,
+  "topK": 5,
+  "calls": 28,
+  "endpoint": "/api/eval/knowledge-bases/2098021244222922753/context-comparison",
+  "retrieval": "RRF; each paired context shares one ranked child list",
+  "rankingsMatchPrevious28": true,
+  "judging": "Codex checked reference slide text and returned bodies. Partial substantive evidence counts as a hit. No generated answer evaluation or independent human gold labels. Notes are qualitative, not a full evidence-coverage score.",
+  "childPartialEvidenceHits": 27,
+  "parentPartialEvidenceHits": 27,
+  "meanChildTokens": 3919.1785714285716,
+  "meanParentTokens": 7020.178571428572,
+  "confirmedAddedEvidenceExample": "os-human-12",
+  "questions": [
+    {
+      "id": "os-human-01",
+      "query": "课程评分标准是什么？",
+      "childTokens": 3726,
+      "parentTokens": 7065,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "评分规则两组都有；修复4096父块丢失。"
+    },
+    {
+      "id": "os-human-02",
+      "query": "课程有什么推荐的课本吗？",
+      "childTokens": 3930,
+      "parentTokens": 6030,
+      "parentCount": 3,
+      "childPartialEvidenceHit": false,
+      "parentPartialEvidenceHit": false,
+      "readingNote": "两组均无教材书单依据；扩大预算没有解决召回缺失。"
+    },
+    {
+      "id": "os-human-03",
+      "query": "OpenHarmony在哪些领域有应用？",
+      "childTokens": 3957,
+      "parentTokens": 7179,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "行业列表与案例两组都有；参考文本跨子块的连贯性变化不算新增事实。"
+    },
+    {
+      "id": "os-human-04",
+      "query": "OS方面的顶级会议有什么？",
+      "childTokens": 3956,
+      "parentTokens": 7174,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "对照指定参考页，主要答案内容已在子块中，未确认必要答案要点新增。"
+    },
+    {
+      "id": "os-human-05",
+      "query": "ENIAC有多大、多贵？",
+      "childTokens": 3964,
+      "parentTokens": 7097,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "对照指定参考页，主要答案内容已在子块中，未确认必要答案要点新增。"
+    },
+    {
+      "id": "os-human-06",
+      "query": "并发的意义在哪里？明明没有更多的计算资源使用？",
+      "childTokens": 3948,
+      "parentTokens": 6942,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "交替使用硬件资源与提高利用率已在子块中。"
+    },
+    {
+      "id": "os-human-07",
+      "query": "进程切换的流程是怎样的？",
+      "childTokens": 3831,
+      "parentTokens": 6886,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "保存、选择、恢复上下文已在子块中。"
+    },
+    {
+      "id": "os-human-08",
+      "query": "RISCV有几个特权等级？",
+      "childTokens": 3796,
+      "parentTokens": 6926,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "对照指定参考页，主要答案内容已在子块中，未确认必要答案要点新增。"
+    },
+    {
+      "id": "os-human-09",
+      "query": "五状态进程模型有几种状态，是什么？",
+      "childTokens": 3863,
+      "parentTokens": 7029,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "对照指定参考页，主要答案内容已在子块中，未确认必要答案要点新增。"
+    },
+    {
+      "id": "os-human-10",
+      "query": "多级反馈队列算法是什么？有什么特征？",
+      "childTokens": 3973,
+      "parentTokens": 7158,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "对照指定参考页，主要答案内容已在子块中，未确认必要答案要点新增。"
+    },
+    {
+      "id": "os-human-11",
+      "query": "衡量调度算法的指标有什么？",
+      "childTokens": 3911,
+      "parentTokens": 6976,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "对照指定参考页，主要答案内容已在子块中，未确认必要答案要点新增。"
+    },
+    {
+      "id": "os-human-12",
+      "query": "基于EAS的调度是什么？",
+      "childTokens": 3868,
+      "parentTokens": 7981,
+      "parentCount": 4,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "父块新增第67页按PD选择候选CPU、比较迁移前后能耗并选择最小方案的规则。子块已有EAS目标和最终迁移案例。"
+    },
+    {
+      "id": "os-human-13",
+      "query": "内存分配算法主要做什么工作？",
+      "childTokens": 3886,
+      "parentTokens": 6994,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "对照指定参考页，主要答案内容已在子块中，未确认必要答案要点新增。"
+    },
+    {
+      "id": "os-human-14",
+      "query": "课上讲到几种内存分配算法？",
+      "childTokens": 3924,
+      "parentTokens": 6273,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "四种分配算法已由多个子块共同覆盖。"
+    },
+    {
+      "id": "os-human-15",
+      "query": "伙伴系统是什么，怎么实现的？",
+      "childTokens": 3841,
+      "parentTokens": 7024,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "拆分、分配、合并条件已由前两个子块共同覆盖；跨块句子拼接不计新增事实。"
+    },
+    {
+      "id": "os-human-16",
+      "query": "虚拟内存的基本思想是什么？",
+      "childTokens": 3958,
+      "parentTokens": 7163,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "对照指定参考页，主要答案内容已在子块中，未确认必要答案要点新增。"
+    },
+    {
+      "id": "os-human-17",
+      "query": "缺页异常的处理流程？",
+      "childTokens": 3829,
+      "parentTokens": 7155,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "子块已含用户第32页流程及其他块中的磁盘加载、换出步骤；未判定扩展带来完整性净提升。"
+    },
+    {
+      "id": "os-human-18",
+      "query": "快表是什么？",
+      "childTokens": 3950,
+      "parentTokens": 7117,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "对照指定参考页，主要答案内容已在子块中，未确认必要答案要点新增。"
+    },
+    {
+      "id": "os-human-19",
+      "query": "物理内存不够的两种应对办法是什么？",
+      "childTokens": 3952,
+      "parentTokens": 7155,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "子块和父块均有覆盖示例及其他课件中的虚拟存储依据；均非完整保留用户指定18–19页。"
+    },
+    {
+      "id": "os-human-20",
+      "query": "置换算法是做什么用的？",
+      "childTokens": 3969,
+      "parentTokens": 7174,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "两组均有具体置换算法依据，但均未返回用户指定第10页功能目标原文；沿用部分依据命中口径。"
+    },
+    {
+      "id": "os-human-21",
+      "query": "OPT置换算法是什么？",
+      "childTokens": 3941,
+      "parentTokens": 7118,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "对照指定参考页，主要答案内容已在子块中，未确认必要答案要点新增。"
+    },
+    {
+      "id": "os-human-22",
+      "query": "什么是Belady现象？",
+      "childTokens": 3975,
+      "parentTokens": 7174,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "对照指定参考页，主要答案内容已在子块中，未确认必要答案要点新增。"
+    },
+    {
+      "id": "os-human-23",
+      "query": "影响缺页率的因素有什么？",
+      "childTokens": 3955,
+      "parentTokens": 7197,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "对照指定参考页，主要答案内容已在子块中，未确认必要答案要点新增。"
+    },
+    {
+      "id": "os-human-24",
+      "query": "什么是常驻集？",
+      "childTokens": 3925,
+      "parentTokens": 7094,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "对照指定参考页，主要答案内容已在子块中，未确认必要答案要点新增。"
+    },
+    {
+      "id": "os-human-25",
+      "query": "段式地址管理中，进程的地址空间被分为哪些段？",
+      "childTokens": 3976,
+      "parentTokens": 6156,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "完整段列表两组都有；修复4096父块丢失。"
+    },
+    {
+      "id": "os-human-26",
+      "query": "内存置换的Clock算法是什么？",
+      "childTokens": 3977,
+      "parentTokens": 6980,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "对照指定参考页，主要答案内容已在子块中，未确认必要答案要点新增。"
+    },
+    {
+      "id": "os-human-27",
+      "query": "LRU可以如何实现？",
+      "childTokens": 3976,
+      "parentTokens": 7174,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "栈/链表维护步骤两组都有；修复4096父块丢失。"
+    },
+    {
+      "id": "os-human-28",
+      "query": "LRU可能出现Belady现象吗？",
+      "childTokens": 3980,
+      "parentTokens": 7174,
+      "parentCount": 3,
+      "childPartialEvidenceHit": true,
+      "parentPartialEvidenceHit": true,
+      "readingNote": "对照指定参考页，主要答案内容已在子块中，未确认必要答案要点新增。"
+    }
+  ]
+}
