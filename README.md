@@ -1,50 +1,132 @@
-# StudyPilot
+<div align="center">
+  <img src="docs/design/assets/studypilot-pilot-book-logo.png" width="120" alt="StudyPilot 飞行员与书本标志" />
+  <h1>StudyPilot</h1>
+  <p><strong>从课程资料到学习大纲，再到对话、测验与复习卡。</strong></p>
+  <p>AgentScope · Spring Boot · MySQL · Redis · RocketMQ · Elasticsearch · RustFS<br />React · TypeScript · Vite</p>
+</div>
 
-面向桌面浏览器演示：资料入库 → 参考课件和习题生成重点计划 → 讲解、答疑、测验 → 复习卡与 Anki 导出。
+StudyPilot 是面向课程学习与期末备考的 AI 学习助手。上传课件与习题后，按资料生成分层大纲；围绕知识点与 Agent 对话，通过讲解、练习、错题答疑和复习卡串联学习过程。
 
-## IDEA / 本机开发启动（当前入口）
+这是面向**桌面浏览器的个人演示项目**。截图来自实际运行页面；课程和聊天记录属于本地演示数据，不随仓库提供。
 
-1. 启动 Docker Desktop，在根目录执行 `docker compose up -d mysql redis elasticsearch rustfs rocketmq-namesrv rocketmq-broker`。
-2. 本机 hosts 已有 `127.0.0.1 rocketmq-broker`，供 Java 访问 MQ 返回的 broker 地址；新机器需配置同样映射。
-3. IDEA 导入 Maven 项目，选 JDK 21，工作目录为项目根目录，直接运行 `StudyAgentApplication`。无需设置 active profile，默认 `local`；命令行也可用 `mvn spring-boot:run`。
-4. `frontend` 中执行 `npm run dev`，访问 http://localhost:5173。
+[界面展示](#界面展示) · [核心设计](#核心设计) · [本地运行](#本地运行) · [实验记录](#实验记录)
 
-默认 local 配置复用现有 `study_agent_eval` 数据库和选定索引，不连接旧项目的 `study_agent`。旧库保留，不关闭 Flyway、不执行 repair。Windows 启动入口使用 `.eval/sockets` 保存 JDK 临时 socket，避开本机系统 TEMP 的 AF_UNIX 连接错误。
+## 界面展示
 
-Java 在 Windows 运行，只有中间件在 Docker。不要同时启动下方历史 Docker 后端，以免争用 8080 和消息消费。IDEA 修改源码后重新运行应用即可，无需向容器同步项目。
+### 按知识库组织对话
 
-## 大纲与学习入口
+知识库像项目一样收纳历史聊天，按最近更新时间排列。新聊天复用当前知识库大纲，拥有独立的消息、练习、卡片和上下文。
 
-在“知识库”上传课件和习题，处理完成后去“学习大纲”选择资料、新建课程大纲。知识点数量由课件内容决定。大纲保存为可折叠的多层待办列表，每个叶子是独立学习知识点，父节点汇总进度；每库直接显示当前大纲，之后继续学习。旧版卡片大纲不迁移，需要重新生成；“学习对话”列出当前资料库的历史会话，点击恢复，不需要输入编号。
+![新对话首页](docs/assets/screenshots/new-chat.png)
 
-原文件与解析后的 TXT 都保存在 RustFS；父子文本块保存在 MySQL。生成大纲读取已有父块，按文档分批提取、合并，不重复解析或向量化。文档 embedding 按用户、内容、模型及维度复用 MySQL 产物并写入 Elasticsearch；检索时仍需要为新的查询文本生成查询向量。保留解析 TXT 是为了重切块或重建索引时复用，不需要再额外维护同内容的 MD 副本。
+### 连续学习对话
 
-## 之前的 Docker 验收启动方式（历史说明）
+消息区独立滚动，输入框固定在底部。Agent 可以检索资料、回答追问并通过工具推进阶段；工具调用默认折叠，选择题与卡片直接在对话中操作。
 
-`eval` 是真实后端的配置名称，不是 mock。以下是之前的混合验收环境，日常开发使用上方 Windows 本机入口：
+![实际操作系统学习对话](docs/assets/screenshots/learning-chat.png)
 
-| 部分 | 运行位置 | 本机入口 |
-|---|---|---|
-| React / Vite | Windows Node | http://localhost:5173 |
-| Spring Boot / AgentScope | Docker `study-agent-eval-app-1`，Java 21 JAR | http://localhost:8080 |
-| MySQL / Redis / Elasticsearch | Docker | 3307 / 6380 / 9200 |
-| RustFS | Docker | 9000（S3）/ 9001（管理页）|
-| RocketMQ nameserver / broker | Docker | 9876 / 10911 |
-| ASR / AnkiConnect | Windows，可选 | 8767 / 8765 |
-| 真实流程和性能实验 | Windows Python，通过 HTTP 调后端 | `scripts/` |
+### 分层学习大纲
 
-以下适用于**这台已初始化的机器**，保留现有课程和索引。新机器还需准备密钥、数据库、模型及 Maven 缓存，当前不是完整的一键安装包。
+课件知识点先提取、再合并成多层待办目录，叶子节点对应学习任务。选入习题参考时，结合习题标注重点；同一大纲的已完成节点跨关联聊天汇总。
 
-先启动 Docker Desktop，在项目根目录执行：
+![操作系统分层大纲](docs/assets/screenshots/outline.png)
+
+> 图中大纲使用「进程的上下文切换」课件生成，未选入习题，因此没有重点标签。知识库中上传了整门课的资料，不等于本次大纲使用了全部资料。
+
+### 资料库管理
+
+集中管理知识库、上传课程资料、搜索文件名并查看处理状态。支持 PDF、PPTX、TXT、Markdown，以及通过本地转写服务处理音视频。
+
+![资料库与文件处理状态](docs/assets/screenshots/library.png)
+
+## 核心设计
+
+### 学习 Agent 与状态管理
+
+- **规划：** 复用已解析的课件文本，按文档分批提取知识点、合并分层大纲；可选习题映射与重点标注。
+- **学习：** 讲解与追问 → 选择题 → 交卷与错题答疑 → 卡片草稿 → 用户确认 → 下一个知识点。阶段转换与写入限制由服务端工具控制，单次题目和卡片各最多 10 个。
+- **复习：** 卡片可以编辑或要求重写，确认后可通过 AnkiConnect 导出到本机 Anki。
+- **流式与观测：** SSE 推送模型输出及工具事件；traceId 关联模型调用、工具执行和业务状态，便于定位失败步骤。
+
+### 上下文压缩
+
+在阈值压缩之外，利用知识点边界做局部摘要：进入写卡阶段时，异步总结该知识点的学习对话；编辑、重写卡片期间继续使用原上下文。全部卡片确认后，才用摘要替换该知识点记录，并丢弃卡片阶段的对话。摘要与业务状态持久化，支持会话恢复。
+
+摘要属于有损压缩，主要面向按大纲继续学习的场景，不保证保留此前对话的全部细节。
+
+### 资料处理与 RAG
+
+```text
+文件分片上传 → RustFS 原文件 → RocketMQ 异步处理
+                              ↓
+                       解析 / 音视频转写
+                              ↓
+                  保存解析文本 → 切块 → 向量化
+                              ↓
+                         Elasticsearch
+                              ↓
+                   Agent 检索工具 → 带来源的讲解
+```
+
+- Redis Bitmap 记录已上传分片，支持断点续传；SHA-256 与唯一索引用于文件去重及并发重复写入控制。
+- 文档阶段状态、中间产物复用、幂等写入与重试支持处理任务恢复，减少重复解析和向量化。
+- 原文件与解析 TXT 保存在 RustFS，文本块与向量复用产物保存在 MySQL，Elasticsearch 承担检索。
+- 检索支持关键词、向量及 RRF 混合方案；父块回填作为上下文组装的独立对照。保留策略比较入口，不预设复杂方案一定更好。
+
+普通检索、Agent 检索、Trace、评测和 Hello 诊断集中在独立的**测试工具**页面。评测接口需要启用 `eval` profile；未启用时页面明确提示不可用。
+
+## 本地运行
+
+### 环境
+
+- JDK 21、Maven 3.9+、Node.js 22 LTS 与 npm。
+- Docker Desktop，用于运行中间件。
+- 可用的 DeepSeek 与阿里云百炼 API Key。
+- 可选：Anki + AnkiConnect；Python、本地 faster-whisper 模型与转写 worker。
+
+**前后端在本机运行，Docker 只运行中间件。** IDEA 修改代码后重新运行即可，不需要同步源码到容器。当前默认配置名为 `local`，复用项目已有演示数据库 `study_agent_eval`；`eval` 不是模拟模型。
+
+### 1. 启动中间件
+
+在仓库根目录执行：
 
 ```powershell
 docker compose up -d mysql redis elasticsearch rustfs rocketmq-namesrv rocketmq-broker
-.eval/python-env/Scripts/python.exe scripts/run-chunk-config.py --config eval/rag/config-validation-selected.json --deploy-only
 ```
 
-第二条启动已有 JAR，生成选定索引的 Compose 覆盖配置，不重新导入课程或运行模型实验。只使用两个基础 Compose 文件会回到 `application-eval.yml` 的默认索引，所以统一从这个入口启动。
+按当前 broker 配置，在本机 hosts 中添加以下映射（Windows 文件位置：`C:\Windows\System32\drivers\etc\hosts`，编辑需要管理员权限）：
 
-另开终端启动前端：
+```text
+127.0.0.1 rocketmq-broker
+```
+
+**首次使用空数据卷时**，Compose 创建的是 `study_agent`，还需为默认 `local` 配置创建演示库并授权：
+
+```powershell
+docker exec -it study-agent-mysql mysql -uroot -p -e "CREATE DATABASE IF NOT EXISTS study_agent_eval CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci; GRANT ALL PRIVILEGES ON study_agent_eval.* TO 'study'@'%';"
+```
+
+按提示输入 Compose 中配置的本地 MySQL root 密码。后端启动时由 Flyway 创建表结构，初始化 Elasticsearch 索引与对象存储 bucket。已有数据库无需重复初始化或清空。
+
+### 2. 配置模型并启动后端
+
+PowerShell 示例，在**同一个终端**设置自己的密钥后启动：
+
+```powershell
+$env:DEEPSEEK_API_KEY = '你的 DeepSeek API Key'
+$env:AI_DASHSCOPE_API_KEY = '你的百炼 API Key'
+mvn spring-boot:run
+```
+
+IDEA：导入根目录 `pom.xml`，使用 JDK 21，工作目录设为仓库根目录，在运行配置中设置上述环境变量，启动 `com.studyagent.StudyAgentApplication`。默认 profile 为 `local`。
+
+模型名称与服务地址分别见 [基础配置](src/main/resources/application.yml)、[演示配置](src/main/resources/application-eval.yml) 和 [本机配置](src/main/resources/application-local.yml)。当前演示配置使用 `deepseek-v4-flash`、`qwen3.7-text-embedding`、1024 维向量；需确保账号能够访问对应模型。更换 embedding 模型或维度时，应使用新索引并重建向量。
+
+也支持根目录 `some_apiKey` properties 文件，该文件已被 Git 忽略。不要把实际密钥写入 README 或提交到仓库。
+
+### 3. 启动前端
+
+另开终端：
 
 ```powershell
 cd frontend
@@ -52,59 +134,57 @@ npm ci
 npm run dev
 ```
 
-依赖已安装且锁文件未变化时跳过 `npm ci`。若 `npm` 不在 PATH，本机可使用 `C:/Users/CraftOldW/AppData/Local/hermes/node/npm.cmd`。访问 http://localhost:5173；Vite 将 `/api` 代理到后端 8080。
+打开 **http://localhost:5173**。Vite 将 `/api` 代理到本机后端 8080。
 
-**后端源码变化后**才重新打包，下面跳过测试；完成后重新运行上面的 `--deploy-only`：
+| 服务 | 本机端口 |
+| --- | --- |
+| 前端 / 后端 | 5173 / 8080 |
+| MySQL / Redis / Elasticsearch | 3307 / 6380 / 9200 |
+| RustFS S3 / 管理页 | 9000 / 9001 |
+| RocketMQ nameserver / broker | 9876 / 10911 |
+| 可选 ASR worker / AnkiConnect | 8767 / 8765 |
 
-```powershell
-docker compose -f docker-compose.yml -f docker-compose.eval.yml run --rm --no-deps eval-app mvn -q -DskipTests clean package
-```
+### 4. 走一遍学习流程
 
-密钥由根目录 `some_apiKey` 加载，不提交 Git。当前使用 `study_agent_eval` 数据库、Redis DB 1、`study-agent-eval` bucket 和 `eval-validation-structured-800-0` 索引。
+1. 在「资料库」创建知识库，上传课件，等待状态变为「可检索」。
+2. 进入「学习大纲」，选择用于生成目录的**课件**；若有往年题，将对应文档选为**习题参考**。文件名不会自动决定用途。
+3. 生成大纲后，从「新对话」开始学习；后续新聊天可继续使用这份大纲。
+4. 通过对话追问、进入测验、提交选项，再生成和确认复习卡。
+5. 需要导出时，打开装有 AnkiConnect 的本机 Anki。
 
-新音视频转写需另开终端启动 worker；普通课件和已转写资料不依赖 worker 在线。Anki 导出需打开安装了 AnkiConnect 的 Anki。
+音视频上传后需要启动 [本地 ASR worker](scripts/local-asr-worker.py)，其依赖见 [requirements-asr.txt](scripts/requirements-asr.txt)；启动时传入本地模型目录和缓存目录。仅演示课件学习无需启动 ASR。
 
-```powershell
-.eval/python-env/Scripts/python.exe scripts/local-asr-worker.py --model-dir .eval/asr-models/faster-whisper-small --cache-dir .eval/asr-cache
-```
+## 实验记录
 
-Canal、Kibana、RocketMQ Dashboard 不需要随核心演示启动。当前 `eval` 后端关闭 Canal，即使容器运行也不消费它。停止项目可用 `docker compose -f docker-compose.yml -f docker-compose.eval.yml stop`；前端终端按 Ctrl+C。保留数据卷和 `.eval` 中的会话、模型及原始实验数据。
+实验调用真实后端 API。以下是指定资料和脚本下的结果，不代表线上效果或所有课程的表现。
 
-## 必要文件的职责
+| 实验 | 范围 | 结果 |
+| --- | --- | --- |
+| 知识点摘要 | 同一份 OS 大纲，5 个知识点、31 个用户回合；对比不压缩 | 累计输入 token 从 1,041,780 降至 390,101，减少 **62.55%**，包含摘要调用 |
+| 检索策略 | 18 份 OS 课件、28 道用户编写并提供参考页的问题，Top 5 | BM25 命中 26/28，向量与 RRF 均 27/28 |
 
-Java 路径均相对 `src/main/java/com/studyagent/`：
+检索按“存在实质答案依据”判读，允许部分依据，由 Codex 对照参考页检查，并非独立人工黄金标注或回答准确率。父块回填在 4096 预算下为 25/28，8192 下恢复至 27/28，不能据此宣称优于子块。压缩实验是单组工作流对照，模型输出和工具调用次数并非完全一致，也不能将输入 token 降幅当成费用降幅。
 
-| 路径 | 职责 |
-|---|---|
-| 根 `pom.xml`、`StudyAgentApplication.java` | 后端依赖与启动入口 |
-| `src/main/resources/application*.yml`、`src/main/resources/db/migration/` | 配置与数据库结构；旧迁移仍是新建数据库的输入 |
-| `ingest/` | 上传、解析/转写、切块、异步处理与恢复 |
-| `rag/`、`algo/chunk/`、`algo/rrf/` | 索引、检索、来源读取、切块与融合 |
-| `learning/`、`agent/` | 计划、知识点状态、Agent 工具、对话、摘要、trace |
-| `review/` | 卡片与 Anki 导出 |
-| `config/`、`identity/`、`common/`、`model/`、`mapper/` | 配置、用户范围、通用响应与持久化 |
-| 根 `frontend/src/`、前端包/锁文件和 Vite/TS 配置 | 桌面页面、API、SSE、上传和构建 |
-| 根 `docker-compose*.yml`、`docker/`、`.agentscope/workspace/skills/` | 部署配置、Agent skill 资源 |
-| 根 `eval/`、必要 `scripts/`、最终实验结果 | 简历数据的样本、执行入口与统计依据 |
-| 根 `src/test/`、前端 `*.test.*` | 回归测试，不属于应用运行路径 |
+- [上下文压缩实验：流程、计数与限制](docs/implementation/current-learning-compaction.md)
+- [OS 28 题检索与父块预算对照](docs/implementation/os-rag-human-28.md)
 
-这是职责图，不表示目录中每个现存文件都必须保留。接口、组件和状态见 [架构导读](docs/implementation/architecture-walkthrough.md)。
+## 代码导航
 
-## 清理候选
+| 目录 | 职责 |
+| --- | --- |
+| `frontend/src/` | 页面、聊天渲染、SSE 与上传交互 |
+| `src/main/java/com/studyagent/learning/`、`agent/` | 大纲编排、学习状态、Agent 与上下文 |
+| `src/main/java/com/studyagent/ingest/` | 上传、解析、存储与异步处理 |
+| `src/main/java/com/studyagent/rag/`、`algo/` | 检索、索引、切块和融合算法 |
+| `src/main/java/com/studyagent/review/` | 复习卡与 Anki 导出 |
+| `src/main/resources/db/migration/` | Flyway 表结构迁移 |
+| `eval/`、`scripts/` | 实验样本、结果和执行脚本 |
 
-Goal 仍暂停，以下尚未执行代码删除：
+进一步阅读：[架构导读](docs/implementation/architecture-walkthrough.md) · [技术设计](docs/design/StudyAgent-技术设计方案.md) · [当前进展](PROGRESS.md)
 
-- **旧流程：** 页面已用 `/plans` 和自然消息 SSE，`learningApi.ts` 仍有旧创建会话、讲解、出题、生成卡片包装。统一入口时同步清理旧 `LearningPlanService`、对应 Controller 方法、脚本和测试；同步 HTTP 消息接口仍可能被批测使用。
-- **未接入功能：** `algo/fsrs/` 没有业务调用，以 Anki 导出作为当前演示范围时无需自建调度器。Canal 在当前配置关闭，可以与现有 MQ/阶段恢复方案一起收敛，再移除相关依赖、配置与容器定义。
-- **实验脚本：** 日常只暴露入库、RAG 批测、完整学习、压缩对照、上传计时和用量汇总。旧造数、冻结、单次修复和审计脚本不作为每次开发步骤；删除前检查被保留脚本的 import 和子进程依赖。
-- **测试：** 删除随旧功能失效的测试，以及没有实际收益的重复字段/常量检查；保留状态转换、重复写入、来源归属、检索算法、摘要恢复和 SSE 等能发现实际回归的测试。
-- **文档：** 日常从本 README、架构导读和 `PROGRESS.md` 进入；最终指标链接原始结果，旧过程记录不再逐轮读取和扩写。`AGENTS.md` 决策条款仍由用户维护。
-- **临时文件：** 旧构建产物、截图、日志可按需清理；`.eval` 同时保存模型缓存、会话状态和原始测量，不能整目录删除。其他工具的未跟踪目录也不等于废文件。
+## 当前边界
 
-## Demo 验证方式
-
-日常只验证受影响部分：文档检查差异；页面改动构建一次并看桌面效果；业务改动跑相关现有测试，再走一次受影响的 API 或页面流程。没有新改动或失败原因时，不重复全量验证。
-
-后端测试通过 Docker 中的 Maven 运行，前端测试通过 Windows `npm test` 运行。真实实验脚本调用后端，可能消耗模型额度或改变演示数据，不作为每次提交的默认检查。
-
-需要简历指标时才做对应对照实验，保留参数、原始结果、失败记录和汇总。先确认一组完整运行，再决定重复次数；不默认执行大矩阵、逐文件哈希、额外冻结和多层审计。上传去重的 SHA-256 是产品功能，继续保留。
+- 当前面向本机演示，前端使用固定演示用户；不作为已完成登录鉴权、可直接公网部署的产品。
+- 新聊天共享大纲及关联节点完成情况；旧会话不补迁移历史进度，重新生成大纲不迁移正在进行的练习和卡片。
+- 本仓库不附带个人 API Key、下载的课程原件、本地模型权重或演示数据库。请使用自己有权使用的资料。
+- 日常开发只检查受影响部分。真实模型实验会产生调用费用，不作为每次构建的默认步骤。
