@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DocumentItem } from './types'
 
@@ -11,7 +11,8 @@ const apiMock = vi.hoisted(() => ({
   agentSearch: vi.fn(),
 }))
 
-vi.mock('./api', () => ({ api: apiMock }))
+vi.mock('./api', () => ({ api: apiMock, apiRequest: vi.fn(), ApiError: Error }))
+vi.mock('./learningApi', () => ({ learningApi: { listSessions: vi.fn().mockResolvedValue([]), currentPlan: vi.fn().mockResolvedValue(null) } }))
 const uploadMock = vi.hoisted(() => ({ initializeUpload: vi.fn(), uploadStatus: vi.fn(), uploadMissing: vi.fn(), completeUpload: vi.fn() }))
 vi.mock('./upload/hashFile', () => ({ hashFile: vi.fn().mockResolvedValue('a'.repeat(64)) }))
 vi.mock('./upload/uploadClient', async (original) => ({ ...await original<typeof import('./upload/uploadClient')>(), ...uploadMock }))
@@ -53,7 +54,8 @@ describe('App knowledge-base request association', () => {
 
     render(<App />)
     await waitFor(() => expect(apiMock.listDocuments).toHaveBeenCalledWith('9007199254740993'))
-    fireEvent.click(screen.getByRole('button', { name: '▤ 知识库二' }))
+    fireEvent.click(screen.getByRole('button', { name: '知识库二' }))
+    fireEvent.click(screen.getByRole('button', { name: '资料库' }))
     await waitFor(() => expect(apiMock.listDocuments).toHaveBeenCalledWith('9007199254740995'))
 
     first.resolve([document('11', '9007199254740993', '旧知识库.pdf')])
@@ -81,17 +83,17 @@ describe('App knowledge-base request association', () => {
 
     const { container } = render(<App />)
     await waitFor(() => expect(apiMock.listDocuments).toHaveBeenCalledWith('101'))
+    fireEvent.click(screen.getByRole('button', { name: '资料库' }))
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
     fireEvent.change(fileInput, {
       target: { files: [new File(['pdf'], 'source.pdf', { type: 'application/pdf' })] },
     })
     await waitFor(() => expect(uploadMock.completeUpload).toHaveBeenCalledWith(expect.objectContaining({ knowledgeBaseId: '101' })))
 
-    fireEvent.click(screen.getByRole('button', { name: '▤ 知识库 B' }))
+    fireEvent.click(screen.getByRole('button', { name: '知识库 B' }))
+    fireEvent.click(screen.getByRole('button', { name: '资料库' }))
     await waitFor(() => expect(apiMock.listDocuments).toHaveBeenCalledWith('202'))
-    upload.resolve({ fileId: '301', documentId: '401', status: 'RECEIVED' })
-
-    await waitFor(() => expect(screen.getByRole('button', { name: '选择文件' })).toBeEnabled())
+    await act(async () => { upload.resolve({ fileId: '301', documentId: '401', status: 'RECEIVED' }); await upload.promise })
     await waitFor(() => expect(apiMock.listDocuments).toHaveBeenCalledTimes(2))
     expect(screen.getByText('正在读取文档状态…')).toBeInTheDocument()
 
@@ -104,11 +106,10 @@ describe('App knowledge-base request association', () => {
     apiMock.listKnowledgeBases.mockReturnValue(initialList.promise)
 
     render(<App />)
-    fireEvent.change(screen.getByLabelText('新建知识库'), { target: { value: '并发资料' } })
-    expect(screen.getByRole('button', { name: '创建' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '创建知识库' })).toBeDisabled()
 
     initialList.resolve([])
-    await waitFor(() => expect(screen.getByRole('button', { name: '创建' })).toBeEnabled())
+    await waitFor(() => expect(screen.getByRole('button', { name: '创建知识库' })).toBeEnabled())
     expect(apiMock.createKnowledgeBase).not.toHaveBeenCalled()
   })
 })

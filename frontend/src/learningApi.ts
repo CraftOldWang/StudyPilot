@@ -33,6 +33,7 @@ export const learningApi = {
   getPlan: (id: string) => apiRequest<PlanningView>(`/api/learning/plans/${id}`),
   executePlan: (id: string) => apiRequest<PlanningView>(`/api/learning/plans/${id}/execute`, { method: 'POST' }),
   planSession: (id: string) => apiRequest<LearningSession>(`/api/learning/plans/${id}/session`, { method: 'POST' }),
+  newConversation: (id: string) => apiRequest<LearningSession>(`/api/learning/plans/${id}/session?newConversation=true`, { method: 'POST' }),
   createSession: (knowledgeBaseId: string, learningGoal: string) =>
     apiRequest<CreatedSession>(SESSION_PATH, {
       method: 'POST',

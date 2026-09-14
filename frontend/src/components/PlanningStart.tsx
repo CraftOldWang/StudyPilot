@@ -84,7 +84,7 @@ export function PlanningStart({ knowledgeBase, visible, requestedSessionId, onSe
     })
   }
   const nodes = plan?.result?.nodes || []
-  const completed = session?.plan.filter(p => p.status === 'COMPLETED').length || 0
+  const completed = plan?.completedNodeIds?.length || 0
   const generating = busy || plan?.status === 'RUNNING'
   return <section className="panel outline-page">
     <header className="outline-page-heading"><div><h1>学习大纲</h1><p>{knowledgeBase.name}</p></div>
@@ -113,7 +113,7 @@ export function PlanningStart({ knowledgeBase, visible, requestedSessionId, onSe
       </div>
       {plan.errorMessage && <Feedback error>{plan.errorMessage}</Feedback>}
       {plan.status !== 'SUCCEEDED' && <div className="action-row"><span>{generating ? phaseLabel(plan.stages.at(-1)?.stage || '') : '大纲尚未生成完成'}</span><button disabled={generating} type="button" onClick={() => void action(() => execute(plan.id))}>{generating ? '生成中…' : '继续生成'}</button></div>}
-      {plan.result && <LearningOutline nodes={nodes} points={session?.plan || []} />}
+      {plan.result && <LearningOutline nodes={nodes} points={session?.plan || []} completedNodeIds={plan.completedNodeIds} />}
     </>}
   </section>
 }

@@ -1,6 +1,8 @@
 import { isDocumentTerminal, statusLabel } from '../status'
 import type { DocumentItem, KnowledgeBase } from '../types'
 import { UploadWidget } from './UploadWidget'
+import { useState } from 'react'
+import { apiRequest } from '../api'
 
 function displayTime(value: string) {
   const utc = /(?:Z|[+-]\d{2}:\d{2})$/.test(value) ? value : `${value}Z`
@@ -15,16 +17,27 @@ interface Props {
 }
 
 export function DocumentPanel({ knowledgeBase, documents, loading, onUploaded }: Props) {
+  const [filter, setFilter] = useState('')
+  const [retrying, setRetrying] = useState<string | null>(null)
+  const [error, setError] = useState('')
+  const visible = documents.filter(d => d.title.toLocaleLowerCase().includes(filter.toLocaleLowerCase()))
+  async function retry(id: string) {
+    setRetrying(id); setError('')
+    try { await apiRequest(`/api/documents/${id}/retry`, { method: 'POST' }); onUploaded(knowledgeBase.id) }
+    catch (e) { setError(e instanceof Error ? e.message : String(e)) }
+    finally { setRetrying(null) }
+  }
   return (
     <section className="panel documents-panel">
       <div className="panel-header">
         <div>
-          <span className="eyebrow">当前知识库</span>
           <h1>{knowledgeBase.name}</h1>
-          <p>整理课件与往年习题，处理完成后即可检索和制定学习计划。</p>
+          <p>{documents.length} 份资料</p>
         </div>
       </div>
       <UploadWidget knowledgeBase={knowledgeBase} onUploaded={onUploaded} />
+      <input className="file-filter" aria-label="搜索文件" placeholder="搜索文件名…" value={filter} onChange={e => setFilter(e.target.value)} />
+      {error && <div className="feedback feedback-error" role="alert">{error}</div>}
 
       {loading ? (
         <div className="empty-state">正在读取文档状态…</div>
@@ -38,10 +51,10 @@ export function DocumentPanel({ knowledgeBase, documents, loading, onUploaded }:
         <div className="document-table-wrap">
           <table>
             <thead>
-              <tr><th>文档</th><th>状态</th><th>更新时间</th></tr>
+              <tr><th>文档</th><th>状态</th><th>更新时间</th><th><span className="visually-hidden">操作</span></th></tr>
             </thead>
             <tbody>
-              {documents.map((document) => (
+              {visible.map((document) => (
                 <tr key={document.id}>
                   <td>
                     <strong>{document.title}</strong>
@@ -54,10 +67,12 @@ export function DocumentPanel({ knowledgeBase, documents, loading, onUploaded }:
                     </span>
                   </td>
                   <td>{displayTime(document.updatedAt)}</td>
+                  <td>{document.pipelineStatus === 'FAILED' && <button className="plain" disabled={retrying !== null} onClick={() => void retry(document.id)}>{retrying === document.id ? '重试中…' : '重试处理'}</button>}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {!visible.length && <p className="feedback">没有匹配的文件。</p>}
         </div>
       )}
     </section>

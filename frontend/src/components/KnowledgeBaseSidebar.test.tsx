@@ -1,72 +1,14 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { expect, it, vi } from 'vitest'
 import { KnowledgeBaseSidebar } from './KnowledgeBaseSidebar'
+vi.mock('../learningApi', () => ({ learningApi: { listSessions: vi.fn().mockResolvedValue([
+  { id: 'chat-1', learningGoal: '进程和线程的区别' },
+]) } }))
 
-const knowledgeBase = {
-  id: '12',
-  name: 'Java 并发',
-  createdAt: '2026-09-04T12:00:00',
-  updatedAt: '2026-09-04T12:00:00',
-}
-
-describe('KnowledgeBaseSidebar', () => {
-  it('preserves the create and rename drafts when the backend reports failure', async () => {
-    const onCreate = vi.fn().mockResolvedValue(false)
-    const onRename = vi.fn().mockResolvedValue(false)
-    render(<KnowledgeBaseSidebar busy={false} items={[knowledgeBase]} loading={false} onCreate={onCreate} onRename={onRename} onSelect={vi.fn()} selectedId="12" />)
-    fireEvent.change(screen.getByLabelText('新建知识库'), { target: { value: '待重试名称' } })
-    fireEvent.click(screen.getByRole('button', { name: '创建' }))
-    await waitFor(() => expect(onCreate).toHaveBeenCalled())
-    expect(screen.getByLabelText('新建知识库')).toHaveValue('待重试名称')
-    fireEvent.click(screen.getByRole('button', { name: `重命名 ${knowledgeBase.name}` }))
-    fireEvent.change(screen.getByLabelText(`重命名 ${knowledgeBase.name}`), { target: { value: '修改尚未保存' } })
-    fireEvent.click(screen.getByRole('button', { name: '保存' }))
-    await waitFor(() => expect(onRename).toHaveBeenCalled())
-    expect(screen.getByLabelText(`重命名 ${knowledgeBase.name}`)).toHaveValue('修改尚未保存')
-  })
-  it('normalizes a new knowledge base name before creating it', async () => {
-    const onCreate = vi.fn().mockResolvedValue(true)
-    render(
-      <KnowledgeBaseSidebar
-        busy={false}
-        items={[]}
-        loading={false}
-        onCreate={onCreate}
-        onRename={vi.fn()}
-        onSelect={vi.fn()}
-        selectedId={null}
-      />,
-    )
-
-    fireEvent.change(screen.getByLabelText('新建知识库'), { target: { value: '  JVM 原理  ' } })
-    fireEvent.click(screen.getByRole('button', { name: '创建' }))
-
-    await waitFor(() => expect(onCreate).toHaveBeenCalledWith('JVM 原理'))
-    expect(screen.getByLabelText('新建知识库')).toHaveValue('')
-  })
-
-  it('renames an existing knowledge base without changing selection', async () => {
-    const onRename = vi.fn().mockResolvedValue(true)
-    const onSelect = vi.fn()
-    render(
-      <KnowledgeBaseSidebar
-        busy={false}
-        items={[knowledgeBase]}
-        loading={false}
-        onCreate={vi.fn()}
-        onRename={onRename}
-        onSelect={onSelect}
-        selectedId={knowledgeBase.id}
-      />,
-    )
-
-    fireEvent.click(screen.getByRole('button', { name: `重命名 ${knowledgeBase.name}` }))
-    fireEvent.change(screen.getByLabelText(`重命名 ${knowledgeBase.name}`), {
-      target: { value: '  Java 虚拟机  ' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: '保存' }))
-
-    await waitFor(() => expect(onRename).toHaveBeenCalledWith('12', 'Java 虚拟机'))
-    expect(onSelect).not.toHaveBeenCalled()
-  })
+it('opens a listed conversation in its owning knowledge base', async () => {
+  const onSession = vi.fn()
+  render(<KnowledgeBaseSidebar items={[{ id: 'os', name: '操作系统', createdAt: '', updatedAt: '' }]} selectedId="os"
+    activeSessionId={null} loading={false} view="new" revision={0} onNavigate={vi.fn()} onSelect={vi.fn()} onSession={onSession} />)
+  fireEvent.click(await screen.findByRole('button', { name: '进程和线程的区别' }))
+  expect(onSession).toHaveBeenCalledWith('os', 'chat-1')
 })

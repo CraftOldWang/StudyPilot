@@ -14,7 +14,7 @@ const session: LearningSession = { id: '9007199254740999', learningGoal: '理解
 const turn: ConversationTurn = { id: '9007199254741001', requestId: 'saved-request', userMessage: '先前问题', assistantMessage: '先前回答',
   status: 'SUCCEEDED', phase: 'COMPLETE', errorMessage: null, artifactJson: null, traceId: 'trace', createdAt: '' }
 async function restore() {
-  await screen.findByRole('heading', { name: session.learningGoal })
+  await screen.findByRole('heading', { name: turn.userMessage })
 }
 describe('durable learning conversation', () => {
   beforeEach(() => {
@@ -30,7 +30,7 @@ describe('durable learning conversation', () => {
     })
     render(<LearningPanel initialSessionId={session.id} onBack={vi.fn()} onOutline={vi.fn()} knowledgeBase={{ id: '20', name: '课程', createdAt: '', updatedAt: '' }} onSessionKnowledgeBase={vi.fn()} />)
     await restore()
-    expect(screen.getByText('先前问题')).toBeInTheDocument()
+    expect(screen.getAllByText('先前问题').length).toBeGreaterThan(0)
     expect(screen.getByText('先前回答')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('继续学习或提问'), { target: { value: '再举个例子' } })
     fireEvent.keyDown(screen.getByLabelText('继续学习或提问'), { key: 'Enter', ctrlKey: true, isComposing: true })

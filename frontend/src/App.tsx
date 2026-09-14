@@ -1,249 +1,92 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from './api'
 import { DocumentPanel } from './components/DocumentPanel'
-import { KnowledgeBaseSidebar } from './components/KnowledgeBaseSidebar'
+import { KnowledgeBaseSidebar, type WorkspaceView } from './components/KnowledgeBaseSidebar'
 import { LearningPanel } from './components/LearningPanel'
-import { LearningHistory } from './components/LearningHistory'
 import { PlanningStart } from './components/PlanningStart'
-import { SearchPanel } from './components/SearchPanel'
-import { isDocumentTerminal } from './status'
-import type { AgentSearchResult, DocumentItem, KnowledgeBase, SearchResult } from './types'
+import { NewConversation } from './components/NewConversation'
+import { TestTools } from './components/TestTools'
+import type { DocumentItem, KnowledgeBase } from './types'
 import { useDocumentPolling } from './useDocumentPolling'
 
 export default function App() {
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [documents, setDocuments] = useState<DocumentItem[]>([])
-  const [initialLoading, setInitialLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
   const [documentsLoading, setDocumentsLoading] = useState(false)
-  const [mutationBusy, setMutationBusy] = useState(false)
-  const [searchBusy, setSearchBusy] = useState(false)
-  const [searchResult, setSearchResult] = useState<SearchResult | AgentSearchResult | null>(null)
+  const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [view, setView] = useState<'knowledge' | 'outline' | 'learning'>('knowledge')
-  const [learningVisited, setLearningVisited] = useState(false)
-  const [outlineVisited, setOutlineVisited] = useState(false)
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
-  const [showHistory, setShowHistory] = useState(true)
-  const [outlineSessionId, setOutlineSessionId] = useState<string | null>(null)
-  const selectedIdRef = useRef<string | null>(selectedId)
-  const documentRequestIdRef = useRef(0)
-  const searchRequestIdRef = useRef(0)
-  selectedIdRef.current = selectedId
-
-  const selectedKnowledgeBase = useMemo(
-    () => knowledgeBases.find((item) => item.id === selectedId) ?? null,
-    [knowledgeBases, selectedId],
-  )
-
-  const reportError = useCallback((caught: unknown) => {
-    setError(caught instanceof Error ? caught.message : '发生未知错误。')
-  }, [])
-
+  const [view, setView] = useState<WorkspaceView>('new')
+  const [chat, setChat] = useState<{ id: string; kb: string; message?: string } | null>(null)
+  const [revision, setRevision] = useState(0)
+  const [creating, setCreating] = useState(false)
+  const [name, setName] = useState('')
+  const [rename, setRename] = useState(false)
+  const selectedRef = useRef(selectedId)
+  const request = useRef(0)
+  selectedRef.current = selectedId
+  const kb = knowledgeBases.find(k => k.id === selectedId)
+  const chatKb = knowledgeBases.find(k => k.id === chat?.kb)
+  const changed = useCallback(() => setRevision(n => n + 1), [])
   useEffect(() => {
-    let active = true
-    api.listKnowledgeBases()
-      .then((items) => {
-        if (!active) return
-        setKnowledgeBases(items)
-        if (selectedIdRef.current === null) selectKnowledgeBase(items[0]?.id ?? null)
-      })
-      .catch((caught) => active && reportError(caught))
-      .finally(() => active && setInitialLoading(false))
-    return () => { active = false }
-  }, [reportError])
-
+    let alive = true
+    api.listKnowledgeBases().then(items => { if (alive) { setKnowledgeBases(items); setSelectedId(items[0]?.id || null) } })
+      .catch(e => { if (alive) setError(e.message) }).finally(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [])
   const refreshDocuments = useCallback(async (silent = false) => {
     if (!selectedId) return
-    const knowledgeBaseId = selectedId
-    if (selectedIdRef.current !== knowledgeBaseId) return
-    const requestId = ++documentRequestIdRef.current
+    const current = ++request.current
     if (!silent) setDocumentsLoading(true)
     try {
-      const items = await api.listDocuments(knowledgeBaseId)
-      if (selectedIdRef.current === knowledgeBaseId && documentRequestIdRef.current === requestId) {
-        setDocuments(items)
-      }
-    } catch (caught) {
-      if (selectedIdRef.current === knowledgeBaseId && documentRequestIdRef.current === requestId) {
-        reportError(caught)
-      }
-    } finally {
-      if (!silent && selectedIdRef.current === knowledgeBaseId && documentRequestIdRef.current === requestId) {
-        setDocumentsLoading(false)
-      }
-    }
-  }, [reportError, selectedId])
-
-  useEffect(() => {
-    setDocuments([])
-    setSearchResult(null)
-    if (selectedId) void refreshDocuments()
-  }, [refreshDocuments, selectedId])
-
+      const rows = await api.listDocuments(selectedId)
+      if (current === request.current && selectedRef.current === selectedId) setDocuments(rows)
+    } catch (e) { if (current === request.current) setError(e instanceof Error ? e.message : String(e)) }
+    finally { if (current === request.current) setDocumentsLoading(false) }
+  }, [selectedId])
+  useEffect(() => { setDocuments([]); void refreshDocuments() }, [refreshDocuments])
   useDocumentPolling(selectedId, documents, refreshDocuments)
-
-  function selectKnowledgeBase(id: string | null) {
-    selectedIdRef.current = id
-    documentRequestIdRef.current += 1
-    searchRequestIdRef.current += 1
-    setDocumentsLoading(false)
-    setSearchBusy(false)
-    setSelectedId(id)
-    setOutlineSessionId(null)
-  }
-
-  async function createKnowledgeBase(name: string) {
-    if (initialLoading) return false
-    setMutationBusy(true)
-    setError('')
+  useEffect(() => { document.title = `${({ new: '新对话', knowledge: '资料库', outline: '学习大纲', learning: '学习对话', tools: '测试工具' })[view]} — StudyPilot` }, [view])
+  function select(id: string) { selectedRef.current = id; request.current++; setSelectedId(id); setRename(false); setError('') }
+  function navigate(next: WorkspaceView) { setView(next); setError('') }
+  function openSession(kbId: string, id: string, message?: string) { select(kbId); setChat({ id, kb: kbId, message }); setView('learning'); changed() }
+  async function saveLibrary() {
+    if (!name.trim() || busy || loading) return
+    setBusy(true); setError('')
     try {
-      const created = await api.createKnowledgeBase(name)
-      setKnowledgeBases((items) => [created, ...items])
-      selectKnowledgeBase(created.id)
-      return true
-    } catch (caught) {
-      reportError(caught)
-      return false
-    } finally {
-      setMutationBusy(false)
-    }
+      const result = rename && kb ? await api.renameKnowledgeBase(kb.id, name.trim()) : await api.createKnowledgeBase(name.trim())
+      setKnowledgeBases(items => rename ? items.map(k => k.id === result.id ? result : k) : [result, ...items])
+      select(result.id); setCreating(false); setRename(false); setName('')
+    } catch (e) { setError(e instanceof Error ? e.message : String(e)) }
+    finally { setBusy(false) }
   }
-
-  async function renameKnowledgeBase(id: string, name: string) {
-    setMutationBusy(true)
-    setError('')
-    try {
-      const renamed = await api.renameKnowledgeBase(id, name)
-      setKnowledgeBases((items) => items.map((item) => item.id === id ? renamed : item))
-      return true
-    } catch (caught) {
-      reportError(caught)
-      return false
-    } finally {
-      setMutationBusy(false)
-    }
-  }
-
-  async function search(mode: 'retrieval' | 'agent', query: string) {
-    if (!selectedId) return
-    const knowledgeBaseId = selectedId
-    const requestId = ++searchRequestIdRef.current
-    setSearchBusy(true)
-    setSearchResult(null)
-    setError('')
-    try {
-      const result = mode === 'agent'
-        ? await api.agentSearch(knowledgeBaseId, query)
-        : await api.search(knowledgeBaseId, query)
-      if (selectedIdRef.current === knowledgeBaseId && searchRequestIdRef.current === requestId) {
-        setSearchResult(result)
-      }
-    } catch (caught) {
-      if (selectedIdRef.current === knowledgeBaseId && searchRequestIdRef.current === requestId) {
-        reportError(caught)
-      }
-    } finally {
-      if (selectedIdRef.current === knowledgeBaseId && searchRequestIdRef.current === requestId) {
-        setSearchBusy(false)
-      }
-    }
-  }
-
-  const hasIndexedDocument = documents.some((document) =>
-    isDocumentTerminal(document.pipelineStatus) && document.pipelineStatus.toUpperCase() === 'INDEXED')
-
-  useEffect(() => { document.title = `${view === 'knowledge' ? '资料库' : view === 'outline' ? '学习大纲' : '学习对话'} — StudyPilot` }, [view])
-
-  return (
-    <div className="app-shell">
-      <KnowledgeBaseSidebar
-        busy={mutationBusy || initialLoading}
-        items={knowledgeBases}
-        loading={initialLoading}
-        onCreate={createKnowledgeBase}
-        onRename={renameKnowledgeBase}
-        onSelect={selectKnowledgeBase}
-        selectedId={selectedId}
-      />
-      <main className="app-main">
-        {error && (
-          <div className="error-banner" role="alert">
-            <span>{error}</span>
-            <button aria-label="关闭错误" onClick={() => setError('')} type="button">×</button>
-          </div>
-        )}
-
-        {selectedKnowledgeBase ? (
-          <>
-            <nav aria-label="工作区" className="view-tabs">
-              <button
-                aria-current={view === 'knowledge' ? 'page' : undefined}
-                className={view === 'knowledge' ? 'active' : ''}
-                onClick={() => setView('knowledge')}
-                type="button"
-              >
-                知识库
-              </button>
-              <button aria-current={view === 'outline' ? 'page' : undefined} className={view === 'outline' ? 'active' : ''}
-                onClick={() => { setOutlineVisited(true); setOutlineSessionId(null); setView('outline') }} type="button">学习大纲</button>
-              <button
-                aria-current={view === 'learning' ? 'page' : undefined}
-                className={view === 'learning' ? 'active' : ''}
-                onClick={() => { setLearningVisited(true); setView('learning') }}
-                type="button"
-              >
-                学习对话
-              </button>
-            </nav>
-            <div className="content-grid" hidden={view !== 'knowledge'}>
-              <DocumentPanel
-                documents={documents}
-                knowledgeBase={selectedKnowledgeBase}
-                loading={documentsLoading}
-                onUploaded={(knowledgeBaseId) => {
-                  if (selectedIdRef.current === knowledgeBaseId) void refreshDocuments(true)
-                }}
-              />
-              <SearchPanel
-                disabled={!hasIndexedDocument}
-                loading={searchBusy}
-                onSearch={search}
-                result={searchResult}
-              />
-            </div>
-            <div className="learning-view" hidden={view !== 'outline'}>
-              {outlineVisited && <PlanningStart key={selectedKnowledgeBase.id} knowledgeBase={selectedKnowledgeBase}
-                visible={view === 'outline'} requestedSessionId={outlineSessionId} onSession={async session => {
-                  setActiveSessionId(session.id); setShowHistory(false); setLearningVisited(true); setView('learning')
-                }} />}
-            </div>
-            <div className="learning-view" hidden={view !== 'learning'}>
-              {learningVisited && <>
-                <div className="history-view" hidden={!showHistory}>
-                  <LearningHistory knowledgeBaseId={selectedKnowledgeBase.id} visible={view === 'learning' && showHistory}
-                    onSelect={id => { setActiveSessionId(id); setShowHistory(false) }}
-                    onOutline={() => { setOutlineVisited(true); setOutlineSessionId(null); setView('outline') }} />
-                </div>
-                <div className="active-chat-view" hidden={showHistory}>
-                  {activeSessionId && <LearningPanel key={activeSessionId} initialSessionId={activeSessionId}
-                    knowledgeBase={selectedKnowledgeBase} onBack={() => setShowHistory(true)}
-                    onOutline={() => { setOutlineSessionId(activeSessionId); setOutlineVisited(true); setView('outline') }}
-                    onSessionKnowledgeBase={(knowledgeBaseId) => {
-                      if (knowledgeBases.some((item) => item.id === knowledgeBaseId)) selectKnowledgeBase(knowledgeBaseId)
-                    }} />}
-                </div>
-              </>}
-            </div>
-          </>
-        ) : (
-          <section className="welcome-state">
-            <span className="welcome-mark">S</span>
-            <h1>从一份真实资料开始</h1>
-            <p>先创建知识库，再上传课件与习题。处理完成后，可以检索资料并制定学习计划。</p>
-          </section>
-        )}
-      </main>
-    </div>
-  )
+  const selector = <select aria-label="当前知识库" value={selectedId || ''} onChange={e => select(e.target.value)} disabled={loading || busy}>
+    {!kb && <option value="">选择知识库</option>}{knowledgeBases.map(k => <option key={k.id} value={k.id}>{k.name}</option>)}
+  </select>
+  return <div className="app-shell">
+    <KnowledgeBaseSidebar items={knowledgeBases} selectedId={selectedId} activeSessionId={chat?.id || null} loading={loading} view={view} revision={revision}
+      onNavigate={navigate} onSelect={id => { select(id); navigate('new') }} onSession={openSession} />
+    <main className="app-main">
+      {error && <div className="error-banner" role="alert"><span>{error}</span><button className="plain" aria-label="关闭错误" onClick={() => setError('')}>×</button></div>}
+      {view === 'new' && <><header className="workspace-header">{selector}{kb && <button className="plain" onClick={() => navigate('outline')}>学习大纲 ↗</button>}</header>
+        {kb ? <NewConversation key={kb.id} knowledgeBase={kb} onOutline={() => navigate('outline')} onCreated={(s, message) => openSession(kb.id, s.id, message)} />
+          : <section className="new-conversation"><h1>{loading ? '正在打开学习空间…' : '从一份课件开始'}</h1><p>创建知识库，整理资料，开始你的学习对话。</p><button disabled={loading} onClick={() => { setCreating(true); navigate('knowledge') }}>创建知识库</button></section>}</>}
+      <div className="page-scroll" hidden={view !== 'knowledge'}>
+        <header className="page-heading"><div><h1>资料库</h1><p>课程资料，都在这里。</p></div><button onClick={() => { setCreating(true); setRename(false); setName('') }}>＋ 新建知识库</button></header>
+        <div className="library-toolbar">{selector}{kb && <><button className="plain" onClick={() => { setName(kb.name); setRename(true); setCreating(false) }}>重命名</button><button className="plain" onClick={() => navigate('outline')}>学习大纲 ↗</button></>}</div>
+        {(creating || rename) && <form className="library-create" onSubmit={e => { e.preventDefault(); void saveLibrary() }}>
+          <label htmlFor="library-name">{rename ? '知识库名称' : '新知识库名称'}</label><input id="library-name" autoFocus value={name} maxLength={100} onChange={e => setName(e.target.value)} placeholder="例如：操作系统" />
+          <button disabled={loading || busy || !name.trim()}>{busy ? '保存中…' : '保存'}</button><button type="button" className="plain" disabled={busy} onClick={() => { setCreating(false); setRename(false) }}>取消</button>
+        </form>}
+        {kb && <DocumentPanel key={kb.id} documents={documents} knowledgeBase={kb} loading={documentsLoading} onUploaded={id => { if (selectedRef.current === id) void refreshDocuments(true) }} />}
+      </div>
+      {view === 'outline' && kb && <div className="page-scroll"><PlanningStart key={kb.id} knowledgeBase={kb} visible requestedSessionId={null} onSession={async s => openSession(kb.id, s.id)} /></div>}
+      <div className="active-chat-view" hidden={view !== 'learning'}>
+        {chat && chatKb && <LearningPanel key={chat.id} initialSessionId={chat.id} initialMessage={chat.message} knowledgeBase={chatKb} onChanged={changed}
+          onBack={() => navigate('new')} onOutline={() => { select(chat.kb); navigate('outline') }} onSessionKnowledgeBase={() => {}} />}
+      </div>
+      {view === 'tools' && <TestTools knowledgeBases={knowledgeBases} selectedId={selectedId} onSelect={select} />}
+    </main>
+  </div>
 }

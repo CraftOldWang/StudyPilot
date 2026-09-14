@@ -26,8 +26,9 @@ function TreeNode({ node, progress }: { node: OutlineNode; progress: Progress })
     </details> : <div className={`outline-row outline-leaf${active ? ' active' : ''}`}>{label}</div>}
   </li>
 }
-export function LearningOutline({ nodes, points }: { nodes: OutlineNode[]; points: KnowledgePoint[] }) {
-  const progress: Progress = new Map(points.map(point => [point.id, point.status]))
+export function LearningOutline({ nodes, points, completedNodeIds = [] }: { nodes: OutlineNode[]; points: KnowledgePoint[]; completedNodeIds?: string[] }) {
+  const progress: Progress = new Map(points.map(point => [point.outlineNodeId || point.id, point.status]))
+  completedNodeIds.forEach(id => progress.set(id, 'COMPLETED'))
   return <ul className="outline-tree" aria-label="学习待办大纲">{nodes.map(node => <TreeNode key={node.id} node={node} progress={progress} />)}</ul>
 }
 export function outlineLeafCount(nodes: OutlineNode[]): number {

@@ -13,9 +13,9 @@ import { SavedArtifacts } from './SavedArtifacts'
 import { MessageContent } from './ui/MessageContent'
 import { SourceProvider } from './SourceDrawer'
 
-interface Props { knowledgeBase: KnowledgeBase; initialSessionId: string; onSessionKnowledgeBase: (id: string) => void; onBack: () => void; onOutline: () => void }
+interface Props { knowledgeBase: KnowledgeBase; initialSessionId: string; initialMessage?: string; onChanged?: () => void; onSessionKnowledgeBase: (id: string) => void; onBack: () => void; onOutline: () => void }
 interface Pending { requestId: string; message: string }
-export function LearningPanel({ knowledgeBase, initialSessionId, onSessionKnowledgeBase, onBack, onOutline }: Props) {
+export function LearningPanel({ knowledgeBase, initialSessionId, initialMessage, onChanged, onSessionKnowledgeBase, onBack, onOutline }: Props) {
   const [session, setSession] = useState<LearningSession | null>(null)
   const [history, setHistory] = useState<ConversationTurn[]>([])
   const [message, setMessage] = useState('')
@@ -34,6 +34,7 @@ export function LearningPanel({ knowledgeBase, initialSessionId, onSessionKnowle
   const follow = useRef(true)
   const draft = useRef(new Map<string, string>())
   const pendingBySession = useRef(new Map<string, Pending>())
+  const firstMessageSent = useRef(false)
   useEffect(() => {
     mounted.current = true
     return () => { mounted.current = false; transport.current?.abort() }
@@ -127,7 +128,7 @@ export function LearningPanel({ knowledgeBase, initialSessionId, onSessionKnowle
       }, transport.current.signal)
     } catch (e) {
       if (mounted.current) setError(e instanceof Error && e.name === 'AbortError' ? '已断开显示，后台处理不会取消。请查询结果。' : e instanceof Error ? e.message : String(e))
-    } finally { transport.current = undefined; lock.current = false; if (mounted.current) setBusy(false) }
+    } finally { transport.current = undefined; lock.current = false; if (mounted.current) { setBusy(false); onChanged?.() } }
   }
   const active = session?.activeKnowledgePoint
   const lastTurn = history.at(-1)
@@ -136,6 +137,12 @@ export function LearningPanel({ knowledgeBase, initialSessionId, onSessionKnowle
   const blocking = pending || (unresolved && (unresolved.status === 'RUNNING' || unresolved.phase === 'ARTIFACTS_COMMITTED'))
   const canSend = !!active && active.status !== 'CARD_CONFIRMING' && !busy && !blocking
   const hint = active?.status === 'NEW' ? '开始这个知识点的讲解' : active?.status === 'EXPLAINING' ? '我理解了，继续练习' : active?.status === 'FEEDBACK' ? '没有疑问了，继续生成复习卡片' : ''
+  useEffect(() => {
+    if (initialMessage && session && canSend && !firstMessageSent.current) {
+      firstMessageSent.current = true
+      if (!history.length) void send(initialMessage)
+    }
+  }, [session?.id, canSend, initialMessage])
   async function saveCards(cards: LearningSession['cards'], confirm = false) {
     if (!session || !active || lock.current) return
     lock.current = true; setBusy(true); setError(''); setProgress(confirm ? '正在确认卡片、写入 Anki 并整理学习记录…' : '正在保存卡片…')
@@ -147,6 +154,7 @@ export function LearningPanel({ knowledgeBase, initialSessionId, onSessionKnowle
       }
       if (confirm) await apiRequest<LearningSession>(`/api/learning/sessions/${session.id}/points/${active.id}/cards/confirm`, { method: 'POST' })
       await loadSession(await learningApi.getSession(session.id))
+      onChanged?.()
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
       const current = await learningApi.getSession(session.id).catch(() => null)
@@ -156,26 +164,23 @@ export function LearningPanel({ knowledgeBase, initialSessionId, onSessionKnowle
   if (!session) return <section className="panel learning-start">
     <h1>打开学习会话</h1>
     {error ? <Feedback error>{error}<button type="button" disabled={busy} onClick={() => void openSession()}>重新读取会话</button></Feedback> : <Feedback>正在读取已保存的学习进度和对话…</Feedback>}
-    <button className="secondary" type="button" onClick={onBack}>返回历史会话</button>
+    <button className="secondary" type="button" onClick={onBack}>返回新对话</button>
   </section>
   return <SourceProvider knowledgeBaseId={session.knowledgeBaseId}><div className="learning-workspace">
-    <section className="panel learning-summary"><div><span className="eyebrow">{session.status === 'COMPLETED' ? '课程学习已完成' : '学习与练习'}</span><h1>{session.learningGoal}</h1>
-      <details className="resource-reference"><summary>会话信息</summary><p>会话：{session.id}<br />绑定资料库：{session.knowledgeBaseId}</p></details></div>
-      <div className="action-row"><button className="secondary" type="button" onClick={() => { onSessionKnowledgeBase(session.knowledgeBaseId); onOutline() }}>查看学习大纲</button>
-        <button className="secondary" disabled={busy} onClick={() => void refresh()} type="button">查询已保存结果</button>
-        <button className="secondary" disabled={busy} onClick={onBack} type="button">历史会话</button></div></section>
+    <section className="learning-summary"><div><span className="muted">{knowledgeBase.name}</span><h1>{history[0]?.userMessage.slice(0, 55) || '新对话'}</h1></div>
+      <button className="plain" type="button" onClick={onOutline}>学习大纲 ↗</button></section>
     {session.knowledgeBaseId !== knowledgeBase.id && <Feedback>当前会话仍绑定原资料库。<button className="text-button" type="button" onClick={() => onSessionKnowledgeBase(session.knowledgeBaseId)}>切回会话资料库</button></Feedback>}
     {(error || session.errorMessage) && <Feedback error>{error || session.errorMessage}</Feedback>}
     <div className="learning-columns">
       <section className="learning-focus" aria-label="学习对话">
-        <div className="focus-heading"><span className="eyebrow">{active ? `当前知识点 · ${active.sequenceNo}` : '学习记录'}</span><h2>{active?.topic || '讲解、测验与卡片已保存'}</h2><p>完成流程不代表已经掌握，之后可用卡片继续复习。</p></div>
+        <div className="focus-heading"><span className="muted">{active ? '正在学习' : '学习记录'}</span><span>{active?.topic || '本轮学习已完成'}</span></div>
         <div className="chat-scroll-wrapper">
         <div className="chat-scroll" ref={chatScroll} role="region" aria-label="对话记录" tabIndex={0} onScroll={event => {
           const node = event.currentTarget
           follow.current = node.scrollHeight - node.scrollTop - node.clientHeight < 100
           setShowLatest(!follow.current)
         }}>
-        {history.length === 0 && <Feedback>{session.status === 'COMPLETED' ? '课程学习已完成，可以查看保存的卡片与资料来源。' : active?.explanation ? '此会话来自旧版本，早期对话未存为聊天记录；现有讲解与测验仍可查看。' : '发送一条消息开始学习，也可以先提问。'}</Feedback>}
+        {history.length === 0 && !initialMessage && <Feedback>{session.status === 'COMPLETED' ? '大纲中的知识点已完成，可以从侧栏查看之前的学习记录。' : '发送一条消息开始学习，也可以先提问。'}</Feedback>}
         {history.length === 0 && active?.explanation && <article className="chat-answer"><MessageContent text={active.explanation} /></article>}
         <div className="conversation-history">{history.map(turn => <article className="conversation-turn" key={turn.id}>
           <div className="chat-user"><span>你</span><p>{turn.userMessage}</p></div>
@@ -189,6 +194,7 @@ export function LearningPanel({ knowledgeBase, initialSessionId, onSessionKnowle
         {partial && <div className="chat-answer streaming"><span>StudyPilot · 生成中</span><MessageContent text={partial} /></div>}
         {busy && <Feedback>{progress || '正在处理…'} {transport.current && <button className="text-button" type="button" onClick={() => transport.current?.abort()}>断开显示</button>}</Feedback>}
         {!busy && retry && <div className="recovery-actions"><Feedback>{blocking ? '请先确认上次消息的结果。' : '上次生成未完成，也可以调整消息后继续。'}重试会沿用同一请求编号。</Feedback><button disabled={busy} type="button" onClick={() => void send(retry.message, retry)}>重试原回合</button></div>}
+        {!busy && (retry || error) && <button className="secondary" type="button" onClick={() => void refresh()}>查询已保存结果</button>}
         {session.currentQuiz && <QuizSection busy={!canSend} quiz={session.currentQuiz} onSubmit={async answers => {
           const quiz = session.currentQuiz!
           await send(answers.map((answer, i) => `${i + 1}. ${'ABCD'[quiz.questions[i].options.indexOf(answer)]}`).join('\n'))
@@ -202,11 +208,11 @@ export function LearningPanel({ knowledgeBase, initialSessionId, onSessionKnowle
         {showLatest && <button className="jump-latest secondary" type="button" onClick={jumpToLatest}>↓ 返回最新消息</button>}
         </div>
         {active && <form noValidate className="learning-message-form" onSubmit={e => { e.preventDefault(); void send(message) }}>
-          <Field id="learning-message" label="继续学习或提问" hint="可自然提问、请求测验或生成卡片。Ctrl + Enter 发送。">
-            <MultilineInput id="learning-message" rows={3} value={message} maxLength={12000} onChange={e => { setMessage(e.target.value); draft.current.set(session.id, e.target.value) }} aria-describedby="learning-message-hint" onKeyDown={e => {
+          <Field id="learning-message" label="继续学习或提问">
+            <MultilineInput id="learning-message" rows={3} value={message} maxLength={12000} onChange={e => { setMessage(e.target.value); draft.current.set(session.id, e.target.value) }} onKeyDown={e => {
               if (e.ctrlKey && e.key === 'Enter' && !e.nativeEvent.isComposing && canSend) { e.preventDefault(); void send(message) }
             }} placeholder="例如：先用一个例子解释，再带我做题" /></Field>
-          <div className="action-row"><button disabled={!canSend || !message.trim()} type="submit">{busy ? '处理中…' : '发送消息'}</button>
+          <div className="action-row"><button className="send-button" aria-label="发送消息" disabled={!canSend || !message.trim()} type="submit">{busy ? '…' : '↑'}</button>
             {hint && <button className="secondary" disabled={!canSend} onClick={() => void send(hint)} type="button">{active.status === 'NEW' ? '开始讲解' : active.status === 'EXPLAINING' ? '进入测验' : '生成复习卡'}</button>}</div>
         </form>}
       </section></div></div></SourceProvider>

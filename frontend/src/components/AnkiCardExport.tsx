@@ -50,9 +50,9 @@ export function AnkiCardExport({ cardId }: { cardId: string }) {
     {loading ? <small className="muted">正在读取导出状态…</small> : <>
       {status?.status === 'SUCCEEDED' && !error && <small role="status">已导出至 Anki</small>}
       {status?.status === 'EXPORTING' && !busy && <small className="muted">上次导出结果待确认，重试会先查找已有卡片。</small>}
-      <button className="secondary" type="button" disabled={busy} onClick={() => void exportCard()}>
+      {(status?.status !== 'SUCCEEDED' || error) && <button className="secondary" type="button" disabled={busy} onClick={() => void exportCard()}>
         {busy ? '正在导出…' : error || status?.status === 'EXPORTING' ? '重试导出到 Anki' : status?.status === 'SUCCEEDED' ? '再次导出到 Anki' : '导出到 Anki'}
-      </button>
+      </button>}
     </>}
     {error && <Feedback error>{error}</Feedback>}
   </div>

@@ -3,6 +3,7 @@ export type KnowledgePointStatus = 'NEW' | 'EXPLAINING' | 'QUIZZING' | 'FEEDBACK
 
 export interface KnowledgePoint {
   id: string
+  outlineNodeId?: string
   sequenceNo: number
   topic: string
   subtopics: string[]
@@ -99,6 +100,7 @@ export interface PlanningView {
   sessionId: string | null
   stages: { id: string; stage: string; status: string; errorMessage: string | null; attemptCount: number }[]
   result: { nodes: OutlineNode[] } | null
+  completedNodeIds?: string[]
 }
 
 export interface GeneratedQuiz {
