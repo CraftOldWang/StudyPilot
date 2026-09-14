@@ -35,16 +35,19 @@ public class PlanningModel {
 
     public String fingerprintConfiguration(String stage) {
         String base = VERSION + "/" + model.getModelName() + "/json_object/temperature=0/" + properties;
+        if ("OUTLINE".equals(stage)) { return base + "/direct-outline/" + reasoning.maxTokens(); }
+        if (stage.startsWith("EMPHASIS/")) { return base + "/direct-emphasis/" + reasoning.maxTokens(); }
         return useReasoning(stage) ? base + "/" + reasoning : base;
     }
 
     boolean useReasoning(String stage) {
-        return reasoning.enabled() && ("OUTLINE".equals(stage) || stage.startsWith("EMPHASIS/") || stage.startsWith("EMPHASIS_REVIEW/"));
+        return reasoning.enabled() && stage.startsWith("EMPHASIS_REVIEW/");
     }
 
     GenerateOptions options(String stage) {
         var options = GenerateOptions.builder().stream(false).temperature(0.0)
-                .maxTokens(useReasoning(stage) ? reasoning.maxTokens() : properties.outputTokens())
+                // Course-wide merging needs the budget for the JSON tree, not a long reasoning preamble.
+                .maxTokens(useReasoning(stage) || "OUTLINE".equals(stage) || stage.startsWith("EMPHASIS/") ? reasoning.maxTokens() : properties.outputTokens())
                 .responseFormat(io.agentscope.core.formatter.ResponseFormat.jsonObject());
         if (useReasoning(stage)) {
             options.additionalBodyParam("thinking", java.util.Map.of("type", "enabled"))

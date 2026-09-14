@@ -22,6 +22,7 @@ public final class PlanningData {
     public record Task(Long knowledgePointId, Long chapterId, String chapterTitle, String topic,
                        List<String> subtopics, List<String> sourceChunkIds, String priority,
                        int estimatedMinutes, String reason) { }
+    public record TaskBatch(List<Task> tasks) { }
     public record OutlineNode(Long id, String title, String priority, List<OutlineNode> children) { }
     public record Result(Outline outline, Emphasis emphasis, List<Task> tasks, List<OutlineNode> nodes) { }
 }

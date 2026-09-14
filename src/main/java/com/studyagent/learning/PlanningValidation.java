@@ -93,6 +93,50 @@ public final class PlanningValidation {
                 .map(entry -> new Chapter(IdWorker.getId(), entry.getKey(), List.copyOf(entry.getValue()))).toList());
     }
 
+    public static Outline selectEmphasisOutline(JsonNode root, Outline outline) {
+        Set<Long> allowed = outline.chapters().stream().flatMap(c -> c.points().stream()).map(Point::id).collect(Collectors.toSet());
+        Set<Long> selected = new HashSet<>();
+        for (JsonNode node : array(root, "knowledgePointIds")) {
+            Long pointId = id(node);
+            require(allowed.contains(pointId), "习题定位引用未知知识点");
+            require(selected.add(pointId), "习题定位重复知识点");
+        }
+        return new Outline(outline.chapters().stream().map(c -> new Chapter(c.id(), c.title(),
+                c.points().stream().filter(p -> selected.contains(p.id())).toList()))
+                .filter(c -> !c.points().isEmpty()).toList());
+    }
+
+    public static Emphasis emphasisByReference(JsonNode root, Outline outline, List<Source> exercises, List<Source> lessons) {
+        JsonNode resolved = root.deepCopy();
+        Map<String, Source> sources = exercises.stream().collect(Collectors.toMap(Source::chunkId, s -> s));
+        Map<Long, Point> points = outline.chapters().stream().flatMap(c -> c.points().stream()).collect(Collectors.toMap(Point::id, p -> p));
+        for (String field : List.of("matches", "unmatched")) {
+            for (JsonNode value : array(resolved, field)) {
+                require(value.isObject(), "习题映射必须为对象");
+                var node = (com.fasterxml.jackson.databind.node.ObjectNode) value;
+                String sourceId = text(node, "sourceChunkId");
+                require(sources.containsKey(sourceId), "习题摘录引用未知来源");
+                var excerpts = PlanningEvidence.excerpts(sources.get(sourceId).content());
+                int excerpt = referenceIndex(node.get("excerptNo"), excerpts.size());
+                node.put("quote", excerpts.get(excerpt).text());
+                if ("matches".equals(field)) {
+                    Point point = points.get(id(node.get("knowledgePointId")));
+                    require(point != null, "习题映射引用未知知识点");
+                    Evidence evidence = point.evidence().get(referenceIndex(node.get("lessonEvidenceNo"), point.evidence().size()));
+                    node.put("lessonSourceChunkId", evidence.sourceChunkId());
+                    node.put("lessonQuote", evidence.quote());
+                }
+            }
+        }
+        return emphasis(resolved, outline, exercises, lessons);
+    }
+
+    private static int referenceIndex(JsonNode value, int size) {
+        require(value != null && value.isIntegralNumber() && value.canConvertToInt()
+                && value.intValue() >= 1 && value.intValue() <= size, "摘录编号超出已提供范围");
+        return value.intValue() - 1;
+    }
+
     public static Emphasis emphasis(JsonNode root, Outline outline, List<Source> exercises, List<Source> lessons) {
         Set<Long> pointIds = outline.chapters().stream().flatMap(c -> c.points().stream()).map(Point::id).collect(Collectors.toSet());
         Map<String, Source> sources = exercises.stream().collect(Collectors.toMap(Source::chunkId, s -> s));

@@ -135,15 +135,25 @@ public class LearningPlanningService {
             List<Unmatched> unmatched = new ArrayList<>();
             index = 0;
             for (List<Source> batch : batches(input.exercises())) {
+                int batchIndex = index++;
+                String selectionPrompt = """
+                        根据本批考试回忆或习题，从完整课程目录中定位直接涉及的知识点。
+                        逐题覆盖其考察的概念、算法和实现，选择最直接的叶子，不把整章的背景点全部选上。
+                        这里只定位，尚不判断重点和答案；后续会读取被选点的课件摘录核对。
+                        只使用目录给出的ID，无对应知识点则不选。
+                        格式：{"knowledgePointIds":["..."]}。
+                        目录：%s
+                        习题：%s
+                        """.formatted(json(outline.chapters().stream().flatMap(c -> c.points().stream())
+                                .map(p -> Map.of("id", p.id(), "path", p.path(), "topic", p.topic())).toList()), json(batch));
+                Outline relevant = stage(run, token, "EMPHASIS_SELECT/" + batchIndex, selectionPrompt, Outline.class,
+                        node -> PlanningValidation.selectEmphasisOutline(node, outline));
                 String prompt = """
                         把当前批次往年习题的考察内容映射到既有大纲知识点，可一题关联多个点。
                         逐段处理，不能只看前几题。重点 HIGH 或 MEDIUM 仅代表这批资料给出的复习建议，不是未来考试概率。
-                        reason 解释题目考察的概念与知识点关系；quote 必须原样摘录习题文字，禁止自行修正标点或公式。
-                        一道题有多个空或小问时，每条匹配只引用一个小问的连续原文，不要把其它小问和全部选项一起放进quote。
-                        可直接选“生成三地址码程序是在 D 阶段”这样的原文分句，单独寻找支持该分句的课件摘录；
-                        其它小问分别匹配或列入unmatched。有直接依据的部分不能因整题包含未覆盖内容而全部放弃。
-                        每个匹配还必须提供 lessonSourceChunkId 和 lessonQuote，摘录课件中直接支持该知识点解题的具体内容。
-                        lessonQuote 只能取大纲该知识点 evidence 中已提供的原文或其子串，没有直接依据的题目保留未匹配。
+                        reason 解释题目具体考察的概念与知识点关系。
+                        习题只选提供的 excerptNo，课件只选被映射知识点的 lessonEvidenceNo；不要抄写原文。
+                        服务端按编号回填原文。一个摘录包含多个题目时，分别映射到直接相关知识点，reason注明具体考察点。
                         不得仅凭“都属于编译器”或“都会报告错误”将细分阶段问题笼统映射到编译器基本概念。
                         “有关系”不是“直接依据”。课件摘录必须具体描述解答题目所需的对象、操作或结论，
                         仅有上位概念、一般定义或前置背景时必须列入 unmatched，不能借助你自身的常识补齐后声称课件支持。
@@ -155,26 +165,29 @@ public class LearningPlanningService {
                         习题里的参考选项不保证正确，不照抄其正确性结论；只分析题目所考察的概念。
                         未匹配题目或非题目内容保留 unmatched 及原因，不强行匹配，不新造知识点 ID。
                         每个输入 chunkId 至少出现在 matches 或 unmatched，未涉及习题的基础知识点仍保留。
-                        格式：{"matches":[{"knowledgePointId":"...","sourceChunkId":"...","quote":"...",
-                        "lessonSourceChunkId":"...","lessonQuote":"...","reason":"...","priority":"HIGH"}],
-                        "unmatched":[{"sourceChunkId":"...","quote":"...","reason":"..."}]}。
+                        格式：{"matches":[{"knowledgePointId":"...","sourceChunkId":"...","excerptNo":1,
+                        "lessonEvidenceNo":1,"reason":"...","priority":"HIGH"}],
+                        "unmatched":[{"sourceChunkId":"...","excerptNo":1,"reason":"..."}]}。
                         大纲：%s
                         习题片段：%s
-                        """.formatted(json(outline), json(batch));
-                int batchIndex = index++;
+                        """.formatted(json(relevant.chapters().stream().flatMap(c -> c.points().stream()).map(p -> Map.of(
+                                "id", p.id(), "topic", p.topic(), "path", p.path(), "evidence",
+                                java.util.stream.IntStream.range(0, p.evidence().size()).mapToObj(i -> Map.of(
+                                        "lessonEvidenceNo", i + 1, "text", p.evidence().get(i).quote())).toList())).toList()),
+                                json(batch.stream().map(s -> Map.of("chunkId", s.chunkId(), "excerpts", PlanningEvidence.excerpts(s.content()))).toList()));
                 Emphasis proposed = stage(run, token, "EMPHASIS/" + batchIndex, prompt, Emphasis.class,
-                        node -> PlanningValidation.emphasis(node, outline, batch, input.lessons()));
+                        node -> PlanningValidation.emphasisByReference(node, relevant, batch, input.lessons()));
                 Emphasis emphasis = proposed;
                 if (!proposed.matches().isEmpty()) {
                     List<Map<String, Object>> pairs = new ArrayList<>();
                     for (int i = 0; i < proposed.matches().size(); i++) {
                         Importance match = proposed.matches().get(i);
                         pairs.add(Map.of("matchIndex", i, "exerciseSourceChunkId", match.sourceChunkId(),
-                                "exerciseQuote", match.quote(), "lessonQuote", match.lessonQuote()));
+                                "exerciseQuote", match.quote(), "lessonQuote", match.lessonQuote(), "topic", match.reason()));
                     }
                     String reviewPrompt = """
                             独立复核每组习题摘录和课件摘录能否形成直接的解题依据。只使用这两段文字，不补充外部知识。
-                            仅判断exerciseQuote指定的小问。原始习题上下文只用于解释选项代号和指代，
+                            仅判断topic所指出的考察点，exerciseQuote可能同时包含其他题目，不要求课件支持整个摘录。原始习题上下文只用于解释选项代号和指代，
                             不把同一道题的其它小问加入本条支持性要求；有依据的小问可以匹配，其它部分另行未匹配。
                             先写testedClaim（题目实际要求判断的具体命题），再写lessonClaim（课件明确支持的命题），
                             只有后者足以处理前者时supported=true；相关背景、上位概念、阶段名称列表都不足以证明具体职责。
@@ -193,7 +206,16 @@ public class LearningPlanningService {
                 unmatched.addAll(emphasis.unmatched());
             }
             Emphasis emphasis = new Emphasis(List.copyOf(matches), List.copyOf(unmatched));
-            String taskPrompt = """
+            List<Point> allPoints = outline.chapters().stream().flatMap(c -> c.points().stream()).toList();
+            List<Task> tasks = new ArrayList<>();
+            // Bound the JSON response even when an entire semester produces hundreds of leaves.
+            for (int offset = 0; offset < allPoints.size(); offset += 50) {
+                var ids = allPoints.subList(offset, Math.min(offset + 50, allPoints.size())).stream()
+                        .map(Point::id).collect(java.util.stream.Collectors.toSet());
+                Outline part = new Outline(outline.chapters().stream().map(c -> new Chapter(c.id(), c.title(),
+                        c.points().stream().filter(p -> ids.contains(p.id())).toList()))
+                        .filter(c -> !c.points().isEmpty()).toList());
+                String taskPrompt = """
                     将既有大纲转换为有序学习任务，每个知识点 id 必须出现一次且仅一次，基础概念在应用之前。
                     根据目标、先修关系和内容体量安排顺序及基础时长。reason只解释教学顺序与内容安排，
                     不声称习题考察或考试重点；习题依据、优先级与追加时间由服务端另行附加。
@@ -201,10 +223,18 @@ public class LearningPlanningService {
                     格式：{"tasks":[{"knowledgePointId":"...","baseMinutes":15,"reason":"..."}]}。
                     目标：%s
                     大纲：%s
-                    """.formatted(run.getLearningGoal(), json(outline.chapters().stream().flatMap(c -> c.points().stream())
+                    """.formatted(run.getLearningGoal(), json(part.chapters().stream().flatMap(c -> c.points().stream())
                             .map(p -> Map.of("id", p.id(), "path", p.path(), "topic", p.topic())).toList()));
-            stage(run, token, "TASKS", taskPrompt, Result.class,
-                    node -> PlanningOutline.build(outline, emphasis, PlanningValidation.tasks(node, outline, emphasis)));
+                tasks.addAll(stage(run, token, "TASK_BATCH/" + offset / 50, taskPrompt, TaskBatch.class,
+                        node -> new TaskBatch(PlanningValidation.tasks(node, part, emphasis))).tasks());
+            }
+            String assembled = json(tasks);
+            LearningPlanStage resultStage = persistence.begin(run, token, "TASKS", sha256(assembled), assembled, run.getId() + "/TASKS");
+            resultStage.setOutputJson(json(PlanningOutline.build(outline, emphasis, tasks)));
+            resultStage.setStatus("SUCCEEDED");
+            resultStage.setCompletedAt(LocalDateTime.now());
+            resultStage.setElapsedMillis(0L);
+            persistence.finish(resultStage, token);
             persistence.complete(run, token);
             return view(userId, runId);
         } catch (RuntimeException error) {

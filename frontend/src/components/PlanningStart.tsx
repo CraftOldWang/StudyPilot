@@ -9,7 +9,7 @@ import { LearningOutline, outlineLeafCount } from './LearningOutline'
 
 type Role = 'lesson' | 'exercise' | 'unused'
 const drafts = new Map<string, { roles: Record<string, Role>; goal: string }>()
-const phaseLabel = (value: string) => ({ EXTRACT: '读取课件', OUTLINE: '整理目录', EMPHASIS: '标注重点', EMPHASIS_REVIEW: '整理重点', TASKS: '保存学习大纲' }[value.split('/')[0]] || '正在整理大纲')
+const phaseLabel = (value: string) => ({ EXTRACT: '读取课件', OUTLINE: '整理目录', EMPHASIS_SELECT: '定位习题考点', EMPHASIS: '标注重点', EMPHASIS_REVIEW: '整理重点', TASK_BATCH: '安排学习任务', TASKS: '保存学习大纲' }[value.split('/')[0]] || '正在整理大纲')
 
 export function PlanningStart({ knowledgeBase, visible, requestedSessionId, onSession }: {
   knowledgeBase: KnowledgeBase; visible: boolean; requestedSessionId: string | null

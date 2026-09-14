@@ -15,6 +15,23 @@ class PlanningValidationTest {
             new Point(20L, List.of("操作系统"), "同步", List.of("互斥"), List.of("chunk-1"), List.of(new Evidence("chunk-1", "进程同步与互斥"))),
             new Point(21L, List.of("操作系统"), "基础", List.of(), List.of("chunk-1"), List.of(new Evidence("chunk-1", "进程同步与互斥")))))));
 
+    @Test void selectsOnlyExistingPointsAndRetainsTheirEvidence() throws Exception {
+        var selected = PlanningValidation.selectEmphasisOutline(mapper.readTree("{\"knowledgePointIds\":[\"20\"]}"), outline);
+        assertThat(selected.chapters().getFirst().points()).containsExactly(outline.chapters().getFirst().points().getFirst());
+        assertThatThrownBy(() -> PlanningValidation.selectEmphasisOutline(mapper.readTree("{\"knowledgePointIds\":[\"99\"]}"), outline))
+                .hasMessageContaining("未知知识点");
+    }
+
+    @Test void resolvesVerbatimExamAndLessonTextFromNumbers() throws Exception {
+        Source exam = new Source(2L, "exam", "hash", "exam-1", "PV信号量：选择 \\*10，解释互斥。", "{}");
+        var result = PlanningValidation.emphasisByReference(mapper.readTree("""
+                {"matches":[{"knowledgePointId":"20","sourceChunkId":"exam-1","excerptNo":1,
+                 "lessonEvidenceNo":1,"priority":"HIGH","reason":"考察互斥"}],"unmatched":[]}
+                """), outline, List.of(exam), List.of(source));
+        assertThat(result.matches().getFirst().quote()).isEqualTo(exam.content());
+        assertThat(result.matches().getFirst().lessonQuote()).isEqualTo(source.content());
+    }
+
     @Test void rejectsOmittedInputAndForeignReferences() throws Exception {
         assertThatThrownBy(() -> PlanningValidation.extraction(mapper.readTree("{\"points\":[],\"uncovered\":[]}"), List.of(source)))
                 .isInstanceOf(BusinessException.class).hasMessageContaining("遗漏");
