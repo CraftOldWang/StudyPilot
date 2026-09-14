@@ -297,21 +297,25 @@ td strong, .document-error { display: block; overflow-wrap: anywhere; }
 
 .plain { color: var(--color-text); background: transparent; border: 0; font-weight: 400; }
 .plain:hover:not(:disabled) { background: #e9ecf1; color: var(--color-text); }
-.pilot-logo { width: 38px; height: 38px; flex-shrink: 0; }
+.pilot-logo { display: inline-block; position: relative; overflow: hidden; width: 42px; height: 42px; flex-shrink: 0; mix-blend-mode: multiply; }
+.pilot-logo img { position: absolute; width: 132%; max-width: none; height: auto; left: -16.5%; top: -15.3%; }
 .global-nav { display: grid; gap: .2rem; margin-bottom: 2rem; }
 .global-nav button { display: flex; align-items: center; gap: .8rem; text-align: left; padding: .6rem .9rem; }
 .global-nav span { width: 18px; text-align: center; font-size: 19px; line-height: 1; }
 .global-nav .active, .chat-link.active, .test-nav .active { background: #e9ecf1; }
 .sidebar-heading { padding: .25rem .9rem .65rem; font-size: 11px; font-weight: 400; }
-.sidebar-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.sidebar-scroll { flex: 1; min-height: 0; min-width: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
 .course-list, .course-chats { list-style: none; padding: 0; margin: 0; }
 .course-group { margin-bottom: .7rem; }
-.course-heading { display: flex; align-items: center; }
-.course-expand { width: 25px; padding: .4rem 0; flex-shrink: 0; }
-.course-name { display: flex; gap: .5rem; text-align: left; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; padding: .5rem .4rem; }
-.course-name span { color: var(--color-primary); }
+.course-heading { display: flex; align-items: center; min-width: 0; }
+.course-expand { display: grid; place-items: center; width: 25px; padding: .4rem 0; flex-shrink: 0; color: var(--color-muted); }
+.course-expand svg { width: 14px; height: 14px; }
+.course-expand[aria-expanded="true"] svg { transform: rotate(90deg); }
+.course-name { display: flex; align-items: center; gap: .5rem; text-align: left; flex: 1; min-width: 0; overflow: hidden; font-size: 13px; padding: .5rem .4rem; }
+.course-icon { width: 16px; height: 16px; flex-shrink: 0; color: var(--color-muted); }
+.course-label { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .course-chats { padding-left: 1.5rem; }
-.chat-link { display: block; width: 100%; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: .55rem .7rem; min-height: 36px; font-size: 12px; }
+.chat-link { display: block; width: 100%; max-width: 100%; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: .55rem .7rem; min-height: 36px; font-size: 12px; }
 .sidebar-note { font-size: 11px; color: var(--color-muted); padding: .5rem .7rem; }
 .sidebar-footer { display: flex; gap: .75rem; align-items: center; padding: 1rem .7rem .1rem; font-size: 12px; }
 .sidebar-footer small { display: block; font-size: 10px; }

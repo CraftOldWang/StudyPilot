@@ -89,6 +89,8 @@ display 仅用于 StudyPilot 字标与少量标题；中文标题优先黑体，
 
 图标以少量线条 SVG 为辅，并始终保留文本动作；不使用装饰 emoji 替代标题。动画仅用于实际处理中和轻微颜色过渡；减少动态效果时禁用位移、闪烁与强制平滑滚动。
 
+品牌统一使用已确认的图像生成原稿 `frontend/src/assets/studypilot-pilot-book-logo.png`，由 PilotLogo 展示，CSS 仅收紧原图留白。侧栏知识库名与会话标题单行省略，完整名称保留在 title；目录图标不收缩，展开箭头使用同一枚线条 SVG 旋转。
+
 映射：`colors.* → --color-*`、字体角色 `→ --font-*`、圆角 `→ --radius-*`、spacing `→ --space-*`；布局特殊值保留在拥有该布局的 class。验证脚本检查映射，视觉与行为仍通过浏览器验证。
 
 ## Do's and Don'ts

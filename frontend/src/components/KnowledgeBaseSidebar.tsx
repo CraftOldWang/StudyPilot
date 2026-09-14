@@ -31,8 +31,8 @@ function CourseChats({ item, selected, activeSessionId, revision, onSelect, onSe
   }, [item.id, open, revision, retry])
   return <li className="course-group">
     <div className={`course-heading${selected ? ' selected' : ''}`}>
-      <button className="plain course-expand" aria-label={`${open ? '收起' : '展开'} ${item.name}`} aria-expanded={open} onClick={() => setOpen(!open)}>{open ? '⌄' : '›'}</button>
-      <button className="plain course-name" onClick={onSelect}><span aria-hidden="true">▱</span>{item.name}</button>
+      <button className="plain course-expand" aria-label={`${open ? '收起' : '展开'} ${item.name}`} aria-expanded={open} onClick={() => setOpen(!open)}><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m7.5 5 5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
+      <button className="plain course-name" title={item.name} onClick={onSelect}><svg className="course-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 6V4.5h5L10 7h7v9H3V6Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /></svg><span className="course-label">{item.name}</span></button>
     </div>
     {open && <ul className="course-chats">
       {sessions.slice(0, limit).map(s => <li key={s.id}><button className={`plain chat-link${activeSessionId === s.id ? ' active' : ''}`} title={s.learningGoal} onClick={() => onSession(s.id)}>{s.learningGoal}</button></li>)}
