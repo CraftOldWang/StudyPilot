@@ -18,6 +18,9 @@ public class KnowledgePoint {
     @TableField("session_id")
     private Long sessionId;
 
+    @TableField("outline_node_id")
+    private Long outlineNodeId;
+
     @TableField("user_id")
     private Long userId;
 

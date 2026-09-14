@@ -21,6 +21,9 @@ public class LearningSession {
     @TableField("knowledge_base_id")
     private Long knowledgeBaseId;
 
+    @TableField("plan_run_id")
+    private Long planRunId;
+
     @TableField("learning_goal")
     private String learningGoal;
 

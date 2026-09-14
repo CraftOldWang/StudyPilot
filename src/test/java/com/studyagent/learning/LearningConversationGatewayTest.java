@@ -119,7 +119,7 @@ class LearningConversationGatewayTest {
                 List.of(new KnowledgeSearchResponse.Result("source-1", "synthetic fact", null, 1))));
         var search = new KnowledgeSearchTool(retrieval, new KnowledgeSearchRetryExecutor(), mapper);
         return new LearningConversationGateway(model, search, reader, scopes, properties, mock(LearningTraceService.class), new IdentityScope(), mapper,
-                mock(LearningCardStageService.class), mock(LearningPersistenceService.class));
+                mock(LearningCardStageService.class), mock(LearningPersistenceService.class), mock(LearningCatalog.class), mock(LearningPlanningService.class));
     }
     private LearningSession session() {
         var s = new LearningSession(); s.setId(10L); s.setUserId(1L); s.setKnowledgeBaseId(2L); s.setAgentscopeSessionId("s"); s.setLearningGoal("synthetic goal"); return s;

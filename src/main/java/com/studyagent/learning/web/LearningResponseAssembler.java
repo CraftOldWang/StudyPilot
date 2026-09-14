@@ -88,7 +88,7 @@ public class LearningResponseAssembler {
                 point.getChapterId(),
                 point.getChapterTitle(),
                 point.getPriority(),
-                point.getSourcesJson() == null ? List.of() : readSubtopics(point.getSourcesJson()));
+                point.getSourcesJson() == null ? List.of() : readSubtopics(point.getSourcesJson()), point.getOutlineNodeId());
     }
 
     private LearningSessionResponse.QuestionResponse question(int index, QuizQuestionDraft question) {

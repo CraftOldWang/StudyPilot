@@ -7,7 +7,7 @@ import com.studyagent.model.LearningPlanStage;
 import org.junit.jupiter.api.Test;
 
 class PlanningRetryPromptTest {
-    private final LearningPlanningService service = new LearningPlanningService(null, null, null, null, null, null, null, new ObjectMapper());
+    private final LearningPlanningService service = new LearningPlanningService(null, null, null, null, null, null, null, new ObjectMapper(), null);
 
     @Test void validationRetryCarriesLatestFailureWithoutChangingBaseTask() {
         var previous = failed();

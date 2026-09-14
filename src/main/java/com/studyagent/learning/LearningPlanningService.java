@@ -43,6 +43,7 @@ public class LearningPlanningService {
     private final LearningTraceService traces;
     private final LearningPlanningProperties properties;
     private final ObjectMapper mapper;
+    private final com.studyagent.mapper.LearningSessionMapper sessions;
 
     public LearningPlanRun create(Long userId, Long kbId, String goal, List<Long> lessonIds, List<Long> exerciseIds, Integer targetPointCount) {
         scopeFactory.validateKnowledgeBaseScope(userId, kbId);
@@ -76,7 +77,8 @@ public class LearningPlanningService {
                 run.getErrorMessage(), run.getSessionId(), persistence.listStages(runId).stream()
                 .map(s -> new StageView(s.getId(), s.getStageKey(), s.getStatus(), s.getInputHash(), s.getAttemptCount(),
                         s.getTraceId(), s.getErrorMessage(), s.getStartedAt(), s.getCompletedAt(), s.getElapsedMillis(),
-                        s.getUsageJson())).toList(), result == null ? null : new OutlineView(result.nodes()));
+                        s.getUsageJson())).toList(), result == null ? null : new OutlineView(result.nodes()),
+                sessions.completedOutlineNodes(userId, runId));
     }
 
     public View execute(Long userId, Long runId) {
@@ -336,5 +338,5 @@ public class LearningPlanningService {
                             String errorMessage, LocalDateTime startedAt, LocalDateTime completedAt, Long elapsedMillis, String usageJson) { }
     public record OutlineView(List<OutlineNode> nodes) { }
     public record View(Long id, Long knowledgeBaseId, String learningGoal, String status, String errorMessage,
-                       Long sessionId, List<StageView> stages, OutlineView result) { }
+                       Long sessionId, List<StageView> stages, OutlineView result, java.util.Set<Long> completedNodeIds) { }
 }

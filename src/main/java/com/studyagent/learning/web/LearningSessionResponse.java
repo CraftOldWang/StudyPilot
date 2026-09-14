@@ -27,11 +27,12 @@ public record LearningSessionResponse(
             Long chapterId,
             String chapterTitle,
             String priority,
-            List<String> sourceChunkIds) {
+            List<String> sourceChunkIds,
+            Long outlineNodeId) {
         public KnowledgePointResponse(Long id, Integer sequenceNo, String topic, List<String> subtopics,
                 Integer estimatedMinutes, String status, String explanation, String errorMessage) {
             this(id, sequenceNo, topic, subtopics, estimatedMinutes, status, explanation, errorMessage,
-                    null, null, null, List.of());
+                    null, null, null, List.of(), null);
         }
     }
 

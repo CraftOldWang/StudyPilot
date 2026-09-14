@@ -46,8 +46,9 @@ public class LearningPlanningController {
     }
 
     @PostMapping("/{runId}/session")
-    public ApiResponse<LearningSessionResponse> session(@PathVariable Long runId) {
-        var session = persistence.createFromPlanning(user.userId(), runId);
+    public ApiResponse<LearningSessionResponse> session(@PathVariable Long runId,
+            @RequestParam(defaultValue = "false") boolean newConversation) {
+        var session = persistence.createFromPlanning(user.userId(), runId, newConversation);
         return ApiResponse.ok(assembler.session(user.userId(), session.getId()));
     }
 

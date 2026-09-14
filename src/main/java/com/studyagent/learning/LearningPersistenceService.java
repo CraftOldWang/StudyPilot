@@ -44,10 +44,15 @@ public class LearningPersistenceService {
 
     @Transactional
     public LearningSession createFromPlanning(Long userId, Long runId) {
+        return createFromPlanning(userId, runId, false);
+    }
+
+    @Transactional
+    public LearningSession createFromPlanning(Long userId, Long runId, boolean newConversation) {
         var run = planningRuns.selectOne(com.baomidou.mybatisplus.core.toolkit.Wrappers.<com.studyagent.model.LearningPlanRun>query()
                 .eq("id", runId).eq("user_id", userId).last("FOR UPDATE"));
         if (run == null) { throw new BusinessException(404, "规划任务不存在"); }
-        if (run.getSessionId() != null) { return requireSession(userId, run.getSessionId()); }
+        if (!newConversation && run.getSessionId() != null) { return requireSession(userId, run.getSessionId()); }
         if (!"SUCCEEDED".equals(run.getStatus())) { throw new BusinessException("规划完成后才能创建学习会话"); }
         var stage = planningStages.selectOne(com.baomidou.mybatisplus.core.toolkit.Wrappers.<com.studyagent.model.LearningPlanStage>query()
                 .eq("run_id", runId).eq("stage_key", "TASKS").eq("status", "SUCCEEDED")
@@ -59,7 +64,7 @@ public class LearningPersistenceService {
         List<LearningPlanItem> items = result.tasks().stream()
                 .map(t -> new LearningPlanItem(t.topic(), t.subtopics(), t.estimatedMinutes())).toList();
         LearningSession session = createRecords(userId, run.getKnowledgeBaseId(), run.getLearningGoal(),
-                java.util.UUID.randomUUID().toString(), items, result.tasks());
+                java.util.UUID.randomUUID().toString(), items, result.tasks(), runId);
         run.setSessionId(session.getId());
         run.setUpdatedAt(LocalDateTime.now());
         planningRuns.updateById(run);
@@ -85,6 +90,11 @@ public class LearningPersistenceService {
 
     private LearningSession createRecords(Long userId, Long knowledgeBaseId, String learningGoal,
             String agentScopeSessionId, List<LearningPlanItem> items, List<PlanningData.Task> tasks) {
+        return createRecords(userId, knowledgeBaseId, learningGoal, agentScopeSessionId, items, tasks, null);
+    }
+
+    private LearningSession createRecords(Long userId, Long knowledgeBaseId, String learningGoal,
+            String agentScopeSessionId, List<LearningPlanItem> items, List<PlanningData.Task> tasks, Long runId) {
         if (items == null || items.isEmpty()) {
             throw new BusinessException("学习计划不能为空");
         }
@@ -92,6 +102,7 @@ public class LearningPersistenceService {
         LearningSession session = new LearningSession();
         session.setUserId(userId);
         session.setKnowledgeBaseId(knowledgeBaseId);
+        session.setPlanRunId(runId);
         session.setLearningGoal(learningGoal);
         session.setAgentscopeSessionId(agentScopeSessionId);
         session.setStatus("ACTIVE");
@@ -106,12 +117,14 @@ public class LearningPersistenceService {
         plan.setCreatedAt(now);
         planMapper.insert(plan);
 
+        var completed = runId == null ? java.util.Set.<Long>of() : sessionMapper.completedOutlineNodes(userId, runId);
         for (int index = 0; index < items.size(); index++) {
             LearningPlanItem item = items.get(index);
             KnowledgePoint point = new KnowledgePoint();
             if (tasks != null) {
                 PlanningData.Task task = tasks.get(index);
-                point.setId(task.knowledgePointId());
+                point.setId(runId == null ? task.knowledgePointId() : com.baomidou.mybatisplus.core.toolkit.IdWorker.getId());
+                point.setOutlineNodeId(runId == null ? null : task.knowledgePointId());
                 point.setChapterId(task.chapterId());
                 point.setChapterTitle(task.chapterTitle());
                 point.setPriority(task.priority());
@@ -123,14 +136,15 @@ public class LearningPersistenceService {
             point.setTopic(item.topic());
             point.setSubtopicsJson(toJson(item.subtopics()));
             point.setEstimatedMinutes(item.estimatedMinutes());
-            point.setStatus(KnowledgePointStatus.NEW.name());
+            point.setStatus(point.getOutlineNodeId() != null && completed.contains(point.getOutlineNodeId()) ? "COMPLETED" : "NEW");
             point.setCreatedAt(now);
             point.setUpdatedAt(now);
             knowledgePointMapper.insert(point);
-            if (index == 0) {
+            if (session.getActiveKnowledgePointId() == null && !"COMPLETED".equals(point.getStatus())) {
                 session.setActiveKnowledgePointId(point.getId());
             }
         }
+        if (session.getActiveKnowledgePointId() == null) session.setStatus("COMPLETED");
         sessionMapper.updateById(session);
         return session;
     }
@@ -219,8 +233,12 @@ public class LearningPersistenceService {
         requireStatus(point, KnowledgePointStatus.CARD_CONFIRMING);
         advance(point, KnowledgePointStatus.COMPLETED);
         List<KnowledgePoint> points = listPoints(session.getId());
+        var completed = session.getPlanRunId() == null ? java.util.Set.<Long>of()
+                : sessionMapper.completedOutlineNodes(session.getUserId(), session.getPlanRunId());
         KnowledgePoint next = points.stream()
                 .filter(candidate -> candidate.getSequenceNo() > point.getSequenceNo())
+                .filter(candidate -> !"COMPLETED".equals(candidate.getStatus()))
+                .filter(candidate -> candidate.getOutlineNodeId() == null || !completed.contains(candidate.getOutlineNodeId()))
                 .findFirst()
                 .orElse(null);
         session.setActiveKnowledgePointId(next == null ? null : next.getId());
