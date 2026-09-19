@@ -49,6 +49,8 @@
 
 ## Flow ledger
 
+学习记忆页复用 Field / MultilineInput、Feedback、apiRequest 与 page-scroll。偏好草稿在工作区切换时保留；进入页面重新读取当前知识库的最近 50 条测验记录。排除/重新纳入只改变后续跨会话召回，不删除原聊天，成功后更新状态。关闭记忆同时停止新测验记录与偏好/历史注入，已有数据保留。历史已注入的聊天上下文不会追溯擦除。
+
 | Operation | Pending | Success | Failure recovery |
 |---|---|---|---|
 | 新建知识库 | 阻止重复提交，保留名称 | 插入列表并选中，清空输入 | 保留名称与字段错误，不伪装成功 |

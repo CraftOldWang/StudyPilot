@@ -32,7 +32,7 @@ class LearningPersistenceServiceTest {
                 pointMapper,
                 mock(QuizMapper.class),
                 new ObjectMapper(), mock(com.studyagent.mapper.LearningPlanRunMapper.class),
-                mock(com.studyagent.mapper.LearningPlanStageMapper.class));
+                mock(com.studyagent.mapper.LearningPlanStageMapper.class), mock(com.studyagent.profile.LearningMemoryService.class));
         LearningSession session = new LearningSession();
         session.setId(10L);
         session.setUserId(1L);
@@ -65,7 +65,7 @@ class LearningPersistenceServiceTest {
                 pointMapper,
                 mock(QuizMapper.class),
                 new ObjectMapper(), mock(com.studyagent.mapper.LearningPlanRunMapper.class),
-                mock(com.studyagent.mapper.LearningPlanStageMapper.class));
+                mock(com.studyagent.mapper.LearningPlanStageMapper.class), mock(com.studyagent.profile.LearningMemoryService.class));
         LearningSession session = new LearningSession();
         session.setId(10L);
         session.setUserId(1L);
@@ -100,7 +100,7 @@ class LearningPersistenceServiceTest {
                 pointMapper,
                 mock(QuizMapper.class),
                 new ObjectMapper(), mock(com.studyagent.mapper.LearningPlanRunMapper.class),
-                mock(com.studyagent.mapper.LearningPlanStageMapper.class));
+                mock(com.studyagent.mapper.LearningPlanStageMapper.class), mock(com.studyagent.profile.LearningMemoryService.class));
         LearningSession session = new LearningSession();
         session.setId(10L);
         session.setUserId(1L);

@@ -4,7 +4,7 @@ import type { KnowledgeBase } from '../types'
 import type { SessionEntry } from '../learningTypes'
 import { PilotLogo } from './PilotLogo'
 
-export type WorkspaceView = 'new' | 'knowledge' | 'outline' | 'learning' | 'tools'
+export type WorkspaceView = 'new' | 'knowledge' | 'outline' | 'learning' | 'tools' | 'memory'
 interface Props {
   items: KnowledgeBase[]; selectedId: string | null; activeSessionId: string | null
   loading: boolean; view: WorkspaceView; revision: number
@@ -49,6 +49,7 @@ export function KnowledgeBaseSidebar({ items, selectedId, activeSessionId, loadi
     <nav className="global-nav" aria-label="主导航">
       <button className={`plain${view === 'new' ? ' active' : ''}`} onClick={() => onNavigate('new')}><span aria-hidden="true">＋</span>新对话</button>
       <button className={`plain${view === 'knowledge' ? ' active' : ''}`} onClick={() => onNavigate('knowledge')}><span aria-hidden="true">▤</span>资料库</button>
+      <button className={`plain${view === 'memory' ? ' active' : ''}`} onClick={() => onNavigate('memory')}><span aria-hidden="true">◎</span>学习记忆</button>
       <button className={`plain${view === 'tools' ? ' active' : ''}`} onClick={() => onNavigate('tools')}><span aria-hidden="true">⚙</span>测试工具</button>
     </nav>
     <div className="sidebar-heading">我的知识库</div>

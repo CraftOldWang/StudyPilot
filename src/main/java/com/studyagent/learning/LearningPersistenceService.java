@@ -30,6 +30,7 @@ public class LearningPersistenceService {
     private final ObjectMapper objectMapper;
     private final com.studyagent.mapper.LearningPlanRunMapper planningRuns;
     private final com.studyagent.mapper.LearningPlanStageMapper planningStages;
+    private final com.studyagent.profile.LearningMemoryService memory;
     private final KnowledgePointLifecycle lifecycle = new KnowledgePointLifecycle();
 
     @Transactional
@@ -224,6 +225,7 @@ public class LearningPersistenceService {
         quiz.setFeedbackJson(feedbackJson);
         quiz.setAnsweredAt(LocalDateTime.now());
         quizMapper.updateById(quiz);
+        memory.recordQuiz(session, point, quiz);
         advance(point, KnowledgePointStatus.FEEDBACK);
         clearSessionFailure(session);
     }

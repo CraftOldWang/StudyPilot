@@ -6,6 +6,7 @@ import { LearningPanel } from './components/LearningPanel'
 import { PlanningStart } from './components/PlanningStart'
 import { NewConversation } from './components/NewConversation'
 import { TestTools } from './components/TestTools'
+import { LearningMemoryPage } from './components/LearningMemoryPage'
 import type { DocumentItem, KnowledgeBase } from './types'
 import { useDocumentPolling } from './useDocumentPolling'
 
@@ -47,7 +48,7 @@ export default function App() {
   }, [selectedId])
   useEffect(() => { setDocuments([]); void refreshDocuments() }, [refreshDocuments])
   useDocumentPolling(selectedId, documents, refreshDocuments)
-  useEffect(() => { document.title = `${({ new: '新对话', knowledge: '资料库', outline: '学习大纲', learning: '学习对话', tools: '测试工具' })[view]} — StudyPilot` }, [view])
+  useEffect(() => { document.title = `${({ new: '新对话', knowledge: '资料库', outline: '学习大纲', learning: '学习对话', tools: '测试工具', memory: '学习记忆' })[view]} — StudyPilot` }, [view])
   function select(id: string) { selectedRef.current = id; request.current++; setSelectedId(id); setRename(false); setError('') }
   function navigate(next: WorkspaceView) { setView(next); setError('') }
   function openSession(kbId: string, id: string, message?: string) { select(kbId); setChat({ id, kb: kbId, message }); setView('learning'); changed() }
@@ -87,6 +88,7 @@ export default function App() {
           onBack={() => navigate('new')} onOutline={() => { select(chat.kb); navigate('outline') }} onSessionKnowledgeBase={() => {}} />}
       </div>
       {view === 'tools' && <TestTools knowledgeBases={knowledgeBases} selectedId={selectedId} onSelect={select} />}
+      <div hidden={view !== 'memory'} className="memory-view"><LearningMemoryPage knowledgeBases={knowledgeBases} selectedId={selectedId} visible={view === 'memory'} onSelect={select} onSession={openSession} /></div>
     </main>
   </div>
 }
