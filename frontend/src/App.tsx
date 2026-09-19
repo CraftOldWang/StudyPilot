@@ -9,6 +9,7 @@ import { TestTools } from './components/TestTools'
 import { LearningMemoryPage } from './components/LearningMemoryPage'
 import type { DocumentItem, KnowledgeBase } from './types'
 import { useDocumentPolling } from './useDocumentPolling'
+import { DEMO_MODE } from './deployment'
 
 export default function App() {
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([])
@@ -87,7 +88,7 @@ export default function App() {
         {chat && chatKb && <LearningPanel key={chat.id} initialSessionId={chat.id} initialMessage={chat.message} knowledgeBase={chatKb} onChanged={changed}
           onBack={() => navigate('new')} onOutline={() => { select(chat.kb); navigate('outline') }} onSessionKnowledgeBase={() => {}} />}
       </div>
-      {view === 'tools' && <TestTools knowledgeBases={knowledgeBases} selectedId={selectedId} onSelect={select} />}
+      {!DEMO_MODE && view === 'tools' && <TestTools knowledgeBases={knowledgeBases} selectedId={selectedId} onSelect={select} />}
       <div hidden={view !== 'memory'} className="memory-view"><LearningMemoryPage knowledgeBases={knowledgeBases} selectedId={selectedId} visible={view === 'memory'} onSelect={select} onSession={openSession} /></div>
     </main>
   </div>

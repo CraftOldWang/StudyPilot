@@ -1,9 +1,10 @@
 import { apiRequest } from '../api'
 import type { UploadResult } from '../types'
+import { DEMO_MODE } from '../deployment'
 
 export const UPLOAD_CHUNK_BYTES = 8 * 1024 * 1024
 export const UPLOAD_CONCURRENCY = 4
-export const MAX_UPLOAD_BYTES = 1024 * 1024 * 1024
+export const MAX_UPLOAD_BYTES = (DEMO_MODE ? 50 : 1024) * 1024 * 1024
 
 export interface UploadTask {
   knowledgeBaseId: string
@@ -32,9 +33,10 @@ export interface UploadStatus {
 }
 
 export function validateUploadFile(file: File): string | null {
+  if (DEMO_MODE && !/\.(pdf|pptx|txt|md|markdown)$/i.test(file.name)) return '在线演示仅支持 PDF、PPTX、TXT 和 Markdown，音视频请使用本地版。'
   if (!/\.(pdf|pptx|txt|md|markdown|mp4|m4a|mp3|wav)$/i.test(file.name)) return '支持 PDF、PPTX、TXT、Markdown、MP4、M4A、MP3 和 WAV 文件。'
   if (file.size === 0) return '文件为空，请重新选择。'
-  if (file.size > MAX_UPLOAD_BYTES) return '文件超过 1 GiB 上传上限。'
+  if (file.size > MAX_UPLOAD_BYTES) return DEMO_MODE ? '文件超过演示站 50 MiB 上传上限。' : '文件超过 1 GiB 上传上限。'
   return null
 }
 

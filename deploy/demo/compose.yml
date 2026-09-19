@@ -1,0 +1,144 @@
+name: studypilot-demo
+
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: deploy/demo/Web.Dockerfile
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN}
+      DEMO_USER: ${DEMO_USER:-visitor}
+      DEMO_PASSWORD_HASH: ${DEMO_PASSWORD_HASH:?Set a Caddy password hash}
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [api]
+    mem_limit: 256m
+
+  api:
+    build:
+      context: ../..
+      dockerfile: deploy/demo/Api.Dockerfile
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: demo
+      TZ: Asia/Shanghai
+      DOMAIN: ${DOMAIN:?Set DOMAIN}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD}
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-studypilot}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:?Set RUSTFS_SECRET_KEY}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?Set DEEPSEEK_API_KEY}
+      AI_DASHSCOPE_API_KEY: ${AI_DASHSCOPE_API_KEY:?Set AI_DASHSCOPE_API_KEY}
+      CHAT_MODEL: ${CHAT_MODEL:-deepseek-v4-flash}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-qwen3.7-text-embedding}
+      MODEL_MAX_CALLS: ${MODEL_MAX_CALLS:-500}
+    volumes: ["app-data:/data"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      rocketmq-broker:
+        condition: service_started
+      rustfs:
+        condition: service_started
+    mem_limit: 1536m
+
+  mysql:
+    image: mysql:8.1
+    restart: unless-stopped
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci", "--default-time-zone=+08:00"]
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: study_agent_demo
+      MYSQL_USER: study
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD}
+    volumes: ["mysql-data:/var/lib/mysql"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 10s
+      retries: 20
+    mem_limit: 1g
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?Set REDIS_PASSWORD}"]
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?Set REDIS_PASSWORD}
+    volumes: ["redis-data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 10
+    mem_limit: 256m
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms768m -Xmx768m
+    volumes: ["es-data:/usr/share/elasticsearch/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9200/_cluster/health >/dev/null"]
+      interval: 15s
+      retries: 20
+    mem_limit: 2g
+
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.3.2
+    restart: unless-stopped
+    command: sh mqnamesrv
+    environment:
+      JAVA_OPT_EXT: -Xms128m -Xmx256m
+    mem_limit: 384m
+
+  rocketmq-init:
+    image: apache/rocketmq:5.3.2
+    user: root
+    command: sh -c "mkdir -p /home/rocketmq/logs /home/rocketmq/store && chown -R 3000:3000 /home/rocketmq/logs /home/rocketmq/store"
+    volumes: ["mq-store:/home/rocketmq/store", "mq-logs:/home/rocketmq/logs"]
+
+  rocketmq-broker:
+    image: apache/rocketmq:5.3.2
+    restart: unless-stopped
+    command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/rocketmq-5.3.2/conf/broker.conf
+    environment:
+      JAVA_OPT_EXT: -Xms256m -Xmx512m -Xmn128m
+    volumes:
+      - ./broker.conf:/home/rocketmq/rocketmq-5.3.2/conf/broker.conf:ro
+      - mq-store:/home/rocketmq/store
+      - mq-logs:/home/rocketmq/logs
+    depends_on:
+      rocketmq-init:
+        condition: service_completed_successfully
+      rocketmq-namesrv:
+        condition: service_started
+    mem_limit: 1g
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    restart: unless-stopped
+    environment:
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-studypilot}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:?Set RUSTFS_SECRET_KEY}
+    volumes: ["rustfs-data:/data"]
+    mem_limit: 768m
+
+volumes:
+  app-data:
+  caddy-data:
+  caddy-config:
+  mysql-data:
+  redis-data:
+  es-data:
+  mq-store:
+  mq-logs:
+  rustfs-data:

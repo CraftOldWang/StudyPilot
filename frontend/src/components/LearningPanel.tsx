@@ -145,7 +145,7 @@ export function LearningPanel({ knowledgeBase, initialSessionId, initialMessage,
   }, [session?.id, canSend, initialMessage])
   async function saveCards(cards: LearningSession['cards'], confirm = false) {
     if (!session || !active || lock.current) return
-    lock.current = true; setBusy(true); setError(''); setProgress(confirm ? '正在确认卡片、写入 Anki 并整理学习记录…' : '正在保存卡片…')
+    lock.current = true; setBusy(true); setError(''); setProgress(confirm ? '正在确认卡片并整理学习记录…' : '正在保存卡片…')
     try {
       if (active.status !== 'CARD_CONFIRMING') {
         await apiRequest<LearningSession>(`/api/learning/sessions/${session.id}/points/${active.id}/cards`, {

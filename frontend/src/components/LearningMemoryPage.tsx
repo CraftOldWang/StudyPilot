@@ -20,6 +20,7 @@ export function LearningMemoryPage({ knowledgeBases, selectedId, visible, onSele
   const currentKb = useRef(selectedId)
   currentKb.current = selectedId
   useEffect(() => {
+    if (preferences) return
     let alive = true
     memoryApi.preferences().then(value => { if (alive) setPreferences(value) })
       .catch(e => { if (alive) setError(e.message) })

@@ -1,0 +1,32 @@
+{$DOMAIN} {
+    header {
+        -Server
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+        X-Frame-Options DENY
+        Cache-Control "no-store"
+    }
+    route {
+        basic_auth {
+            {$DEMO_USER} {$DEMO_PASSWORD_HASH}
+        }
+        request_body {
+            max_size 12MB
+        }
+        # Only product endpoints are public. Trace, evaluation, hello, raw search and Anki stay internal.
+        @product {
+            method GET POST PUT PATCH
+            path_regexp product ^/api/(knowledge-bases(/[0-9]+(/documents|/source)?)?|learning/plans(/(current|[0-9]+(/(execute|session))?))?|learning/sessions(/[0-9]+(/messages(/stream)?|/turns/[0-9]+(/tools)?|/points/[0-9]+/cards(/confirm)?)?)?|learning-memory(/preferences|/[0-9]+/inclusion)?|files/multipart/(init|complete|[0-9]+(/cancel|/chunks/[0-9]+)?)|documents/[0-9]+/retry)$
+        }
+        reverse_proxy @product api:8080 {
+            header_up X-User-Id 1
+            header_up -Authorization
+            flush_interval -1
+        }
+        @internal path /api /api/* /actuator /actuator/* /v3/api-docs* /swagger-ui*
+        respond @internal "Not found" 404
+        root * /srv
+        try_files {path} /index.html
+        file_server
+    }
+}

@@ -55,6 +55,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleException(Exception ex) {
         log.error("未预期异常", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.fail(500, ex.getMessage()));
+                .body(ApiResponse.fail(500, "服务处理失败，请稍后重试；详细原因已记录在服务端日志中"));
     }
 }

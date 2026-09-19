@@ -27,6 +27,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
         com.studyagent.config.AnkiProperties.class,
         com.studyagent.config.AsrProperties.class,
         com.studyagent.config.LearningMemoryProperties.class,
+        com.studyagent.config.DemoProperties.class,
         CanalProperties.class
 })
 public class StudyAgentApplication {

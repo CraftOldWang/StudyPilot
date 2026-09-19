@@ -1,4 +1,5 @@
 import { type ChangeEvent, useEffect, useRef, useState } from 'react'
+import { DEMO_MODE } from '../deployment'
 import type { KnowledgeBase } from '../types'
 import { hashFile } from '../upload/hashFile'
 import { cancelUpload, completeUpload, initializeUpload, storedBytes, uploadMissing, uploadStatus,
@@ -235,11 +236,11 @@ export function UploadWidget({ knowledgeBase, onUploaded }: { knowledgeBase: Kno
   const label = phase === 'completing' ? serverNames[serverPhase] || phaseNames.completing : phaseNames[phase]
   return <div className="upload-widget">
     <div className="upload-heading">
-      <div><strong>添加课程资料</strong><p>课件：PDF、PPTX、TXT、Markdown<br />音视频：MP4、M4A、MP3、WAV · 最大 1 GiB</p></div>
+      <div><strong>添加课程资料</strong><p>课件：PDF、PPTX、TXT、Markdown<br />{DEMO_MODE ? '共享演示 · 最大 50 MiB，请勿上传私人资料' : '音视频：MP4、M4A、MP3、WAV · 最大 1 GiB'}</p></div>
       <button type="button" disabled={running} onClick={() => input.current?.click()}>
         {resumable ? '重新选择同一文件' : '选择文件'}
       </button>
-      <input ref={input} className="visually-hidden" type="file" disabled={running} accept=".pdf,.pptx,.txt,.md,.markdown,.mp4,.m4a,.mp3,.wav" onChange={choose} aria-label="选择课程资料" />
+      <input ref={input} className="visually-hidden" type="file" disabled={running} accept={DEMO_MODE ? '.pdf,.pptx,.txt,.md,.markdown' : '.pdf,.pptx,.txt,.md,.markdown,.mp4,.m4a,.mp3,.wav'} onChange={choose} aria-label="选择课程资料" />
     </div>
     {task && <div className="upload-progress-card">
       <strong className="upload-filename">{task.filename}</strong>

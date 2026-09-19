@@ -3,6 +3,7 @@ import { learningApi } from '../learningApi'
 import type { KnowledgeBase } from '../types'
 import type { SessionEntry } from '../learningTypes'
 import { PilotLogo } from './PilotLogo'
+import { DEMO_MODE } from '../deployment'
 
 export type WorkspaceView = 'new' | 'knowledge' | 'outline' | 'learning' | 'tools' | 'memory'
 interface Props {
@@ -50,7 +51,7 @@ export function KnowledgeBaseSidebar({ items, selectedId, activeSessionId, loadi
       <button className={`plain${view === 'new' ? ' active' : ''}`} onClick={() => onNavigate('new')}><span aria-hidden="true">＋</span>新对话</button>
       <button className={`plain${view === 'knowledge' ? ' active' : ''}`} onClick={() => onNavigate('knowledge')}><span aria-hidden="true">▤</span>资料库</button>
       <button className={`plain${view === 'memory' ? ' active' : ''}`} onClick={() => onNavigate('memory')}><span aria-hidden="true">◎</span>学习记忆</button>
-      <button className={`plain${view === 'tools' ? ' active' : ''}`} onClick={() => onNavigate('tools')}><span aria-hidden="true">⚙</span>测试工具</button>
+      {!DEMO_MODE && <button className={`plain${view === 'tools' ? ' active' : ''}`} onClick={() => onNavigate('tools')}><span aria-hidden="true">⚙</span>测试工具</button>}
     </nav>
     <div className="sidebar-heading">我的知识库</div>
     <div className="sidebar-scroll">
@@ -58,6 +59,6 @@ export function KnowledgeBaseSidebar({ items, selectedId, activeSessionId, loadi
         activeSessionId={view === 'learning' ? activeSessionId : null} revision={revision} onSelect={() => onSelect(item.id)} onSession={id => onSession(item.id, id)} />)}</ul>}
       {!loading && !items.length && <button className="plain sidebar-note" onClick={() => onNavigate('knowledge')}>创建第一个知识库</button>}
     </div>
-    <div className="sidebar-footer"><span className="profile-mark">S</span><div>我的学习空间<small>StudyPilot · 本地演示</small></div></div>
+    <div className="sidebar-footer"><span className="profile-mark">S</span><div>{DEMO_MODE ? '共享演示空间' : '我的学习空间'}<small>StudyPilot · {DEMO_MODE ? '请勿上传私人资料' : '本地演示'}</small></div></div>
   </aside>
 }

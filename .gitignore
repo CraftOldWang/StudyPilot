@@ -3,6 +3,9 @@ target/
 .vscode/
 *.iml
 .env
+.env.*
+!.env.example
+deploy/demo/secrets/
 some_apiKey
 logs/
 *.log

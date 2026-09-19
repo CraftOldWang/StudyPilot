@@ -29,6 +29,7 @@ public class LearningCardStageService {
     private final AnkiExportService anki;
     private final TransactionTemplate transactions;
     private final IdentityScope identity;
+    private final com.studyagent.config.DemoProperties demo;
     @jakarta.annotation.Resource(name = "learningConversationExecutor")
     private ExecutorService executor;
     private final ConcurrentHashMap<Long, CompletableFuture<Void>> jobs = new ConcurrentHashMap<>();
@@ -115,7 +116,9 @@ public class LearningCardStageService {
         if (compactPoint && !"READY".equals(prepared.getPendingSummaryStatus())) {
             throw new BusinessException("学习摘要未完成：" + prepared.getPendingSummaryError() + "；可重试确认，原上下文保留");
         }
-        for (var card : list(userId, pointId)) { anki.export(userId, card.getId()); }
+        if (!demo.enabled()) {
+            for (var card : list(userId, pointId)) { anki.export(userId, card.getId()); }
+        }
         transactions.executeWithoutResult(tx -> {
             var locked = lock(userId, sessionId);
             var point = requirePoint(locked, pointId);

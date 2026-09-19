@@ -150,7 +150,7 @@ public class LearningConversationGateway {
             String answer = switch (intent.action() == null ? "QUESTION" : intent.action().name()) {
                 case "QUIZ" -> intent.questions().size() + "道选择题已准备好，请在下方作答，也可以先提问。";
                 case "GRADE" -> (streamed.isEmpty() ? "本次得分 " + intent.score() + " 分，请查看逐题解析，有疑问可以继续问我。" : streamed.toString());
-                case "CARDS" -> intent.cards().size() + "张卡片草稿已生成，可以编辑或让我重写。确认全部卡片后再写入Anki、进入下一知识点。";
+                case "CARDS" -> intent.cards().size() + "张卡片草稿已生成，可以编辑或让我重写。确认全部卡片后保存、进入下一知识点。";
                 case "PREPARE_CARDS" -> "已进入卡片阶段，可以继续让我生成卡片。";
                 default -> streamed.isEmpty() ? response.get().getTextContent() : streamed.toString();
             };
