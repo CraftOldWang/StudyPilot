@@ -1,266 +1,185 @@
-# StudyAgent 技术设计方案
+# StudyPilot 当前架构与核心链路
 
-> 2026-09-14 对话式重构：大纲归知识库，`learning_sessions.plan_run_id` 关联大纲，`knowledge_points.outline_node_id` 关联原大纲叶子；每次新聊天创建独立会话/知识点 ID。已完成节点按同一大纲跨会话汇总，新聊天跳过已完成节点；在途测验、卡片、消息和摘要按会话隔离。`POST /plans/{id}/session?newConversation=true` 新建聊天，不带参数仍继续已有会话。模型每轮可读取知识库当前大纲；原聊天的在途学习路径不因重新生成大纲被悄悄重写。V17 只增加关联字段，不迁移旧实验进度。
+更新于 2026-09-22。本文描述当前代码，取代早期固定五题三卡、同步按钮式学习的设计。产品范围见 [001](001-全局设计与范围.md)，运行方式见 [README](../../README.md)，待办只维护在 [PROGRESS](../../PROGRESS.md)。
 
+## 1. 整体结构
 
-> 2026-09-10 用户确认的大纲调整：每个资料库直接展示当前大纲，不再提供历史规划任务列表，也不兼容旧版卡片大纲。大纲保存为递归目录树，叶子节点是独立学习任务；父节点聚合后代完成状态，学习按树的深度优先顺序推进。大纲页只显示标题、只读完成状态和简短重点标记，删除课件依据、重点依据、长说明及时间估算。知识点讲解和资料溯源属于学习对话。旧大纲需重新生成，此规则覆盖下文旧版两层大纲与卡片展示描述。
+这是一个 **React 桌面网页 + Spring Boot 模块化单体**。Java 业务运行在同一个进程中；MySQL、Redis、RocketMQ、Elasticsearch、RustFS 是外部基础设施，不是五个业务微服务。
 
-**2026-09-09 对话流程修订：** 采用用户确认的“讲解/追问→测验→错题答疑→卡片草稿→用户确认全部→Anki→下一点”。题目与卡片为工具约束的 1–10 个；写卡时并行摘要、确认前保留原上下文、确认后替换整点并舍弃卡片阶段上下文。实现入口与真实验收见 [对话修复记录](../implementation/learning-dialogue-repair.md)。这些规则替代下文旧版固定五题三卡、生成卡片即完成的设计。
-
-**版本** 2.0 · **日期** 2026-09-04 · **状态** 首个可运行里程碑架构已确认
-
-**2026-09-08 架构扩展已确认：** M3–M8 的当前目标契约见 [002-简历目标与验收计划.md](002-简历目标与验收计划.md)。该文补充并调整下文 M0–M2 的规划、切块、工具推进、压缩、上传和同步 REST 边界；新增 SSE、Anki 与 ASR。存在这些阶段差异时按新契约实施，实际完成状态以 PROGRESS.md 为准；AgentScope 单 Runtime、服务端业务状态权威及既定分包原则继续有效。
-
-产品范围见 [001-全局设计与范围.md](001-全局设计与范围.md)，实时状态见根 [PROGRESS.md](../../PROGRESS.md)。本文只描述当前目标架构与关键契约，不兼容已经废弃的旧分层或双 Runtime 方案。
-
-## 1. 设计目标
-
-首个里程碑只完成两条真实纵向链路：
-
-1. `PDF → 对象存储 → Tika → 分块 → DashScope embedding → Elasticsearch → Agent RAG tool`。
-2. `学习目标 → 计划 → 单知识点讲解/答疑 → 五题测验 → 三张卡片 → 完成`。
-
-AgentScope Java 2.0.1 是唯一 Agent Runtime。Spring AI 代码与依赖全部删除；不保留 provider fallback、兼容层或第二套 Agent Loop。
-
-## 2. 技术栈
-
-| 层 | 选型 | 当前用途 |
-|---|---|---|
-| 后端 | Java 21、Spring Boot | HTTP、服务编排、事务与配置 |
-| Agent Runtime | AgentScope Java 2.0.1 | Agent Loop、AgentTool、AgentState、Memory/Compaction |
-| Chat Model | DeepSeek（AgentScope OpenAI-compatible 扩展） | hello、讲解、测验与卡片生成 |
-| Embedding | 阿里云官方 `dashscope-sdk-java` | DOCUMENT/QUERY 两种 embedding |
-| 数据库 | MySQL、MyBatis-Plus、Flyway | 学习业务事实与处理状态 |
-| 检索 | Elasticsearch Java Client | BM25、向量检索、RRF 与父块回填 |
-| 摄入 | S3-compatible 对象存储、Apache Tika | 原始 PDF 保存与文本解析 |
-| 前端 | React 18、TypeScript、Vite | 知识库与学习闭环同步 REST 页面 |
-
-禁止把密钥输出到日志或实现文档。外部 provider 失败直接返回明确错误，不引入备用 provider 掩盖问题。
-
-## 3. 总体架构
-
-```text
-React UI
-  │ synchronous REST
-  ▼
-Spring Web ── identity scope ──────────────────────────────┐
-  │                                                       │
-  ├─ ingest ── S3 ── Tika ── chunk ── embedding ── ES    │
-  │                                                       │
-  └─ learning ── AgentScope main Agent                    │
-                    ├─ knowledge_search AgentTool ── rag ─┘
-                    ├─ state transition tools ── MySQL
-                    ├─ ConversationCompactor ── AgentStateStore
-                    └─ trace mapping ── trace timeline API
+```mermaid
+flowchart TB
+    UI[React 桌面网页] -->|REST / SSE| API[Spring Boot：身份绑定与 HTTP 入口]
+    API --> I[ingest：资料入库]
+    API --> P[learning：大纲生成]
+    API --> L[learning：对话学习]
+    I -->|文件与解析文本| S[(RustFS)]
+    I -->|异步任务| MQ[RocketMQ]
+    MQ --> W[解析 / 切块 / 向量化 / 索引]
+    W --> DB[(MySQL)]
+    W --> ES[(Elasticsearch)]
+    DB -->|已解析课件文本| P
+    P -->|知识库大纲| DB
+    L --> A[AgentScope：模型与工具循环]
+    A --> R[rag：检索与来源读取]
+    R --> ES
+    R --> DB
+    L -->|阶段、消息、摘要| DB
+    L --> M[profile：跨会话学习记忆]
+    M --> DB
+    L --> C[review：复习卡与 Anki 导出]
+    C --> DB
+    C --> ANKI[本机 Anki]
+    I --> REDIS[(Redis：分片进度等)]
 ```
 
-核心依赖方向：
+`config/` 集中装配与配置；`model/`、`mapper/` 放数据库实体和查询；`algo/` 放切块、RRF、指标等纯算法。无需再为这些目录各建一套接口层。
+
+## 2. 三条核心链路
+
+### A. 资料入库：文件如何变成可检索资料
 
 ```text
-learning → agent → rag
-ingest   → rag
-learning → review
-identity → all request paths
+分片上传 → RustFS 合并文件 → MySQL 保存文档 → RocketMQ 通知
+  → 解析课件 / 转写音视频 → 保存解析文本 → 父子切块
+  → 子块 embedding → Elasticsearch 索引 → 文档 INDEXED
 ```
 
-- `agent` 不依赖 `learning`，只提供 AgentScope 集成、工具治理、状态保存和 trace 映射。
-- `learning` 拥有学习领域状态和流程，不能把 MySQL 业务事实塞进 AgentState。
-- `rag` 读索引，`ingest` 写索引；二者通过稳定的 chunk/index 契约衔接。
-- 包结构与编码纪律以根 [AGENTS.md](../../AGENTS.md) 为准。
+- `FileUploadService` 是上传入口，`NativeMultipartUploadService` 管分片，`UploadPublicationService` 发布文档。
+- `DocumentIndexConsumer → DocumentPipeline` 驱动处理阶段。当前是一条 MQ 消息驱动管道，不是每个阶段一个队列。
+- 原件和解析文本保存在 RustFS；文本块、处理状态、可复用向量产物保存在 MySQL；ES 是用于搜索的索引副本。
+- 规划复用 MySQL 已解析的父块正文，聊天搜索使用 ES。不是每次聊天重新解析、切块、向量化。
+- SHA-256/唯一键解决重复文件写入；Redis Bitmap 记录分片进度；阶段产物复用减少失败后的重复处理。
+- 消息在事务提交后发送，未实现事务 outbox；`DocumentRecoveryJob` 补发待处理或过期任务。任务租约、幂等和失败状态属于当前链路所需能力。
 
-## 4. 身份与权限 scope
-
-首版以 `username='default-user'` 的数据库记录作为唯一用户，不建设注册、登录或 RBAC。身份仍必须由服务端解析并绑定，不能由模型提交。
-
-`users` 表使用：
-
-- `ENGINE=InnoDB`
-- `DEFAULT CHARSET=utf8mb4`
-- `COLLATE=utf8mb4_0900_ai_ci`
-
-M1 尚未建立学习会话时，检索 HTTP 入口验证请求用户拥有 `knowledgeBaseId`，再把 `userId + knowledgeBaseId` 绑定进本次 `RuntimeContext`。M2 建立学习会话后，服务端从 `learningSessionId` 恢复同一个 user/knowledge-base scope 和当前 knowledge point，再构建运行上下文。模型可见的工具 schema 始终不包含 `userId`、`knowledgeBaseId` 或 `knowledgePointId`。
-
-## 5. 知识库与摄入
-
-### 5.1 最小知识库
-
-首版建立 `knowledge_bases` 表，至少保存 `id`、`user_id`、`name`、创建和更新时间。它提供独立、可验证的知识库归属，不再用 documents 的存在性代替知识库实体。
-
-HTTP 能力只包括：
-
-- 创建知识库。
-- 列出当前用户的知识库。
-- 重命名当前用户的知识库。
-- 查看一个知识库下的文档及处理状态。
-
-不实现删除知识库，也不实现 MySQL、对象存储和 Elasticsearch 的级联清理。
-
-### 5.2 PDF 摄入管道
+### B. 生成大纲：整份资料如何形成学习路径
 
 ```text
-RECEIVED → STORED → PARSED → CHUNKED → EMBEDDED → INDEXED
+选课件 + 可选往年题
+  → 分批提取课件知识点（EXTRACT）
+  → 合并递归目录（OUTLINE）
+  → 可选考点定位、原文匹配和复核（EMPHASIS_*）
+  → 分批生成叶子任务（TASK_BATCH）→ 服务端汇总（TASKS）
+  → 保存知识库大纲
 ```
 
-- 上传接口只接收当前里程碑约束内的 PDF，并先验证知识库归属。
-- 原始 PDF 写入对象存储；S3 endpoint 必须通过配置解析并在启动阶段验证。
-- Tika 提取正文和可用结构信息。
-- 分块生成 parent/child 关系和可追溯 provenance；不得只保存无法定位原文的纯文本。
-- 每一步写明确状态；失败停在出错步骤并保存可诊断错误，不伪装为成功。
+- 入口：`LearningPlanningController → LearningPlanningService`。
+- 读取选中文档的全部可用父块，再分批处理；这一过程不使用 RAG Top K 来代表整门课。
+- `PlanningModel` 管模型调用，`PlanningOutline/Validation/Evidence` 管目录结构、来源匹配和结果约束，`PlanningPersistence` 保存阶段及失败位置。
+- 大纲是多层树，叶子才是学习任务；重点是 HIGH/MEDIUM/NORMAL 标签。不是每次新聊天都生成大纲。
+- `POST /api/learning/plans` 创建任务；`POST /plans/{id}/execute` 执行；`GET /plans/current?knowledgeBaseId=...` 读取当前大纲。
+- `POST /plans/{id}/session?newConversation=true` 基于大纲创建独立聊天。没有参数则继续该大纲最近关联的会话。
 
-### 5.3 Embedding
-
-`rag.embedding.EmbeddingService` 由阿里云官方 `dashscope-sdk-java` 实现，不经过 Spring AI，也不手写 DashScope HTTP client。
-
-接口保留两种语义：
-
-- `DOCUMENT`：摄入时为知识片段生成索引向量。
-- `QUERY`：检索时为用户查询生成查询向量。
-
-调用方必须显式选择语义，不能依赖默认值。批次大小、模型名和超时进入 `config/` 下的 `@ConfigurationProperties`。
-
-## 6. RAG 检索与 AgentScope 接入
-
-### 6.1 检索链
-
-1. 服务端注入 user/knowledge-base filter。
-2. 为 query 生成 `QUERY` embedding。
-3. 并行获得 BM25 与向量候选。
-4. 用 RRF 合并排名。
-5. 根据 child chunk 回填 parent chunk 内容和出处。
-6. 输出受控数量的结果。
-
-统一结果契约至少包含：
+### C. 对话学习：模型如何参与、服务端如何约束
 
 ```text
-chunkId
-content
-provenance
-score
+用户消息 → 认领回合并恢复上下文 → 构建本轮 Agent
+  → 模型回答 / 调用资料工具 / 请求学习阶段转换
+  → 服务端检查状态和产物 → 事务保存 → 保存上下文 → SSE 返回
 ```
 
-检索为空时返回明确的“没有资料依据”结果。Agent prompt 和工具返回都不得生成不存在的文档名、页码或 chunk。
+- `LearningConversationService` 编排一轮处理。
+- `LearningConversationGateway` 构建本轮 ReActAgent，注入大纲、学习状态、上下文及学习记忆；通过 `LearningSourceTool/LearningActionTool` 提供本阶段允许的工具。
+- `LearningTurnPersistence` 负责回合认领、幂等和产物提交；`LearningPersistenceService` 保存测验、知识点状态等业务事实。
+- 网页走 `POST /sessions/{id}/messages/stream`。同步 `/messages` 供脚本使用；结构化 `/quiz/submit` 将选项转成同一条对话链路，不另建评分流程。
+- 模型提出动作，服务端决定动作是否合法。题目和卡片数量均为 1–10，工具参数和产物校验共同限制。
+- 学习流程是“大纲生成工作流 + 受状态约束的 ReAct 对话”，不是通用的 Plan-and-Execute Agent。
 
-### 6.2 Retrieval 应用服务与 AgentTool
+```mermaid
+stateDiagram-v2
+    [*] --> NEW
+    NEW --> EXPLAINING: 开始当前知识点
+    EXPLAINING --> EXPLAINING: 讲解和追问
+    EXPLAINING --> QUIZZING: 发布选择题
+    QUIZZING --> FEEDBACK: 提交答案并评分
+    FEEDBACK --> FEEDBACK: 错题答疑
+    FEEDBACK --> CARD_GENERATING: 生成卡片并启动摘要
+    CARD_GENERATING --> CARD_GENERATING: 编辑或重写草稿
+    CARD_GENERATING --> CARD_CONFIRMING: 用户确认全部卡片
+    CARD_CONFIRMING --> COMPLETED: 摘要就绪、保存/导出成功
+    COMPLETED --> [*]
+```
 
-- `rag/retrieval` 应用服务拥有检索编排和统一结果契约。
-- 通过稳定的 AgentScope `AgentTool`/`Toolkit` 自定义 `knowledge_search`，内部调用该应用服务。
-- 模型可见参数只有 query；权限 scope 由服务端在构造工具时绑定。
-- 工具将统一 RAG 结果序列化给模型，同时保留 chunkId 供测验解释和卡片来源引用。
+评分是依据题目保存的标准选项进行确定性判分；题目和标准答案来自模型，不能因此保证题目内容永远正确。确认失败时保留明确状态，用户可重试，不将失败当成完成。
 
-AgentScope 2.0.1 的整个 `io.agentscope.core.rag` package（包括 `Knowledge`）已标记 `@Deprecated(forRemoval=true, since="2.0.0")`。目标态不实现或依赖该 package，也不采用其中的 `KnowledgeRetrievalTools` 或 `GenericRAGHook`；稳定的 tool/toolkit 扩展点足以承载一个权限绑定清楚、返回契约可控的显式检索工具，同时避免把即将移除的 API 变成项目边界。
+## 3. 用“操作系统 → LRU”贯穿数据变化
 
-## 7. 学习会话与状态机
+| 用户动作 | 服务端做什么 | 数据发生什么变化 |
+| --- | --- | --- |
+| 上传 OS 课件和往年题 | 保存文件、解析、切块、向量化 | 新增 `documents/document_chunks`，原件/TXT 入 RustFS，子块向量入 ES |
+| 生成大纲 | 遍历课件，合并章节，结合往年题标重点 | `learning_plan_runs/stages` 保存大纲和阶段输出，其中有 LRU 叶子节点 |
+| 新建聊天 A | 从该大纲创建独立学习实例 | 新增 `learning_sessions`、计划快照 `learning_plans`、会话内 `knowledge_points`；以 `plan_run_id/outline_node_id` 关联共享目录 |
+| 问“LRU 为什么不出现 Belady 现象？” | 恢复聊天 A 上下文；按需检索、读取来源 | 新增 `learning_turns`，保存回答与工具轨迹；知识点仍在讲解阶段 |
+| 答完选择题 | 按已生成选项判分，进入错题答疑 | 写 `quizzes` 的答案/分数/反馈，同时写一条 `learning_memories` 测验观察 |
+| 生成卡片并重写 | 保存草稿，同时总结写卡前的 LRU 对话 | `review_cards` 为草稿；`learning_contexts` 保存待应用摘要，仍使用原上下文 |
+| 确认全部卡片 | 本地导出 Anki；demo 模式只保存站内卡片；应用摘要 | LRU 标 COMPLETED，当前点原上下文被摘要替换；卡片讨论丢弃，完整聊天历史仍在 `learning_turns` |
+| 新建聊天 B | 复用大纲，汇总该大纲已完成叶子，读取可用历史观察 | 独立消息/测验/卡片；新聊天跳过已完成叶子，不复制聊天 A 全部上下文 |
 
-### 7.1 聚合边界
+共享的是大纲及其完成记录的汇总，聊天中的在途练习、草稿和上下文各自独立。重新生成大纲不会悄悄重写正在进行的聊天路径。
 
-一个 `LearningSession` 固定绑定：
+## 4. 两种记忆，两个不同目的
 
-- 一个 user。
-- 一个 learning goal。
-- 一个 knowledge base。
-- 一个 AgentScope session。
-- 同一时刻一个 active knowledge point。
+| 机制 | 保存在哪里 | 什么时候读取 | 作用 |
+| --- | --- | --- | --- |
+| 当前聊天上下文、知识点摘要 | `learning_contexts`，压缩记录在 `learning_compactions` | 同一聊天下一轮 | 控制上下文长度、恢复会话 |
+| 跨聊天学习记忆 | `learning_preferences/learning_memories` | 当前用户、当前知识库的其他聊天 | 带入讲解偏好、目标和历史错题观察 |
 
-客户端只用 `learningSessionId` 恢复。服务端据此恢复业务聚合和对应最新 AgentState；不能信任客户端重复提交的身份、知识库或当前知识点。
+写卡前异步生成摘要，卡片确认前仍使用完整原上下文；确认后才替换当前知识点片段。摘要有损，完整历史记录不等于每轮都送给模型。
 
-### 7.2 状态转换
+长期记忆复用评分结果，不再调用模型提取“人格画像”。当前按同名知识点优先、最近时间其次，最多 4 条、正文预算 1200 token；不采用向量记忆库，也不把一次错误认定为长期弱项。可在界面关闭或排除单条记忆。
+
+## 5. RAG 内部结构与实际查询步骤
 
 ```text
-NEW → EXPLAINING → QUIZZING → CARD_GENERATING → COMPLETED
+knowledge_search(query)
+  → 服务端绑定 userId + knowledgeBaseId
+  → 查询向量（BM25 模式不需要）
+  → ES 子块候选：BM25 / Vector / 两路召回
+  → RRF 按排名融合（选用混合时）
+  → Top K 子块
+  → 直接使用子块 或 按 parentChunkId 回填并去重
+  → 按正文 token 预算装入上下文 + 来源标识
 ```
 
-- Agent 只能通过受控工具提出状态推进请求。
-- 服务端注入 user 和当前 knowledge point，并验证只能走相邻转换。
-- 任何一步失败都留在当前状态并记录错误；不提前推进后回滚成不确定状态。
-- QUIZZING 中允许用户继续追问，回答后仍保持 QUIZZING，不退回 EXPLAINING。
-- 一个知识点完成后，学习计划再激活下一个知识点；首版不并行学习多个知识点。
+| 选择 | 改变哪一层 | 取舍 |
+| --- | --- | --- |
+| BM25 | 召回与排序 | 精确术语有用，容易漏掉不同表述；无需查询 embedding |
+| VECTOR | 召回与排序 | 适合语义改写，仍可能漏掉精确标识 |
+| RRF | 合并 BM25 与向量的排名 | 无需归一化两种分数，但另一条路线不提供新证据时未必提升 |
+| PARENT | 当前实现先 RRF，再回填父块 | 邻近内容更完整，也更占预算；过大整块会跳过，可能丢掉有用证据 |
 
-### 7.3 测验与卡片
+**当前代码默认是 PARENT，而不是此前简历讨论中的 VECTOR。** 本轮只整理，不改变检索策略。默认 Top K=6、两路各 30 候选、RRF k=60、正文预算 4096；本机配置覆盖为子块 800/overlap 0、父块 2400/overlap 0。索引使用 1024 维 cosine 向量。参数以生效 profile 为准。
 
-- 每次测验固定五题，题目作为一份 JSON 聚合持久化。
-- 用户整份提交答案后评分，并对错题给出解释。
-- 首版没有及格门槛；提交并完成评分即可进入卡片生成。
-- 每个知识点生成三张复习卡片并持久化。
-- 卡片可保存来源 chunkId，但首版不调用 AnkiConnect。
+`compareContexts` 复用同一份 RRF 子块排名，只改变上下文组装，适合比较回填效果。召回命中和最终上下文包含答案是两项不同结果；实验记录见 [OS 28 题](../implementation/os-rag-human-28.md)。
 
-讲解、测验和卡片生成都在主 Agent 流程内完成。首个里程碑不启用学习 subagent，避免在闭环尚未稳定时引入额外会话、失败和委派状态。后续若启用，每个 child agent 必须有工具白名单和独立 ReAct loop。
+Agent 也可以用 `knowledge_read` 直接读取已知来源，不要求每轮重新搜索。提供出处只保证可定位资料，不等于已经自动判定回答正确。
 
-## 8. 持久化与上下文
+## 6. 从职责定位代码，不必逐个类读
 
-### 8.1 MySQL 是业务事实来源
+| 想了解什么 | 从哪里开始 | 再看什么 |
+| --- | --- | --- |
+| 页面如何组织 | `frontend/src/App.tsx` | Sidebar、LearningPanel、LearningOutline、DocumentPanel、LearningMemoryPage、TestTools |
+| 上传到索引 | `ingest/upload/FileUploadService` | NativeMultipartUploadService → UploadPublicationService → DocumentPipeline |
+| 大纲怎么生成 | `learning/LearningPlanningService` | PlanningModel、PlanningOutline、PlanningValidation、PlanningPersistence |
+| 一轮聊天 | `learning/LearningConversationService` | Gateway → 工具 → TurnPersistence |
+| 卡片与摘要交接 | `learning/LearningCardStageService` | ConversationCompactor、AnkiExportService |
+| 检索对照 | `rag/retrieval/KnowledgeRetrievalService` | RetrievalService、BM25Retriever、VectorRetriever、ParentAggregator |
+| 历史记忆 | `profile/LearningMemoryService` | LearningMemoryMapper、LearningMemoryController |
+| 请求和工具轨迹 | `learning/LearningTraceService` | ObservedModel、ModelUsageRecorder、LearningTraceController |
 
-首个里程碑的最小业务表：
+`agent/` 提供通用模型、工具 scope 和诊断集成；学习业务编排在 `learning/`。Hello 诊断所用 HarnessAgent 不等于主学习 Agent，主学习流程在 Gateway 内构建 ReActAgent。
 
-| 表 | 事实 |
-|---|---|
-| `users` | 用户身份 |
-| `knowledge_bases` | 知识库归属与名称 |
-| `documents` | 原始资料、对象位置和处理状态 |
-| `document_chunks` | chunk/parent/provenance 与索引映射 |
-| `learning_sessions` | 目标、KB、AgentScope session、当前状态 |
-| `learning_plans` | 会话的知识点顺序 |
-| `knowledge_points` | 单知识点内容、顺序和状态 |
-| `quizzes` | 五题 JSON、提交答案和评分结果 |
-| `review_cards` | 三张卡片及来源 |
+## 7. 运行与辅助内容的边界
 
-具体列由对应实现批次按最小契约确定。旧自建 Runtime 的 run/step/message/checkpoint 表不迁移为目标 schema；trace 时间线的查询投影只在 trace 模块实现时确定，不在本文预设新的持久化表。
+- **日常本地运行：** Windows/IDEA 后端 + 本机 Vite；Docker 运行数据库、MQ、对象存储和 ES。`local` profile 复用 `application-eval.yml` 的演示配置，名称不代表使用假模型。
+- **在线演示：** `deploy/demo/` 是独立的全容器部署配置，口令保护、共享用户。尚未上线，不能把准备了配置写成已经部署。
+- **可选集成：** 音视频需要本地 ASR worker；本地确认卡片需要 AnkiConnect。Canal 在 local/eval/demo 关闭，保留为可选历史同步方式，不是当前必需链路。
+- **测试工具：** 普通检索、Agent 检索、Trace、评测、Hello 是独立页面。`eval/`、实验脚本、`docs/evidence/` 不参与产品运行，但保留简历指标的样本与来源。
+- **数据库迁移：** 历史 Flyway 文件仍须保留，不能因为旧代码删除就删除已应用迁移。
 
-### 8.2 AgentState 只保存最新短期上下文
+## 8. 清理后的边界与仍存在的问题
 
-AgentState 保存恢复对话所需的最新状态，不保存 checkpoint 历史，不实现 fork/replay。业务状态以 MySQL 为准；恢复时二者通过 learning session 与 AgentScope session 映射衔接。
+已删除无业务调用的 FSRS、未注册的旧写卡工具及只服务它的截断中间件；删除根据一句目标临时生成 3–5 点计划的旧入口，以及 explain/quiz/cards 快捷接口。学习会话统一由资料大纲创建，读接口直接组装持久化事实，不再依赖旧流程服务。
 
-知识点完成后，在产生完成响应的当前 Agent turn 结束处，由薄适配器执行一次不依赖日常 middleware 阈值的强制压缩：
+保留结构化交卷接口，因当前压缩实验仍使用它；它也走正式对话链路。没有重建数据库、迁移聊天数据、改动模型或重跑历史实验。
 
-1. 读取该会话当前 Memory。
-2. 构造 one-off `CompactionConfig`：`triggerMessages(1)`、`keepMessages(1)`，并设置 StudyAgent 定制 `summaryPrompt`。Prompt 必须保留 AgentScope 用来注入待压缩消息的 `{messages}` 占位符，同时要求摘要保留学习目标、已掌握点、易错点、关键出处和下一知识点所需上下文。
-3. 调用 public `ConversationCompactor.compactIfNeeded(...)`。
-4. 处理返回的 `Optional<List<Msg>>`：有值时用压缩后的消息替换同一个 `AgentState.contextMutable()` 中的会话上下文；预期应压缩却返回 empty 时显式失败，不能把一次表面调用记成已压缩。
-5. 将修改后的同一个 AgentState 保存到 AgentStateStore；保存成功后才能完成本次知识点收尾。
-
-`triggerMessages(1)` 让该 one-off 配置在知识点完成时立即进入压缩判断，`keepMessages(1)` 为摘要留出非空前缀；这条完成路径不依赖常规长会话阈值。调用或保存失败必须暴露，不得把未压缩/未保存状态标成成功；首版不保留压缩前 checkpoint。
-
-## 9. Trace API
-
-后端为每次 Agent 请求生成 traceId，把 AgentScope 可获得的运行事件映射为稳定的产品时间线。最小事件包含顺序/时间、阶段、事件类型、摘要、成功或失败状态；敏感配置和完整密钥不能进入事件。
-
-提供按 traceId 查询时间线的 JSON API。首版不做 trace UI、不做 replay，也不宣称底层日志等同于产品 trace。
-
-## 10. HTTP 与前端
-
-前端删除现有实现后，以 React 18 + TypeScript + Vite 全新实现；不背负旧组件兼容。
-
-首版页面能力：
-
-- 知识库创建、列表、重命名。
-- PDF 上传、文档处理状态、知识库检索演示。
-- 学习目标输入、学习计划和当前知识点。
-- 讲解与 QUIZZING 中答疑。
-- 五题测验提交、评分和错题解释。
-- 三张卡片与学习状态展示。
-
-所有交互使用同步 REST。首版不做 SSE、WebSocket、trace UI、画像页或 Anki 页面。
-
-## 11. 失败与事务边界
-
-- Controller 只做协议转换；业务校验和事务位于服务层。
-- 学习状态转换与对应业务事实写入处于同一明确事务边界。
-- 对象存储、embedding 和 Elasticsearch 等外部调用失败必须保留管道步骤和错误信息。
-- 工具调用拒绝越权 scope 或非法状态转换，并把失败明确返回给 Agent；不吞异常、不静默降级。
-- 不为首版添加备用 provider、通用插件层或假想扩展点。
-
-## 12. 验证边界
-
-模块完成时由长期实现 agent 一次性完成相关单元/集成测试、`mvn compile` 和必要的 `mvn test`，再由独立 verifier 异步审查提交和关键逻辑。
-
-首个里程碑至少用真实环境验证：
-
-- DeepSeek hello 成功且配置错误时明确失败。
-- 真实 PDF 可上传、解析、分块、embedding、索引并检索到出处。
-- 跨 user/KB 的检索被服务端拒绝或隔离。
-- 无结果不生成伪造来源。
-- 学习状态只走合法相邻转换，失败和 QUIZZING 追问符合约定。
-- 五题测验、评分解释、三张卡片及恢复链路可完成。
-- 知识点完成后的 compact 状态可再次恢复。
-- traceId 能查询到标准化时间线。
-
-实现状态只更新 [PROGRESS.md](../../PROGRESS.md)；实现细节与测试证据在模块完成后写入 `docs/implementation/`。
+仍需分开看待：大纲同义节点重复是内容质量问题；默认 PARENT 与期望 VECTOR 的差异是策略选择；Canal 和旧实验启动脚本是可选历史设施。它们不应混成一次全仓重写。当前代码仍有较大的编排类和重复状态读取，但本轮不为缩短文件而增加抽象层。

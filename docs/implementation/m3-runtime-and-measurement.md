@@ -46,7 +46,7 @@ python scripts/summarize-model-usage.py .eval/model-calls.jsonl
 
 用户最新 Goal 的输入路径为 `D:\Download\BDNetdisk\_DL`；2026-09-08 实际核实该路径不存在，课程资料位于 `D:\Download\BDNetdisk_DL`。后续以实际文件清单与 SHA-256 固定输入，原文件只读。
 
-`scripts/smoke-api.py` 通过生产 HTTP API 按阶段运行 ready/create/search/hello/upload/status/plan/explain/quiz/submit/cards/session，保存业务 HTTP 响应、耗时、traceId 和资料哈希到指定 run-dir。ready 仅对知识库列表执行最多 45 秒的启动等待；业务 mutation 不自动重试。创建的知识库 ID 可跨阶段复用，避免观察超时后重新创建测试对象。Python 依赖见 `scripts/requirements-eval.txt`；本轮在独立 `.eval/python-env` 安装，完整依赖版本记录于 `.eval/python-requirements.lock`，不修改共享 Python 环境。
+`scripts/smoke-api.py` 通过生产 HTTP API 按阶段运行 ready/create/search/hello/upload/status/plan/explain/quiz/submit/cards/session，保存业务 HTTP 响应、耗时、traceId 和资料哈希到指定 run-dir。**2026-09-22：此处是历史运行记录，脚本的旧学习阶段已删除；当前学习走大纲创建会话和对话入口。**ready 仅对知识库列表执行最多 45 秒的启动等待；业务 mutation 不自动重试。创建的知识库 ID 可跨阶段复用，避免观察超时后重新创建测试对象。Python 依赖见 `scripts/requirements-eval.txt`；本轮在独立 `.eval/python-env` 安装，完整依赖版本记录于 `.eval/python-requirements.lock`，不修改共享 Python 环境。
 
 ```powershell
 python scripts/smoke-api.py create --run-dir .eval/runs/m3-smoke

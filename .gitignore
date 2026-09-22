@@ -68,3 +68,10 @@ config/local-secrets.properties
 .archive/
 .archify/
 .codex/worktrees/**/.agentscope/workspace/state/
+
+# Local experiment responses and browser captures are not application source.
+output/
+.playwright-cli/
+.codex/research-sources/
+premium-audit.json
+!scripts/README.md

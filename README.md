@@ -85,7 +85,7 @@ StudyPilot 是面向课程学习与期末备考的 AI 学习助手。上传课�
 - Redis Bitmap 记录已上传分片，支持断点续传；SHA-256 与唯一索引用于文件去重及并发重复写入控制。
 - 文档阶段状态、中间产物复用、幂等写入与重试支持处理任务恢复，减少重复解析和向量化。
 - 原文件与解析 TXT 保存在 RustFS，文本块与向量复用产物保存在 MySQL，Elasticsearch 承担检索。
-- 检索支持关键词、向量及 RRF 混合方案；父块回填作为上下文组装的独立对照。保留策略比较入口，不预设复杂方案一定更好。
+- 检索支持关键词、向量及 RRF 混合方案；父块回填作为上下文组装的独立对照。当前代码默认仍是 PARENT（RRF＋父块回填），并未切换为纯向量；策略实验的结论与运行默认值需分别说明。
 
 普通检索、Agent 检索、Trace、评测和 Hello 诊断集中在独立的**测试工具**页面。评测接口需要启用 `eval` profile；未启用时页面明确提示不可用。
 
@@ -184,6 +184,16 @@ npm run dev
 
 ## 代码导航
 
+项目是模块化单体，先理解三条业务链即可：
+
+```text
+资料入库：上传 → 解析/转写 → 切块/向量化 → 索引
+大纲生成：已解析课件 → 知识点提取 → 合并目录 → 习题标重点
+对话学习：复用大纲 → 讲解/追问 → 测验/答疑 → 卡片确认 → 摘要/下一点
+```
+
+RAG 为学习提供资料，记忆服务提供历史观察，Anki 承接复习卡。完整结构图、状态图和“LRU”数据流例子见下面的架构链接。
+
 | 目录 | 职责 |
 | --- | --- |
 | `frontend/src/` | 页面、聊天渲染、SSE 与上传交互 |
@@ -194,7 +204,7 @@ npm run dev
 | `src/main/resources/db/migration/` | Flyway 表结构迁移 |
 | `eval/`、`scripts/` | 实验样本、结果和执行脚本 |
 
-进一步阅读：[架构导读](docs/implementation/architecture-walkthrough.md) · [技术设计](docs/design/StudyAgent-技术设计方案.md) · [当前进展](PROGRESS.md)
+进一步阅读：[整体架构与三条主链路](docs/design/StudyAgent-技术设计方案.md) · [文档导航](docs/README.md) · [脚本导航](scripts/README.md) · [当前进展](PROGRESS.md)
 
 ## 当前边界
 
