@@ -32,7 +32,7 @@ flowchart TB
     I --> REDIS[(Redis：分片进度等)]
 ```
 
-`config/` 集中装配与配置；`model/`、`mapper/` 放数据库实体和查询；`algo/` 放切块、RRF、指标等纯算法。无需再为这些目录各建一套接口层。
+`config/` 集中装配与配置；`model/`、`mapper/` 放数据库实体和查询；`algo/` 放切块、RRF 等纯算法；实验指标由 Python 评测脚本计算。无需再为这些目录各建一套接口层。
 
 ## 2. 三条核心链路
 
@@ -167,6 +167,28 @@ Agent 也可以用 `knowledge_read` 直接读取已知来源，不要求每轮�
 | 请求和工具轨迹 | `learning/LearningTraceService` | ObservedModel、ModelUsageRecorder、LearningTraceController |
 
 `agent/` 提供通用模型、工具 scope 和诊断集成；学习业务编排在 `learning/`。Hello 诊断所用 HarnessAgent 不等于主学习 Agent，主学习流程在 Gateway 内构建 ReActAgent。
+
+### 为什么会有近 200 个 Java 文件
+
+2026-09-22 清理后，`src/main/java` 共 199 个 Java 文件，约 1.1 万行，包含空行和注释；不含 74 个测试文件或 19 份 Flyway 迁移。
+
+| 分类 | 文件数 | 文件存在的原因 |
+| --- | --- | --- |
+| 学习 `learning` | 40 | 大纲、聊天、状态、摘要、工具、HTTP 与数据类型 |
+| 摄入 `ingest` | 28 | 分片上传、对象存储、解析、MQ、管道与 HTTP |
+| 检索 `rag` | 21 | embedding、ES、召回/组装、知识库/来源 HTTP |
+| 配置 `config` | 31 | 连接各外部服务、配置参数和 Spring Bean 装配 |
+| 实体/Mapper | 39 | 20 个数据实体与 19 个数据库访问接口 |
+| 其他 | 40 | Agent 集成、算法、身份、卡片、记忆、评测、公共响应和入口 |
+
+其中 128 个文件不超过 50 行。小文件不等于废弃代码：例如 Mapper 经 MyBatis 创建代理，Controller 由 Spring 路由调用，不能只凭“没有显式 new”删除。`ingest/web`、`ingest/parse`、`ingest/storage` 是职责分包，不是三个额外产品功能。
+
+这套拆分对个人 demo 偏细；已有上传恢复、音视频、Anki、长期记忆与评测设施，也确实增加了代码量。后续应按以下依据收敛，而不是规定必须砍到某个文件数：
+
+- 没有调用且已被替代的兼容层/工具直接删除。本次又删除 `TextChunker`、`JsonPayloadReader`、仅由自身测试引用的 `RecallMetricCalculator`。
+- 仅供一个入口使用的简单请求/响应类型，可在修改该入口时内聚；不为机械减少文件数改遍全仓引用。
+- 业务状态、外部服务适配、必要事务边界保留，避免所有逻辑重新堆进一个大 Service。
+- Hello、评测、Canal 等辅助设施与主链路分别说明；条件启用不等于完全没有用途，不按无用代码直接删除。
 
 ## 7. 运行与辅助内容的边界
 
