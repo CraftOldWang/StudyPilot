@@ -3,7 +3,11 @@ package com.studyagent.learning.web;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studyagent.common.exception.BusinessException;
-import com.studyagent.learning.LearningFlowService;
+import com.studyagent.learning.LearningPersistenceService;
+import com.studyagent.mapper.QuizMapper;
+import com.studyagent.mapper.ReviewCardMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.studyagent.learning.QuizFeedback;
 import com.studyagent.learning.QuizQuestionDraft;
 import com.studyagent.model.KnowledgePoint;
@@ -18,15 +22,20 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class LearningResponseAssembler {
 
-    private final LearningFlowService flowService;
+    private final LearningPersistenceService learning;
+    private final QuizMapper quizzes;
+    private final ReviewCardMapper reviewCards;
     private final ObjectMapper objectMapper;
 
     public LearningSessionResponse session(Long userId, Long sessionId) {
-        LearningSession session = flowService.loadSession(userId, sessionId);
-        List<KnowledgePoint> points = flowService.listPoints(sessionId);
+        LearningSession session = learning.requireSession(userId, sessionId);
+        List<KnowledgePoint> points = learning.listPoints(sessionId);
         KnowledgePoint focus = focus(session, points);
-        Quiz quiz = focus == null ? null : flowService.findQuiz(focus);
-        List<ReviewCard> cards = focus == null ? List.of() : flowService.existingCards(focus.getId());
+        Quiz quiz = focus == null ? null : quizzes.selectOne(new LambdaQueryWrapper<Quiz>()
+                .eq(Quiz::getUserId, userId).eq(Quiz::getKnowledgePointId, focus.getId()));
+        List<ReviewCard> cards = focus == null ? List.of() : reviewCards.selectList(new LambdaQueryWrapper<ReviewCard>()
+                .eq(ReviewCard::getUserId, userId).eq(ReviewCard::getKnowledgePointId, focus.getId())
+                .orderByAsc(ReviewCard::getCreatedAt));
         return new LearningSessionResponse(
                 session.getId(),
                 session.getLearningGoal(),
@@ -40,8 +49,9 @@ public class LearningResponseAssembler {
     }
 
     public LearningSessionResponse.QuizResponse quiz(Quiz quiz, Long knowledgePointId) {
-        List<QuizQuestionDraft> questions = flowService.readQuestions(quiz.getQuestionsJson());
-        List<QuizFeedback> feedback = flowService.readFeedback(quiz.getFeedbackJson());
+        List<QuizQuestionDraft> questions = readList(quiz.getQuestionsJson(), new TypeReference<>() { });
+        List<QuizFeedback> feedback = quiz.getFeedbackJson() == null ? null
+                : readList(quiz.getFeedbackJson(), new TypeReference<>() { });
         return new LearningSessionResponse.QuizResponse(
                 quiz.getId(),
                 knowledgePointId,
@@ -97,10 +107,14 @@ public class LearningResponseAssembler {
     }
 
     private List<String> readSubtopics(String json) {
+        return readList(json, new TypeReference<>() { });
+    }
+
+    private <T> List<T> readList(String json, TypeReference<List<T>> type) {
         try {
-            return objectMapper.readValue(json, new TypeReference<>() { });
-        } catch (Exception ex) {
-            throw new BusinessException("读取知识点子主题失败: " + ex.getMessage());
+            return objectMapper.readValue(json, type);
+        } catch (JsonProcessingException ex) {
+            throw new BusinessException("读取学习记录失败: " + ex.getOriginalMessage());
         }
     }
 }

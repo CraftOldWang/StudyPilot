@@ -53,6 +53,34 @@ public class LearningConversationService {
         }
     }
 
+    // Structured API submissions share the same turn, tool and persistence path as the chat UI.
+    public LearningTurn submitQuiz(Long userId, Long sessionId, List<String> answers) {
+        var point = learning.requireActivePoint(learning.requireSession(userId, sessionId));
+        var quiz = learning.requireQuiz(point);
+        var questions = questions(quiz.getQuestionsJson());
+        if (answers == null || answers.size() != questions.size()) {
+            throw new BusinessException("请完整提交当前测验的全部答案");
+        }
+        StringBuilder message = new StringBuilder("提交答案：");
+        for (int i = 0; i < questions.size(); i++) {
+            int index = questions.get(i).options().indexOf(answers.get(i));
+            if (index < 0) { throw new BusinessException("答案必须是对应题目的选项"); }
+            message.append(i + 1).append('.').append((char) ('A' + index)).append(' ');
+        }
+        var turn = message(userId, sessionId, java.util.UUID.randomUUID().toString(), message.toString(), event -> { });
+        if (!"SUCCEEDED".equals(turn.getStatus())) {
+            throw new BusinessException("回合 " + turn.getId() + " 未完成：" + turn.getErrorMessage());
+        }
+        try {
+            if (!"GRADE".equals(mapper.readTree(turn.getArtifactJson()).path("type").asText())) {
+                throw new BusinessException("模型本轮选择了答疑，请通过消息入口继续：" + turn.getAssistantMessage());
+            }
+        } catch (JsonProcessingException e) {
+            throw new BusinessException("回合产物无法读取");
+        }
+        return turn;
+    }
+
     private List<QuizQuestionDraft> questions(String json) {
         try { return mapper.readValue(json, new TypeReference<>() { }); }
         catch (JsonProcessingException e) { throw new BusinessException("已保存的测验无法读取，不能评分或继续学习"); }

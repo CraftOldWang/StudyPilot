@@ -58,11 +58,6 @@ export interface LearningSession {
   cards: ReviewCard[]
 }
 
-export interface CreatedSession {
-  traceId: string
-  session: LearningSession
-}
-
 export interface LearningTurn {
   traceId: string
   answer: string
@@ -101,27 +96,6 @@ export interface PlanningView {
   stages: { id: string; stage: string; status: string; errorMessage: string | null; attemptCount: number }[]
   result: { nodes: OutlineNode[] } | null
   completedNodeIds?: string[]
-}
-
-export interface GeneratedQuiz {
-  traceId: string
-  quiz: Quiz
-  session: LearningSession
-}
-
-export interface QuizResult {
-  traceId: string
-  quizId: string
-  score: number
-  feedback: QuizFeedback[]
-  session: LearningSession
-}
-
-export interface GeneratedCards {
-  traceId: string
-  knowledgePointId: string
-  cards: ReviewCard[]
-  session: LearningSession
 }
 
 export interface SessionEntry {

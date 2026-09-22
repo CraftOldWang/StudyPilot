@@ -1,12 +1,8 @@
 import { apiRequest } from './api'
 import { readEventStream, type StreamEvent } from './stream'
 import type {
-  CreatedSession,
-  GeneratedCards,
-  GeneratedQuiz,
   LearningSession,
   LearningTurn,
-  QuizResult,
   ConversationTurn,
   PlanningView,
   SessionEntry,
@@ -34,27 +30,11 @@ export const learningApi = {
   executePlan: (id: string) => apiRequest<PlanningView>(`/api/learning/plans/${id}/execute`, { method: 'POST' }),
   planSession: (id: string) => apiRequest<LearningSession>(`/api/learning/plans/${id}/session`, { method: 'POST' }),
   newConversation: (id: string) => apiRequest<LearningSession>(`/api/learning/plans/${id}/session?newConversation=true`, { method: 'POST' }),
-  createSession: (knowledgeBaseId: string, learningGoal: string) =>
-    apiRequest<CreatedSession>(SESSION_PATH, {
-      method: 'POST',
-      body: JSON.stringify({ knowledgeBaseId, learningGoal }),
-    }),
   getSession: (sessionId: string) =>
     apiRequest<LearningSession>(`${SESSION_PATH}/${sessionId}`),
-  explain: (sessionId: string) =>
-    apiRequest<LearningTurn>(`${SESSION_PATH}/${sessionId}/explain`, { method: 'POST' }),
   sendMessage: (sessionId: string, message: string) =>
     apiRequest<LearningTurn>(`${SESSION_PATH}/${sessionId}/messages`, {
       method: 'POST',
       body: JSON.stringify({ message }),
     }),
-  generateQuiz: (sessionId: string) =>
-    apiRequest<GeneratedQuiz>(`${SESSION_PATH}/${sessionId}/quiz`, { method: 'POST' }),
-  submitQuiz: (sessionId: string, answers: string[]) =>
-    apiRequest<QuizResult>(`${SESSION_PATH}/${sessionId}/quiz/submit`, {
-      method: 'POST',
-      body: JSON.stringify({ answers }),
-    }),
-  generateCards: (sessionId: string) =>
-    apiRequest<GeneratedCards>(`${SESSION_PATH}/${sessionId}/cards`, { method: 'POST' }),
 }

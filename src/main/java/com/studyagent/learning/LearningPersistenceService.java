@@ -34,16 +34,6 @@ public class LearningPersistenceService {
     private final KnowledgePointLifecycle lifecycle = new KnowledgePointLifecycle();
 
     @Transactional
-    public LearningSession create(
-            Long userId,
-            Long knowledgeBaseId,
-            String learningGoal,
-            String agentScopeSessionId,
-            List<LearningPlanItem> items) {
-        return createRecords(userId, knowledgeBaseId, learningGoal, agentScopeSessionId, items, null);
-    }
-
-    @Transactional
     public LearningSession createFromPlanning(Long userId, Long runId) {
         return createFromPlanning(userId, runId, false);
     }
@@ -62,10 +52,8 @@ public class LearningPersistenceService {
         PlanningData.Result result;
         try { result = objectMapper.readValue(stage.getOutputJson(), PlanningData.Result.class); }
         catch (JsonProcessingException e) { throw new IllegalStateException("读取规划任务失败", e); }
-        List<LearningPlanItem> items = result.tasks().stream()
-                .map(t -> new LearningPlanItem(t.topic(), t.subtopics(), t.estimatedMinutes())).toList();
         LearningSession session = createRecords(userId, run.getKnowledgeBaseId(), run.getLearningGoal(),
-                java.util.UUID.randomUUID().toString(), items, result.tasks(), runId);
+                java.util.UUID.randomUUID().toString(), result.tasks(), runId);
         run.setSessionId(session.getId());
         run.setUpdatedAt(LocalDateTime.now());
         planningRuns.updateById(run);
@@ -84,19 +72,13 @@ public class LearningPersistenceService {
         var tasks = source.stream().map(t -> new PlanningData.Task(com.baomidou.mybatisplus.core.toolkit.IdWorker.getId(),
                 t.chapterId(), t.chapterTitle(), t.topic(), t.subtopics(), t.sourceChunkIds(), t.priority(),
                 t.estimatedMinutes(), t.reason())).toList();
-        var items = tasks.stream().map(t -> new LearningPlanItem(t.topic(), t.subtopics(), t.estimatedMinutes())).toList();
         return createRecords(userId, original.getKnowledgeBaseId(), original.getLearningGoal(),
-                java.util.UUID.randomUUID().toString(), items, tasks);
+                java.util.UUID.randomUUID().toString(), tasks, null);
     }
 
     private LearningSession createRecords(Long userId, Long knowledgeBaseId, String learningGoal,
-            String agentScopeSessionId, List<LearningPlanItem> items, List<PlanningData.Task> tasks) {
-        return createRecords(userId, knowledgeBaseId, learningGoal, agentScopeSessionId, items, tasks, null);
-    }
-
-    private LearningSession createRecords(Long userId, Long knowledgeBaseId, String learningGoal,
-            String agentScopeSessionId, List<LearningPlanItem> items, List<PlanningData.Task> tasks, Long runId) {
-        if (items == null || items.isEmpty()) {
+            String agentScopeSessionId, List<PlanningData.Task> tasks, Long runId) {
+        if (tasks == null || tasks.isEmpty()) {
             throw new BusinessException("学习计划不能为空");
         }
         LocalDateTime now = LocalDateTime.now();
@@ -114,29 +96,26 @@ public class LearningPersistenceService {
         LearningPlan plan = new LearningPlan();
         plan.setSessionId(session.getId());
         plan.setUserId(userId);
-        plan.setPlanJson(toJson(tasks == null ? items : tasks));
+        plan.setPlanJson(toJson(tasks));
         plan.setCreatedAt(now);
         planMapper.insert(plan);
 
         var completed = runId == null ? java.util.Set.<Long>of() : sessionMapper.completedOutlineNodes(userId, runId);
-        for (int index = 0; index < items.size(); index++) {
-            LearningPlanItem item = items.get(index);
+        for (int index = 0; index < tasks.size(); index++) {
+            PlanningData.Task task = tasks.get(index);
             KnowledgePoint point = new KnowledgePoint();
-            if (tasks != null) {
-                PlanningData.Task task = tasks.get(index);
-                point.setId(runId == null ? task.knowledgePointId() : com.baomidou.mybatisplus.core.toolkit.IdWorker.getId());
-                point.setOutlineNodeId(runId == null ? null : task.knowledgePointId());
-                point.setChapterId(task.chapterId());
-                point.setChapterTitle(task.chapterTitle());
-                point.setPriority(task.priority());
-                point.setSourcesJson(toJson(task.sourceChunkIds()));
-            }
+            point.setId(runId == null ? task.knowledgePointId() : com.baomidou.mybatisplus.core.toolkit.IdWorker.getId());
+            point.setOutlineNodeId(runId == null ? null : task.knowledgePointId());
+            point.setChapterId(task.chapterId());
+            point.setChapterTitle(task.chapterTitle());
+            point.setPriority(task.priority());
+            point.setSourcesJson(toJson(task.sourceChunkIds()));
             point.setSessionId(session.getId());
             point.setUserId(userId);
             point.setSequenceNo(index + 1);
-            point.setTopic(item.topic());
-            point.setSubtopicsJson(toJson(item.subtopics()));
-            point.setEstimatedMinutes(item.estimatedMinutes());
+            point.setTopic(task.topic());
+            point.setSubtopicsJson(toJson(task.subtopics()));
+            point.setEstimatedMinutes(task.estimatedMinutes());
             point.setStatus(point.getOutlineNodeId() != null && completed.contains(point.getOutlineNodeId()) ? "COMPLETED" : "NEW");
             point.setCreatedAt(now);
             point.setUpdatedAt(now);

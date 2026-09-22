@@ -14,16 +14,13 @@ import requests
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser()
-    parser.add_argument("stage", choices=["ready", "create", "search", "hello", "upload", "retry", "status", "plan",
-                                         "explain", "quiz", "submit", "cards", "session"])
+    parser.add_argument("stage", choices=["ready", "create", "search", "hello", "upload", "retry", "status"])
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--base-url", default="http://localhost:8080")
     parser.add_argument("--file", type=Path)
     parser.add_argument("--query", default="什么是稳定匹配？")
     parser.add_argument("--mode", choices=["BM25", "VECTOR", "RRF", "PARENT"])
     parser.add_argument("--top-k", type=int)
-    parser.add_argument("--answers", nargs=5)
-    parser.add_argument("--compact", action="store_true")
     args = parser.parse_args()
     args.run_dir.mkdir(parents=True, exist_ok=True)
     state_path = args.run_dir / "state.json"
@@ -76,20 +73,6 @@ def main():
         data = request("POST", f"/api/documents/{document_id}/retry")
     elif args.stage == "hello":
         data = request("POST", "/api/agent/hello")
-    elif args.stage in {"explain", "quiz", "submit", "cards", "session"}:
-        learning = state["learning"]["session"]
-        path = f"/api/learning/sessions/{learning['id']}"
-        if args.stage == "session":
-            data = request("GET", path)
-            state["learning"]["session"] = data
-        else:
-            if args.stage == "submit":
-                # A fixed first-option script exercises scoring; it is not a learning-quality metric.
-                answers = args.answers or [q["options"][0] for q in learning["currentQuiz"]["questions"]]
-                data = request("POST", path + "/quiz/submit", json={"answers": answers})
-            else:
-                data = request("POST", path + "/" + args.stage)
-            state["learning"] = {"traceId": data["traceId"], "session": data["session"]}
     else:
         kb = state["knowledgeBaseId"]
         if args.stage == "search":
@@ -101,10 +84,6 @@ def main():
             data = request("POST", f"/api/knowledge-bases/{kb}/search", json=payload)
         elif args.stage == "status":
             data = request("GET", f"/api/knowledge-bases/{kb}/documents")
-        elif args.stage == "plan":
-            data = request("POST", "/api/learning/sessions", json={
-                "knowledgeBaseId": kb, "learningGoal": args.query})
-            state["learning"] = data
         else:
             if args.file is None:
                 raise ValueError("upload requires --file")
@@ -117,18 +96,7 @@ def main():
             state.setdefault("files", []).append({"path": str(args.file.resolve()), "sha256": sha256,
                                                     "bytes": args.file.stat().st_size, "result": data})
     state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
-    if args.compact and isinstance(data, dict) and "session" in data:
-        learning = data["session"]
-        display = {"traceId": data["traceId"], "sessionId": learning["id"],
-                   "activeKnowledgePoint": learning["activeKnowledgePoint"],
-                   "questions": len((learning["currentQuiz"] or {}).get("questions", [])),
-                   "cards": len(learning["cards"])}
-        if display["activeKnowledgePoint"]:
-            display["activeKnowledgePoint"] = {k: v for k, v in display["activeKnowledgePoint"].items()
-                                                if k not in {"explanation", "subtopics"}}
-        print(json.dumps(display, ensure_ascii=False, indent=2))
-    else:
-        print(json.dumps(data, ensure_ascii=False, indent=2))
+    print(json.dumps(data, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

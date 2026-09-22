@@ -5,7 +5,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.studyagent.learning.LearningFlowService;
+import com.studyagent.learning.LearningPersistenceService;
+import com.studyagent.mapper.QuizMapper;
+import com.studyagent.mapper.ReviewCardMapper;
+import static org.mockito.ArgumentMatchers.any;
 import com.studyagent.learning.QuizFeedback;
 import com.studyagent.learning.QuizQuestionDraft;
 import com.studyagent.model.KnowledgePoint;
@@ -18,8 +21,11 @@ import org.junit.jupiter.api.Test;
 class LearningResponseAssemblerTest {
 
     @Test
-    void completedSessionRestoresLastQuizFeedbackAndCardsWithoutRegeneration() {
-        LearningFlowService flow = mock(LearningFlowService.class);
+    void completedSessionRestoresLastQuizFeedbackAndCardsWithoutRegeneration() throws Exception {
+        LearningPersistenceService flow = mock(LearningPersistenceService.class);
+        QuizMapper quizzes = mock(QuizMapper.class);
+        ReviewCardMapper cards = mock(ReviewCardMapper.class);
+        ObjectMapper mapper = new ObjectMapper();
         LearningSession session = new LearningSession();
         session.setId(10L);
         session.setUserId(1L);
@@ -45,14 +51,14 @@ class LearningResponseAssemblerTest {
         card.setFront("front");
         card.setBack("back");
 
-        when(flow.loadSession(1L, 10L)).thenReturn(session);
+        when(flow.requireSession(1L, 10L)).thenReturn(session);
         when(flow.listPoints(10L)).thenReturn(List.of(point));
-        when(flow.findQuiz(point)).thenReturn(quiz);
-        when(flow.existingCards(20L)).thenReturn(List.of(card));
-        when(flow.readQuestions(null)).thenReturn(List.of(
-                new QuizQuestionDraft("q", List.of("A", "B", "C", "D"), "A", "e", "c")));
-        when(flow.readFeedback(null)).thenReturn(List.of(new QuizFeedback(0, true, "A", "e")));
-        LearningResponseAssembler assembler = new LearningResponseAssembler(flow, new ObjectMapper());
+        when(quizzes.selectOne(any())).thenReturn(quiz);
+        when(cards.selectList(any())).thenReturn(List.of(card));
+        quiz.setQuestionsJson(mapper.writeValueAsString(List.of(
+                new QuizQuestionDraft("q", List.of("A", "B", "C", "D"), "A", "e", "c"))));
+        quiz.setFeedbackJson(mapper.writeValueAsString(List.of(new QuizFeedback(0, true, "A", "e"))));
+        LearningResponseAssembler assembler = new LearningResponseAssembler(flow, quizzes, cards, mapper);
 
         LearningSessionResponse response = assembler.session(1L, 10L);
 
