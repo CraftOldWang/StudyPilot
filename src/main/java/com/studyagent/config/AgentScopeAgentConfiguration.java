@@ -1,6 +1,5 @@
 package com.studyagent.config;
 
-import com.studyagent.agent.governance.ToolGovernanceInterceptor;
 import io.agentscope.core.model.Model;
 import io.agentscope.core.state.JsonFileAgentStateStore;
 import io.agentscope.core.tool.AgentTool;
@@ -63,7 +62,6 @@ public class AgentScopeAgentConfiguration {
                 .stateStore(new JsonFileAgentStateStore(
                         workspace.resolve("state").resolve("ReActAgent")))
                 .maxRetries(modelProperties.maxRetries())
-                .middleware(new ToolGovernanceInterceptor())
                 .compaction(learningCompactionConfig())
                 .disableFilesystemTools()
                 .disableShellTool()
