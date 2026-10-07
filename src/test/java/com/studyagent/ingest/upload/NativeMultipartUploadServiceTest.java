@@ -15,6 +15,7 @@ import com.studyagent.model.UploadPart;
 import com.studyagent.model.UploadSession;
 import com.studyagent.rag.web.KnowledgeBaseService;
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,7 +28,9 @@ import org.redisson.api.RLock;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.RedisStringCommands;
 import org.springframework.mock.web.MockMultipartFile;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,7 +41,8 @@ class NativeMultipartUploadServiceTest {
     @Mock ObjectStorageService storage;
     @Mock RedissonClient locks;
     @Mock StringRedisTemplate redis;
-    @Mock ValueOperations<String, String> values;
+    @Mock RedisConnection connection;
+    @Mock RedisStringCommands strings;
     @Mock KnowledgeBaseService knowledgeBases;
     @Mock RReadWriteLock rw;
     @Mock RLock write;
@@ -151,13 +155,56 @@ class NativeMultipartUploadServiceTest {
 
     @Test
     void bitmapEvictionDoesNotLoseDurableProgress() {
-        when(sessions.selectOne(any())).thenReturn(session);
+        completionSetup();
+        bitmapSetup();
         when(parts.listParts(10L)).thenReturn(List.of(part()));
-        when(redis.opsForValue()).thenReturn(values);
         var status = service.status(1L, 10L);
         assertThat(status.uploadedChunkIndexes()).containsExactly(0);
         assertThat(status.missingChunkIndexes()).isEmpty();
-        verify(values).setBit("upload:bitmap:10", 0, true);
+        verify(strings).pSetEx(eq("upload:bitmap:v2:10".getBytes(StandardCharsets.UTF_8)),
+                longThat(ttl -> ttl > 0), eq(new byte[]{(byte) 0x80}));
+        verify(write).unlock();
+    }
+
+    @Test
+    void cachedBitmapProvidesMissingPartsWithoutQueryingPartRows() {
+        when(sessions.selectOne(any())).thenReturn(session);
+        session.setTotalChunks(10);
+        bitmapSetup();
+        when(strings.get(any(byte[].class))).thenReturn(new byte[]{(byte) 0x81, (byte) 0x80});
+        var status = service.status(1L, 10L);
+        assertThat(status.uploadedChunkIndexes()).containsExactly(0, 7, 8);
+        assertThat(status.missingChunkIndexes()).containsExactly(1, 2, 3, 4, 5, 6, 9);
+        verifyNoInteractions(parts, locks, storage);
+    }
+
+    @Test
+    void emptySessionCachesZeroProgressInsteadOfRepeatingDatabaseReads() {
+        completionSetup();
+        bitmapSetup();
+        when(parts.listParts(10L)).thenReturn(List.of());
+        var status = service.status(1L, 10L);
+        assertThat(status.uploadedChunkIndexes()).isEmpty();
+        assertThat(status.missingChunkIndexes()).containsExactly(0);
+        verify(strings).pSetEx(any(byte[].class), anyLong(), eq(new byte[]{0}));
+    }
+
+    @Test
+    void rechecksBitmapAfterWaitingForAnotherRebuilder() {
+        completionSetup();
+        bitmapSetup();
+        when(strings.get(any(byte[].class))).thenReturn(null, new byte[]{(byte) 0x80});
+        assertThat(service.status(1L, 10L).uploadedChunkIndexes()).containsExactly(0);
+        verifyNoInteractions(parts);
+        verify(write).unlock();
+    }
+
+    private void bitmapSetup() {
+        when(connection.stringCommands()).thenReturn(strings);
+        when(redis.execute(any(RedisCallback.class))).thenAnswer(invocation -> {
+            RedisCallback<?> callback = invocation.getArgument(0);
+            return callback.doInRedis(connection);
+        });
     }
 
     @Test
@@ -167,7 +214,6 @@ class NativeMultipartUploadServiceTest {
         when(locks.getLock(anyString())).thenReturn(keyed);
         when(sessions.selectOne(any())).thenReturn(session);
         when(parts.selectOne(any())).thenReturn(part());
-        when(redis.opsForValue()).thenReturn(values);
         service.uploadPart(1L, 10L, 0, new MockMultipartFile("chunk", "hello".getBytes()));
         verifyNoInteractions(storage);
         verify(parts, never()).insert(any(UploadPart.class));

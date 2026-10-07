@@ -17,6 +17,7 @@ import com.studyagent.model.UploadSession;
 import com.studyagent.rag.web.KnowledgeBaseService;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,6 +37,14 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @Slf4j
 public class NativeMultipartUploadService {
+    // A cache miss must remain absent until status() rebuilds the entire bitmap from durable parts.
+    private static final DefaultRedisScript<Long> MARK_UPLOADED = new DefaultRedisScript<>("""
+            if redis.call('EXISTS', KEYS[1]) == 0 then return 0 end
+            redis.call('SETBIT', KEYS[1], ARGV[1], 1)
+            redis.call('PEXPIRE', KEYS[1], ARGV[2])
+            return 1
+            """, Long.class);
+
     private final UploadSessionMapper sessions;
     private final UploadPartMapper parts;
     private final UploadPublicationService publication;
@@ -146,13 +157,12 @@ public class NativeMultipartUploadService {
 
     public MultipartUploadStatusResponse status(Long userId, Long sessionId) {
         UploadSession session = required(userId, sessionId);
-        List<UploadPart> stored = parts.listParts(sessionId);
-        // Durable ETags rebuild the transient bitmap after Redis eviction/restart.
-        for (UploadPart part : stored) markUploaded(session, part.getChunkIndex());
-        List<Integer> uploaded = stored.stream().map(UploadPart::getChunkIndex).toList();
+        byte[] bitmap = progressBitmap(session);
+        List<Integer> uploaded = new ArrayList<>();
         List<Integer> missing = new ArrayList<>();
         for (int index = 0; index < session.getTotalChunks(); index++) {
-            if (!uploaded.contains(index)) missing.add(index);
+            if ((bitmap[index / 8] & (0x80 >>> (index % 8))) != 0) uploaded.add(index);
+            else missing.add(index);
         }
         return new MultipartUploadStatusResponse(sessionId, session.getKnowledgeBaseId(), session.getFilename(),
                 session.getFileHash(), session.getFileSize(), session.getChunkSize(), session.getTotalChunks(),
@@ -288,8 +298,42 @@ public class NativeMultipartUploadService {
     private void markUploaded(UploadSession session, int index) {
         Duration ttl = Duration.between(LocalDateTime.now(), session.getExpiresAt());
         if (ttl.isNegative() || ttl.isZero()) return;
-        redis.opsForValue().setBit(bitmapKey(session.getId()), index, true);
-        redis.expire(bitmapKey(session.getId()), ttl);
+        redis.execute(MARK_UPLOADED, List.of(bitmapKey(session.getId())),
+                Integer.toString(index), Long.toString(ttl.toMillis()));
+    }
+
+    private byte[] progressBitmap(UploadSession session) {
+        byte[] key = bitmapKey(session.getId()).getBytes(StandardCharsets.UTF_8);
+        byte[] cached = readBitmap(key);
+        if (cached != null) return cached;
+
+        // Reuse the session write lock so rebuilding cannot overwrite a concurrently saved part's bit.
+        RLock lock = locks.getReadWriteLock(sessionLockKey(session.getId())).writeLock();
+        lock.lock();
+        try {
+            cached = readBitmap(key);
+            if (cached != null) return cached;
+            byte[] rebuilt = new byte[(session.getTotalChunks() + 7) / 8];
+            for (UploadPart part : parts.listParts(session.getId())) {
+                int index = part.getChunkIndex();
+                rebuilt[index / 8] |= (byte) (0x80 >>> (index % 8));
+            }
+            Duration ttl = Duration.between(LocalDateTime.now(), session.getExpiresAt());
+            if (!ttl.isNegative() && !ttl.isZero()) {
+                redis.execute((RedisCallback<Void>) connection -> {
+                    connection.stringCommands().pSetEx(key, ttl.toMillis(), rebuilt);
+                    return null;
+                });
+            }
+            return rebuilt;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private byte[] readBitmap(byte[] key) {
+        // Bitmap bytes are binary; decoding through StringRedisTemplate's UTF-8 value serializer loses bits.
+        return redis.execute((RedisCallback<byte[]>) connection -> connection.stringCommands().get(key));
     }
 
     private void phase(UploadSession session, String phase) {
@@ -313,5 +357,6 @@ public class NativeMultipartUploadService {
     }
 
     private String sessionLockKey(Long id) { return "lock:upload:session:" + id; }
-    private String bitmapKey(Long id) { return "upload:bitmap:" + id; }
+    // Older keys were populated incrementally and may not represent a complete progress snapshot.
+    private String bitmapKey(Long id) { return "upload:bitmap:v2:" + id; }
 }
