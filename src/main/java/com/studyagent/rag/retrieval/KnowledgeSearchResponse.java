@@ -13,7 +13,7 @@ public record KnowledgeSearchResponse(
 ) {
 
     public KnowledgeSearchResponse(String query, String message, List<Result> hits) {
-        this(query, message, hits, List.of(), List.of(), 0, RetrievalMode.PARENT);
+        this(query, message, hits, List.of(), List.of(), 0, RetrievalMode.VECTOR);
     }
 
     // Evaluation retains raw child ranks; the model receives each admitted context body only once.

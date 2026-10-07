@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
- * StudyAgent 的权限范围内混合检索入口，不依赖 AgentScope 已弃用的 rag package。
+ * 权限范围内的课程检索入口，默认使用向量检索，保留其他策略用于对照。
  */
 @Service
 @RequiredArgsConstructor
@@ -24,7 +24,7 @@ public class KnowledgeRetrievalService {
     private final TokenCounter tokenCounter;
 
     public KnowledgeSearchResponse search(Long userId, Long knowledgeBaseId, String query) {
-        return search(userId, knowledgeBaseId, query, RetrievalMode.PARENT, ragProperties.topK());
+        return search(userId, knowledgeBaseId, query, RetrievalMode.VECTOR, ragProperties.topK());
     }
 
     public KnowledgeSearchResponse search(Long userId, Long knowledgeBaseId, String query, RetrievalMode mode, Integer topK) {
@@ -35,7 +35,7 @@ public class KnowledgeRetrievalService {
             throw new BusinessException("检索问题不能为空");
         }
         String normalizedQuery = query.trim();
-        RetrievalMode effectiveMode = mode == null ? RetrievalMode.PARENT : mode;
+        RetrievalMode effectiveMode = mode == null ? RetrievalMode.VECTOR : mode;
         int limit = topK == null ? ragProperties.topK() : topK;
         if (limit <= 0 || limit > 20) { throw new BusinessException("topK 必须在 1 到 20 之间"); }
         float[] queryVector = effectiveMode == RetrievalMode.BM25 ? null

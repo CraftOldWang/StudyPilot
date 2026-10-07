@@ -29,7 +29,7 @@ class KnowledgeRetrievalServiceTest {
                 .thenReturn(List.of(child));
         when(parents.aggregate("11", "22", List.of(child))).thenReturn(List.of(
                 new KnowledgeSearchResponse.Result("parent", "parent body", parentSource, 0.9)));
-        var response = service.search(11L, 22L, "  Java  ");
+        var response = service.search(11L, 22L, "  Java  ", RetrievalMode.PARENT, null);
         assertThat(response.query()).isEqualTo("Java");
         assertThat(response.rankedChildren()).containsExactly(child);
         assertThat(response.hits()).singleElement().satisfies(hit -> {
@@ -58,10 +58,25 @@ class KnowledgeRetrievalServiceTest {
 
     @Test
     void emptyEvidenceRemainsExplicit() {
-        when(parents.aggregate(eq("11"), eq("22"), anyList())).thenReturn(List.of());
         var response = service.search(11L, 22L, "query");
         assertThat(response.message()).isEqualTo(KnowledgeSearchResponse.NO_EVIDENCE_MESSAGE);
         assertThat(response.hits()).isEmpty();
+    }
+
+    @Test
+    void agentAndUnspecifiedApiModeUseVectorChildContext() {
+        float[] vector = {0.1f, 0.2f};
+        var child = new RetrievalHit("child", "parent", "child body", null, 0.9, RetrievalStrategy.VECTOR);
+        when(embedding.embed("query", EmbeddingPurpose.QUERY)).thenReturn(vector);
+        when(retrieval.retrieve(RetrievalMode.VECTOR, "11", "22", "query", vector, 30, 20, 2, 60))
+                .thenReturn(List.of(child));
+        var agent = service.search(11L, 22L, "query");
+        var api = service.search(11L, 22L, "query", null, null);
+        for (var response : List.of(agent, api)) {
+            assertThat(response.mode()).isEqualTo(RetrievalMode.VECTOR);
+            assertThat(response.hits()).extracting(KnowledgeSearchResponse.Result::chunkId).containsExactly("child");
+        }
+        verifyNoInteractions(parents);
     }
 
     @Test
