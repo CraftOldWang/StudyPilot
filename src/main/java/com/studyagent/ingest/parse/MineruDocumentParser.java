@@ -72,7 +72,8 @@ public class MineruDocumentParser {
         var vision = properties.vision();
         this.descriptionFingerprint = sha256((vision.model() + "\n" + vision.endpoint() + "\n"
                 + vision.maxTokens() + "\n" + VISION_PROMPT).getBytes(StandardCharsets.UTF_8));
-        String profile = sha256((descriptionFingerprint + "\n" + vision.minSidePermille()).getBytes(StandardCharsets.UTF_8));
+        String profile = sha256((descriptionFingerprint + "\n" + vision.minSidePermille() + "\nrequire-descriptions")
+                .getBytes(StandardCharsets.UTF_8));
         // parser_version is limited to 32 characters. Keep the full fingerprint in the image cache key.
         this.artifactVersion = VERSION.replace("-pipeline-v", "-p") + "-" + CLEANER_VERSION
                 + (vision.enabled() ? "-" + VISION_PROMPT_VERSION + "-" + profile.substring(0, 10) : "-off");
@@ -183,6 +184,7 @@ public class MineruDocumentParser {
         StringBuilder markdown = new StringBuilder(raw.text().length());
         List<ParsedDocument.Block> blocks = new ArrayList<>();
         Set<String> seenImages = new HashSet<>();
+        List<String> failures = new ArrayList<>();
         for (var source : raw.blocks()) {
             String text = raw.text().substring(source.startOffset(), source.endOffset());
             if (CLEANABLE_TYPES.contains(source.type()) && !CODE_FENCE.matcher(text).find()) {
@@ -191,7 +193,6 @@ public class MineruDocumentParser {
             if (text.isBlank()) {
                 continue;
             }
-            var errors = new HashMap<String, String>();
             var descriptions = new ArrayList<ImageDescription>();
             if (properties.vision().enabled() && "image".equals(source.type()) && !isSmallImage(source.bbox())) {
                 for (String path : source.imagePaths()) {
@@ -203,17 +204,19 @@ public class MineruDocumentParser {
                     try {
                         descriptions.add(new ImageDescription(path, loadOrDescribe(userId, hash, image, renewLease)));
                     } catch (VisionFailure ex) {
-                        errors.put(path, ex.getMessage());
-                        log.warn("MinerU 图示说明失败: userId={}, pageIndex={}, image={}, reason={}",
-                                userId, source.pageIndex(), path, ex.getMessage());
+                        failures.add("第 " + (source.pageIndex() + 1) + " 页 " + ex.getMessage());
                     }
                 }
             }
-            appendBlock(markdown, blocks, source, text, source.type(), source.imagePaths(), errors);
+            appendBlock(markdown, blocks, source, text, source.type(), source.imagePaths());
             for (var description : descriptions) {
                 appendBlock(markdown, blocks, source, "[模型生成的图示说明] " + description.text(),
-                        "image_description", List.of(description.path()), Map.of());
+                        "image_description", List.of(description.path()));
             }
+        }
+        if (!failures.isEmpty()) {
+            throw new BusinessException("MinerU 图示说明失败，涉及 " + failures.size() + " 张图。"
+                    + String.join("；", failures.stream().limit(5).toList()));
         }
         return new ParsedDocument(markdown.toString(), blocks, raw.images());
     }
@@ -230,7 +233,7 @@ public class MineruDocumentParser {
     }
 
     private static void appendBlock(StringBuilder markdown, List<ParsedDocument.Block> blocks,
-            ParsedDocument.Block source, String text, String type, List<String> imagePaths, Map<String, String> errors) {
+            ParsedDocument.Block source, String text, String type, List<String> imagePaths) {
         if (!markdown.isEmpty()) {
             markdown.append("\n\n");
         }
@@ -238,7 +241,7 @@ public class MineruDocumentParser {
         markdown.append(text);
         List<String> headings = source.headingPath().stream().map(MineruDocumentParser::cleanText).toList();
         blocks.add(new ParsedDocument.Block(start, markdown.length(), source.pageIndex(), headings, type,
-                source.bbox(), imagePaths, errors));
+                source.bbox(), imagePaths, Map.of()));
     }
 
     private boolean isSmallImage(List<Integer> bbox) {
