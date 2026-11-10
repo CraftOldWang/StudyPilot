@@ -1,5 +1,49 @@
 # StudyAgent 进展
 
+## 2026-11-11 · RAG 改进 Goal
+
+### 目标与执行纪律
+
+- 用户已确认：以 **StudyPilot** 为主工程，`D:\1Learningoutput\javabackend\know-engine` 仅作参考；LangChain4j 迁移另开任务。本轮目标是形成可运行的文档处理、检索改进和真实 API 对照结果，让用户能解释工程选择并用于面试。
+- 主 agent 负责宏观设计、阶段取舍和整合；实现与题目起草委派给 **GPT-6.1 Sol**（`gpt-6.1-sol`，小范围任务、明确文件归属，避免复制整段历史给 worker）。不要并行修改同一模块。
+- **周额度保护：** 用 `mcp__codex_app__get_usage_limits` 读取 10080 分钟窗口，剩余比例为 `100-usedPercent`。2026-11-11 建立任务时剩 33%。每个子任务开始/结束和长任务中途检查；剩余不高于 22% 时停止派发新任务并收尾，**不高于 20% 时按用户明确指令暂停 Goal，停止 worker 并记录下一步**。这是账号共享额度，不能折算成固定 token budget；读取失败时先停止扩展工作，查明额度再继续，不消耗付费重置或额外额度来绕过停止线。
+- 每个完成的小阶段及时 commit，普通 push 已持续授权。工作区已有用户在 `learning/`、`agent/integration/`、`model/LearningTurn`、`ApiResponse` 等文件中的阅读注释和修改，以及 AGENTS.md、`exa-results/`、`原来的goal`；**先看 git status/diff，保留这些内容，定向暂存自己的改动**。
+- 检查只覆盖修改行为、必要编译和小样本真实链路；复用已有测试/脚本，不新增大测试矩阵、反复打包、冻结目录或多份重复报告。正式效果评测走实际后端 API；先筛检索方案，再对少量候选评回答。用户要求优先节省时间和 token，中心是面试准备。
+
+### 已完成的准备与参考入口
+
+- [x] 阅读面试复盘：`D:\1Learningoutput\Obsidian_AllNotes\01_Projects\05面试笔试投递实习拿offer\26.11.06滴滴一面.md`。重点问题：清洗、切块依据、语义截断、双路召回/RRF/rerank、部分写入失败、追加内容后的增量复用。
+- [x] 通过 `read_thread` 阅读参考任务“RAG 项目”：host `local`，thread `01a18b4e-7f18-72d3-a90d-47db628dc59a`；参考源码在 `D:\1Learningoutput\javabackend\know-engine`。参考项目中 SMART 固定 10% overlap，部分策略用字符/词；父块扩展发生在融合/重排前；这些应作为对照与改进依据，不直接照搬。
+- [x] 本地参考 PDF `D:\1Learningoutput\WorkTemp\通用知识问答 RAG [1].pdf` 已提取 191 页到 `output/rag-reference/通用知识问答RAG-按页提取.md`。带 PDF 页码，公式和图仍回看原页。相关页：40–43 切分、60–61 重排、107 起具体 case 定位。参考资料只在本地，不把整本 PDF/提取正文发布到 GitHub。
+- [x] GPT-6.1 Sol 已生成 `output/rag-reference/eval-candidates-v1.md`，12 道候选题，各含答案要点、原文证据与位置，**模型起草、待抽查，尚未评测**。语料来自 `D:\Others\E_books`：英文 CSAPP §9.6.1–9.6.4，PDF 854–861（书页853–860）；英文 Database System Concepts §14.2，PDF 654–663（书页625–634，末页以§14.3为界）。发现 2⁶→26、下标压平、位号散行、图中箭头关系丢失。
+- [x] 旧 OS 人工28题主要来自 PPTX；早期 `eval/rag/corpus-v1.json` 是6份PDF、12份PPTX。复用 `scripts/README.md` 指向的脚本与 `docs/implementation/m4-chunk-selection.md`、`os-rag-human-28.md`，分别报告旧课件回归和新PDF题结果。
+- [x] 确认现有 `embedding_artifacts`（V9）已按用户、内容哈希、模型和维度缓存向量。**本轮复用它，不再新增同用途向量表。**
+
+### A．资料解析、清洗、结构切分（优先）
+
+- [ ] A1：检查现有 MinerU/BGE 可复用环境和模型。KnowEngine 的 `deploy/mineru/server.py`、Dockerfile、`docs/local-runtime.md` 描述 MinerU 2.5.4 CPU pipeline、`/file_parse`、Word→PDF；服务已启用 formula/table，目前 `return_content_list=False`。按实际部署版本接入，不直接套最新文档接口，不改参考工程。
+- [ ] A2：选取 PDF 书籍章节＋旧 OS PPTX，首批总量约50–100页，先以十余页走通。PDF走MinerU；PPTX补转PDF（需Impress或可用Office），保持幻灯片到页码映射；DOCX入口及转换按需补齐。当前StudyPilot前后端上传类型尚不接受DOCX。
+- [ ] A3：保存 Markdown 与结构化位置（页码、章节、块类型及可用bbox），处理重复空行、排版断行、页眉页脚；保留代码、列表、表格、公式。公式优先MinerU识别为LaTeX并保留原图可追溯；一般图表复用KnowEngine的识图API思路，保留原图及独立文字说明，以字节/Base64或可访问临时URL调用，跳过装饰图、缓存重复图片。识图失败须明确记录。
+- [ ] A4：比较固定窗口、段落/句子递归、标题结构父子切分。先观察实际段落/章节token分布与错误案例再设初值；统一并记录长度单位，使size/overlap配置确实生效，固定其他条件分别比较块长及overlap。提供简洁的原页位置→解析/清洗文本→chunk对照，便于用户阅读。
+
+### B．检索、重排、上下文扩展与评测
+
+- [ ] B1：复用已有BM25、VECTOR、RRF；接入 **一款现有本地BGE ONNX reranker**，先确认模型来源、tokenizer匹配及输入上限。参考权重在KnowEngine `src/main/resources/model/bge-reranker-model/`（约571MB模型＋tokenizer）。只做有/无重排对照，不扩成多模型选型。配置候选数、最终Top K和正文预算；BM25中文分词作为需要观察的因素。
+- [ ] B2：排序后对照 CHILD、PARENT、NEIGHBOR；优先保留已经选定的命中子块，剩余预算用于父块/相邻块扩展，去重并避免跨文档/版本扩展。用同一候选排名及相同正文预算比较，记录实际进入模型的证据。
+- [ ] B3：Sol围绕真实源文档补齐约60题（20调参/40保留评测，近似问法归同组），覆盖精确术语、同义表达、跨段条件、步骤、表格、公式/图示与无答案。标注文件、页/段落、答案要点和原文证据，避免固定旧chunkId；原文标注独立于检索返回，保留人工抽查与模型起草的区别。
+- [ ] B4：按“具体case→定位解析/切分/召回/排序/组装/生成环节→一次改一个因素→复测”迭代。通过实际API对比BM25、VECTOR、RRF、VECTOR+BGE、RRF+BGE与上下文扩展。先小样本再批量；复用解析、向量和查询结果；只对少数候选跑回答。记录Hit@5、MRR@5、多证据覆盖、无答案表现、上下文token、延迟和embedding调用量，最后选择实际有效的方案，不预设提升数字。
+
+### C．文档更新与失败恢复
+
+- [ ] C1：实现逻辑文档与版本关系。新版本先重新解析/切块；按实际embedding输入的内容哈希＋模型/维度配置复用既有embedding_artifacts，为新版本建立自己的块、来源及父子关系。第一版优化向量计算复用，不追求PDF二进制增量解析。
+- [ ] C2：全部索引成功且可检索后再切换有效版本；查询依据有效版本过滤。新版本失败仍使用旧版，历史引用保留旧版本定位；大纲标记需更新并由用户触发，已有聊天不自动改写。明确旧ES块清理策略，避免新旧版本混查。
+- [ ] C3：只做必要的具体恢复案例：部分向量已保存后失败、ES部分成功后恢复；以及V1→V2末尾追加/中间插入/局部修改，统计向量复用和重算。沿用现有短事务、租约和稳定ES ID，不照搬参考工程的长事务。
+
+### 收尾与完成标准
+
+- [ ] 当前业务API实际可用，用户能查看原文、chunk和检索结果；留一份精简结果表、代表失败/改进case，以及参数/方案选择说明，能够回应滴滴面试追问。代码按阶段提交，更新当前架构与运行说明；完整教材、权重、密钥和参考项目源码不纳入Git。
+- **压缩后下一步：** 读取本节及最新周额度；给 GPT-6.1 Sol 委派 A1/A2 的最小闭环（现有服务可用性与少量PDF/PPT解析），明确归属 `ingest/parse`、相关config和必要上传入口；完成后再扩展，不一次派发整个Goal。现有12题草稿worker已结束，当前没有在运行的实现worker。
+
 ## 2026-10-07 · 检索与续传实现对齐简历
 
 - [x] 按用户要求将学习 Agent 和未指定检索模式的 API 默认切为 VECTOR；BM25、RRF、PARENT 及同排名父块对照保留为显式选项，不重新向量化现有资料。
