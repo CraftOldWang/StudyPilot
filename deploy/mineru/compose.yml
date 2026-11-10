@@ -1,0 +1,12 @@
+services:
+  mineru:
+    build: .
+    image: studypilot-mineru:2.5.4
+    ports:
+      - "127.0.0.1:18001:8000"
+    volumes:
+      - models:/models
+volumes:
+  models:
+    external: true
+    name: ${MINERU_MODELS_VOLUME:-know-engine_mineru-models}

@@ -17,9 +17,9 @@ describe('DocumentPanel', () => {
     )
 
     const input = container.querySelector('input[type="file"]') as HTMLInputElement
-    fireEvent.change(input, { target: { files: [new File(['text'], 'notes.docx', { type: 'application/octet-stream' })] } })
+    fireEvent.change(input, { target: { files: [new File(['text'], 'notes.xlsx', { type: 'application/octet-stream' })] } })
 
-    expect(screen.getByRole('alert')).toHaveTextContent('支持 PDF、PPTX、TXT、Markdown、MP4、M4A、MP3 和 WAV 文件。')
+    expect(screen.getByRole('alert')).toHaveTextContent('支持 PDF、PPTX、DOCX、TXT、Markdown、MP4、M4A、MP3 和 WAV 文件。')
     expect(onUploaded).not.toHaveBeenCalled()
   })
 })

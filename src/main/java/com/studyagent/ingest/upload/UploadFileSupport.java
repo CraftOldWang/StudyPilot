@@ -34,13 +34,14 @@ final class UploadFileSupport {
         String expected = switch (dot < 0 ? "" : lower.substring(dot)) {
             case ".pdf" -> "application/pdf";
             case ".pptx" -> "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+            case ".docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
             case ".txt" -> "text/plain";
             case ".md", ".markdown" -> "text/markdown";
             case ".mp4" -> "video/mp4";
             case ".m4a" -> "audio/mp4";
             case ".mp3" -> "audio/mpeg";
             case ".wav" -> "audio/wav";
-            default -> throw new BusinessException("支持 TXT、Markdown、PDF、PPTX、MP4、M4A、MP3、WAV 文件");
+            default -> throw new BusinessException("支持 TXT、Markdown、PDF、PPTX、DOCX、MP4、M4A、MP3、WAV 文件");
         };
         String actual = contentType(type).split(";", 2)[0].trim().toLowerCase(Locale.ROOT);
         if (actual.equals("audio/x-m4a")) actual = "audio/mp4";

@@ -42,6 +42,11 @@ rocketmq:
     group: study-agent-producer
 
 study-agent:
+  ingest:
+    mineru:
+      enabled: ${STUDY_AGENT_INGEST_MINERU_ENABLED:false}
+      endpoint: "${STUDY_AGENT_INGEST_MINERU_ENDPOINT:http://127.0.0.1:18001/file_parse}"
+      timeout: ${STUDY_AGENT_INGEST_MINERU_TIMEOUT:30m}
   agentscope:
     workspace: ${AGENTSCOPE_WORKSPACE:${user.dir}/.agentscope/workspace}
     model:

@@ -1,6 +1,8 @@
 package com.studyagent.ingest.pipeline;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studyagent.algo.chunk.ChunkSegment;
 import com.studyagent.algo.chunk.SourceLocation;
@@ -13,6 +15,8 @@ import com.studyagent.config.RagProperties;
 import com.studyagent.config.ElasticsearchProperties;
 import com.studyagent.ingest.parse.DocumentTextParser;
 import com.studyagent.ingest.parse.MediaTranscriptionService;
+import com.studyagent.ingest.parse.MineruDocumentParser;
+import com.studyagent.ingest.parse.ParsedDocument;
 import com.studyagent.ingest.storage.ObjectStorageService;
 import com.studyagent.model.Document;
 import com.studyagent.model.DocumentChunk;
@@ -20,7 +24,9 @@ import com.studyagent.model.FileRecord;
 import com.studyagent.rag.index.ElasticsearchChunkDocument;
 import com.studyagent.rag.index.ElasticsearchIndexer;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -28,6 +34,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +47,7 @@ import org.springframework.stereotype.Service;
 public class DocumentPipeline {
 
     public static final String PARSER_VERSION = "tika-3.3.0";
+    private static final String MARKDOWN_VERSION = "markdown-utf8-v1";
     public static final String CHUNKER_VERSION = "v2-jtokkit1.1.0-cl100k";
 
     private final DocumentPipelinePersistence persistence;
@@ -53,6 +62,7 @@ public class DocumentPipeline {
     private final RagProperties ragProperties;
     private final ElasticsearchProperties elasticsearchProperties;
     private final MediaTranscriptionService mediaTranscription;
+    private final MineruDocumentParser mineruParser;
 
     public boolean process(Long documentId) {
         return execute(documentId, true);
@@ -83,32 +93,27 @@ public class DocumentPipeline {
         PipelineStatus stage = PipelineStatus.PARSING;
         try {
             boolean media = MediaTranscriptionService.isMedia(document.getTitle());
-            String parserVersion = media ? mediaTranscription.processorVersion() : PARSER_VERSION;
+            String parserVersion = media ? mediaTranscription.processorVersion() : parserVersion(document.getTitle());
             boolean reusableParse = parserVersion.equals(document.getParserVersion())
                     && document.getParsedTextKey() != null;
-            String parsedText;
+            ParsedDocument parsed;
             if (reusableParse) {
-                parsedText = loadParsed(document);
+                parsed = loadParsed(document, parserVersion);
             } else if (media) {
                 stage = PipelineStatus.TRANSCRIBING;
                 persistence.startStage(document, stage);
-                parsedText = mediaTranscription.transcribe(document);
+                parsed = new ParsedDocument(mediaTranscription.transcribe(document));
             } else {
-                parsedText = parse(document);
+                parsed = parse(document, parserVersion);
             }
             if (!reusableParse) {
-                byte[] bytes = parsedText.getBytes(StandardCharsets.UTF_8);
-                if (parsedText.isBlank()) { throw new BusinessException("文档解析结果为空"); }
-                String hash = sha256(parsedText);
-                String key = "parsed/" + document.getUserId() + "/" + documentId + "/" + parserVersion + "/" + hash + ".txt";
-                objectStorageService.putObject(key, new ByteArrayInputStream(bytes), bytes.length, "text/plain; charset=utf-8");
-                persistence.markParsed(document, key, hash, parserVersion);
+                saveParsed(document, parsed, parserVersion);
             }
 
             stage = PipelineStatus.CHUNKING;
             persistence.startStage(document, stage);
             boolean reusableChunks = reusableParse && chunkerVersion().equals(document.getChunkerVersion());
-            List<DocumentChunk> chunks = reusableChunks ? persistence.loadChunks(documentId) : buildChunks(document, parsedText);
+            List<DocumentChunk> chunks = reusableChunks ? persistence.loadChunks(documentId) : buildChunks(document, parsed);
             if (chunks.isEmpty()) {
                 throw new BusinessException("文档分块结果为空");
             }
@@ -145,34 +150,88 @@ public class DocumentPipeline {
         }
     }
 
-    private String loadParsed(Document document) {
+    private String parserVersion(String title) {
+        if (mineruParser.supports(title)) {
+            return MineruDocumentParser.VERSION;
+        }
+        if (title != null && title.toLowerCase(Locale.ROOT).matches(".*\\.(md|markdown)$")) {
+            return MARKDOWN_VERSION;
+        }
+        return PARSER_VERSION;
+    }
+
+    private void saveParsed(Document document, ParsedDocument parsed, String version) {
+        String text = parsed.text();
+        if (text.isBlank()) { throw new BusinessException("文档解析结果为空"); }
+        String hash = sha256(text);
+        String base = "parsed/" + document.getUserId() + "/" + document.getId() + "/" + version + "/" + hash;
+        String key;
+        if (MineruDocumentParser.VERSION.equals(version)) {
+            String prefix = base + "/";
+            key = prefix + MineruDocumentParser.MARKDOWN;
+            for (var image : parsed.images().entrySet()) {
+                putParsedObject(prefix + image.getKey(), image.getValue(), "image/jpeg");
+            }
+            try {
+                putParsedObject(prefix + MineruDocumentParser.SOURCES, objectMapper.writeValueAsBytes(parsed.blocks()),
+                        "application/json");
+            } catch (JsonProcessingException ex) {
+                throw new BusinessException("序列化 MinerU 来源坐标失败: " + ex.getMessage());
+            }
+        } else {
+            key = base + (MARKDOWN_VERSION.equals(version) ? ".md" : ".txt");
+        }
+        String contentType = key.endsWith(".md") ? "text/markdown" : "text/plain";
+        putParsedObject(key, text.getBytes(StandardCharsets.UTF_8), contentType + "; charset=utf-8");
+        persistence.markParsed(document, key, hash, version);
+    }
+
+    private void putParsedObject(String key, byte[] bytes, String contentType) {
+        objectStorageService.putObject(key, new ByteArrayInputStream(bytes), bytes.length, contentType);
+    }
+
+    private ParsedDocument loadParsed(Document document, String version) {
         try (InputStream stream = objectStorageService.getObject(document.getParsedTextKey())) {
             String text = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
             if (!sha256(text).equals(document.getParsedTextHash())) {
                 throw new BusinessException("规范文本产物哈希不匹配: documentId=" + document.getId());
             }
             log.info("复用规范文本: documentId={}", document.getId());
-            return text;
-        } catch (java.io.IOException ex) {
-            throw new BusinessException("读取规范文本产物失败: " + ex.getMessage());
+            if (MineruDocumentParser.VERSION.equals(version)) {
+                String key = document.getParsedTextKey();
+                String sourcesKey = key.substring(0, key.lastIndexOf('/') + 1) + MineruDocumentParser.SOURCES;
+                try (InputStream sources = objectStorageService.getObject(sourcesKey)) {
+                    List<ParsedDocument.Block> blocks = objectMapper.readValue(sources, new TypeReference<>() {});
+                    return new ParsedDocument(text, blocks, Map.of());
+                }
+            }
+            return new ParsedDocument(text);
+        } catch (IOException ex) {
+            throw new BusinessException("读取解析产物失败: " + ex.getMessage());
         }
     }
 
-    private String parse(Document document) {
+    private ParsedDocument parse(Document document, String version) {
         FileRecord file = persistence.loadFile(document.getFileRecordId());
         if (file == null) {
             throw new BusinessException("文件记录不存在: " + document.getFileRecordId());
         }
         try (InputStream inputStream = objectStorageService.getObject(file.getStorageKey())) {
-            return documentTextParser.parse(inputStream);
-        } catch (BusinessException ex) {
-            throw ex;
-        } catch (Exception ex) {
+            if (MineruDocumentParser.VERSION.equals(version)) {
+                return mineruParser.parse(inputStream, document.getTitle(), () -> persistence.renewLease(document));
+            }
+            if (MARKDOWN_VERSION.equals(version)) {
+                String markdown = StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(inputStream.readAllBytes())).toString();
+                return new ParsedDocument(markdown.startsWith("\uFEFF") ? markdown.substring(1) : markdown);
+            }
+            return new ParsedDocument(documentTextParser.parse(inputStream));
+        } catch (IOException ex) {
             throw new BusinessException("读取文档对象失败: " + ex.getMessage());
         }
     }
 
-    private List<DocumentChunk> buildChunks(Document document, String parsedText) {
+    private List<DocumentChunk> buildChunks(Document document, ParsedDocument parsed) {
+        String parsedText = parsed.text();
         List<DocumentChunk> chunks = new ArrayList<>();
         List<ChunkSegment> parents = ragProperties.chunkStrategy() == RagProperties.ChunkStrategy.STRUCTURED
                 ? structuredChunker.parentChunks(parsedText, ragProperties.parentChunkSize())
@@ -181,7 +240,7 @@ public class DocumentPipeline {
         LocalDateTime createdAt = LocalDateTime.now();
         for (int parentIndex = 0; parentIndex < parents.size(); parentIndex++) {
             ChunkSegment parentSegment = parents.get(parentIndex);
-            DocumentChunk parent = chunk(document.getId(), "PARENT", parentIndex, parentSegment, null, createdAt);
+            DocumentChunk parent = chunk(document.getId(), "PARENT", parentIndex, parentSegment, null, createdAt, parsed.blocks());
             chunks.add(parent);
             List<ChunkSegment> children = ragProperties.chunkStrategy() == RagProperties.ChunkStrategy.STRUCTURED
                     ? tokenWindowChunker.splitStructured(parentSegment, ragProperties.chunkSize(), ragProperties.chunkOverlap())
@@ -193,7 +252,8 @@ public class DocumentPipeline {
                         childIndex++,
                         childSegment,
                         parent.getChunkId(),
-                        createdAt));
+                        createdAt,
+                        parsed.blocks()));
             }
         }
         return List.copyOf(chunks);
@@ -205,7 +265,8 @@ public class DocumentPipeline {
             int chunkIndex,
             ChunkSegment segment,
             String parentChunkId,
-            LocalDateTime createdAt
+            LocalDateTime createdAt,
+            List<ParsedDocument.Block> sourceBlocks
     ) {
         String contentHash = sha256(segment.content());
         DocumentChunk chunk = new DocumentChunk();
@@ -216,7 +277,7 @@ public class DocumentPipeline {
         chunk.setChunkIndex(chunkIndex);
         chunk.setContent(segment.content());
         chunk.setContentHash(contentHash);
-        chunk.setSourceLocation(sourceLocationJson(segment.sourceLocation()));
+        chunk.setSourceLocation(sourceLocationJson(segment.sourceLocation(), sourceBlocks));
         chunk.setEmbeddingStatus("PARENT".equals(chunkType) ? "NOT_REQUIRED" : "PENDING");
         chunk.setCreatedAt(createdAt);
         return chunk;
@@ -272,12 +333,15 @@ public class DocumentPipeline {
                 + "-p" + ragProperties.parentChunkSize() + "o" + ragProperties.parentChunkOverlap();
     }
 
-    private String sourceLocationJson(SourceLocation location) {
+    private String sourceLocationJson(SourceLocation location, List<ParsedDocument.Block> sourceBlocks) {
+        List<ParsedDocument.Block> overlapping = sourceBlocks.stream()
+                .filter(block -> block.overlaps(location.startInclusive(), location.endExclusive())).toList();
         try {
             return objectMapper.writeValueAsString(new StoredSourceLocation(
                     location.startInclusive(),
                     location.endExclusive(),
-                    location.headingPath()));
+                    location.headingPath(),
+                    overlapping));
         } catch (JsonProcessingException ex) {
             throw new BusinessException("序列化 chunk 来源坐标失败: " + ex.getMessage());
         }
@@ -295,6 +359,7 @@ public class DocumentPipeline {
     private record EmbeddedChunk(DocumentChunk chunk, float[] embedding) {
     }
 
-    private record StoredSourceLocation(int startOffset, int endOffset, List<String> headingPath) {
+    private record StoredSourceLocation(int startOffset, int endOffset, List<String> headingPath,
+                                        @JsonInclude(JsonInclude.Include.NON_EMPTY) List<ParsedDocument.Block> blocks) {
     }
 }

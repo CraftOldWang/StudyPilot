@@ -26,6 +26,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
         UploadProperties.class,
         com.studyagent.config.AnkiProperties.class,
         com.studyagent.config.AsrProperties.class,
+        com.studyagent.config.MineruProperties.class,
         com.studyagent.config.LearningMemoryProperties.class,
         com.studyagent.config.DemoProperties.class,
         CanalProperties.class

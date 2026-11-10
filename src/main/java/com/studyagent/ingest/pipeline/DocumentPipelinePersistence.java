@@ -66,6 +66,7 @@ public class DocumentPipelinePersistence {
         writeOwned(document, update -> update.set("pipeline_status", "PARSED")
                 .set("parser_version", parserVersion)
                 .set("parsed_text_key", key).set("parsed_text_hash", hash)
+                .set("chunker_version", null)
                 .set("last_successful_stage", "PARSED"));
     }
 

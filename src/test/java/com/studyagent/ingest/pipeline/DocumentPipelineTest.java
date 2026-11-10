@@ -130,7 +130,8 @@ class DocumentPipelineTest {
                                 "unused",
                                 "http://localhost"),
                         null),
-                new ObjectMapper(), ragProperties, new ElasticsearchProperties("http://localhost", "test-v1", "test-read", "test-write", 2), media);
+                new ObjectMapper(), ragProperties, new ElasticsearchProperties("http://localhost", "test-v1", "test-read", "test-write", 2), media,
+                mock(com.studyagent.ingest.parse.MineruDocumentParser.class));
         return new Fixture(pipeline, persistence, objectStorage, parser, embeddingArtifacts, elasticsearchIndexer, media);
     }
 

@@ -38,6 +38,7 @@ class FileUploadServiceTest {
 
     @ParameterizedTest
     @CsvSource({"demo.pdf,application/pdf", "course.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "notes.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "notes.txt,text/plain", "notes.md,text/markdown", "notes.markdown,text/plain", "course.PPTX,application/octet-stream"})
     void duplicateReturnsExistingDocumentWithoutAnotherObject(String filename, String type) {
         String hash = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
@@ -60,7 +61,7 @@ class FileUploadServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"notes.docx,application/octet-stream", "notes.zip,application/zip", "notes.pdf,text/plain"})
+    @CsvSource({"notes.docx,text/plain", "notes.zip,application/zip", "notes.pdf,text/plain"})
     void unsupportedTypeIsRejectedBeforeStorage(String filename, String type) {
         assertThatThrownBy(() -> service.uploadSingle(1L, 1L,
                 new MockMultipartFile("file", filename, type, new byte[]{1}))).isInstanceOf(BusinessException.class);

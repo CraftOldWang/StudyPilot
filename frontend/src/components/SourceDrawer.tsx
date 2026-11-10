@@ -8,10 +8,14 @@ const SourceContext = createContext<((chunkId: string) => void) | null>(null)
 export function locationLabel(raw: string) {
   if (!raw?.startsWith('{')) return raw || '资料位置未记录'
   try {
-    const value = JSON.parse(raw) as { headingPath?: string[]; startOffset?: number; endOffset?: number }
-    const heading = value.headingPath?.join(' / ')
+    const value = JSON.parse(raw) as {
+      headingPath?: string[]; startOffset?: number; endOffset?: number
+      blocks?: { pageIndex: number; headingPath: string[] }[]
+    }
+    const heading = (value.headingPath?.length ? value.headingPath : value.blocks?.[0]?.headingPath)?.join(' / ')
+    const pages = [...new Set(value.blocks?.map(block => block.pageIndex + 1))].join('、')
     const range = typeof value.startOffset === 'number' && typeof value.endOffset === 'number' ? `文本字符 ${value.startOffset}–${value.endOffset}` : ''
-    return [heading, range].filter(Boolean).join(' · ') || '资料片段'
+    return [pages && `第 ${pages} 页`, heading, range].filter(Boolean).join(' · ') || '资料片段'
   } catch { return '资料位置无法读取' }
 }
 
