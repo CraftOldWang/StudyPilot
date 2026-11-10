@@ -6,8 +6,8 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 /**
  * RAG 检索、切块和父子检索配置。
  *
- * <p>chunkSize/chunkOverlap 表示用于召回的子 chunk 粒度；parentChunkSize/parentChunkOverlap
- * 表示用于回填上下文的父 chunk 粒度。这样可以让 ES 精确命中小片段，同时把更完整的父段落交给模型。</p>
+ * <p>父子 size 与 overlap 均使用 CL100K_BASE token。size 是每块上限。
+ * overlap 是同级相邻窗口共享文本的上限，保留整段或句子时实际重叠可以更短。</p>
  */
 @ConfigurationProperties(prefix = "study-agent.rag")
 public record RagProperties(
@@ -22,7 +22,7 @@ public record RagProperties(
         @DefaultValue("STRUCTURED") ChunkStrategy chunkStrategy,
         @DefaultValue("4096") int contextMaxTokens
 ) {
-    public enum ChunkStrategy { STRUCTURED, FIXED }
+    public enum ChunkStrategy { STRUCTURED, FIXED, RECURSIVE }
 
     public RagProperties {
         if (chunkSize <= 0 || chunkOverlap < 0 || chunkOverlap >= chunkSize

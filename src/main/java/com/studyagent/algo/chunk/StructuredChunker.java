@@ -16,13 +16,19 @@ public final class StructuredChunker {
     private static final Pattern TABLE_SEPARATOR = Pattern.compile(
             "^\\s*\\|?\\s*:?-{3,}:?\\s*(?:\\|\\s*:?-{3,}:?\\s*)+\\|?\\s*$"
     );
+    private static final Pattern HTML_TABLE_START = Pattern.compile("^\\s*<table(?:\\s|>)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern HTML_TABLE_END = Pattern.compile("</table>", Pattern.CASE_INSENSITIVE);
+    private static final Pattern DISPLAY_DOLLARS = Pattern.compile("\\$\\$");
+    private static final Pattern DISPLAY_BRACKETS = Pattern.compile("\\\\\\]");
 
     private final TokenCounter tokenCounter;
     private final TokenWindowChunker tokenWindowChunker;
+    private final RecursiveChunker recursiveChunker;
 
     public StructuredChunker(TokenCounter tokenCounter) {
         this.tokenCounter = Objects.requireNonNull(tokenCounter, "tokenCounter");
         this.tokenWindowChunker = new TokenWindowChunker(tokenCounter);
+        this.recursiveChunker = new RecursiveChunker(tokenCounter, tokenWindowChunker);
     }
 
     public List<ChunkSegment> childChunks(String parsedText) {
@@ -66,13 +72,30 @@ public final class StructuredChunker {
     }
 
     public List<ChunkSegment> chunk(String parsedText, int maxTokens, int overlapTokens) {
+        List<ChunkSegment> segments = new ArrayList<>();
+        for (MarkdownBlock block : scan(parsedText, false)) {
+            segments.addAll(tokenWindowChunker.split(block.segment(), maxTokens, overlapTokens));
+        }
+        return List.copyOf(segments);
+    }
+
+    public List<ChunkSegment> recursiveChunks(String text, int maxTokens, int overlapTokens) {
+        return recursiveChunks(new ChunkSegment(text, tokenCounter.count(text), new SourceLocation(0, text.length(), List.of())),
+                maxTokens, overlapTokens);
+    }
+
+    public List<ChunkSegment> recursiveChunks(ChunkSegment source, int maxTokens, int overlapTokens) {
+        return recursiveChunker.split(source, scan(source.content(), true), maxTokens, overlapTokens);
+    }
+
+    private List<MarkdownBlock> scan(String parsedText, boolean protectRichBlocks) {
         if (parsedText == null || parsedText.isBlank()) {
             return List.of();
         }
 
         List<Line> lines = lines(parsedText);
         List<Heading> headings = new ArrayList<>();
-        List<ChunkSegment> segments = new ArrayList<>();
+        List<MarkdownBlock> blocks = new ArrayList<>();
         int index = 0;
         while (index < lines.size()) {
             Line line = lines.get(index);
@@ -83,42 +106,49 @@ public final class StructuredChunker {
 
             Matcher heading = HEADING.matcher(line.text());
             int endIndex;
+            boolean atomic = false;
             if (heading.matches()) {
                 updateHeadingPath(headings, heading.group(1).length(), heading.group(2).strip());
                 endIndex = index + 1;
             } else if (fenceMarker(line.text()) != null) {
                 endIndex = fencedBlockEnd(lines, index, fenceMarker(line.text()));
+                atomic = true;
             } else if (isTableStart(lines, index)) {
                 endIndex = tableEnd(lines, index);
+                atomic = true;
+            } else if (protectRichBlocks && richBlockEnd(line.text()) != null) {
+                endIndex = markedBlockEnd(lines, index, richBlockEnd(line.text()));
+                atomic = true;
             } else if (LIST_ITEM.matcher(line.text()).matches()) {
                 endIndex = listEnd(lines, index);
             } else {
-                endIndex = paragraphEnd(lines, index);
+                endIndex = paragraphEnd(lines, index, protectRichBlocks);
             }
 
-            addSegment(parsedText, line.start(), lines.get(endIndex - 1).end(), headings,
-                    maxTokens, overlapTokens, segments);
+            int start = line.start(), end = lines.get(endIndex - 1).end();
+            String content = parsedText.substring(start, end);
+            blocks.add(new MarkdownBlock(new ChunkSegment(content, tokenCounter.count(content),
+                    new SourceLocation(start, end, headings.stream().map(Heading::title).toList())), atomic));
             index = endIndex;
         }
-        return List.copyOf(segments);
+        return blocks;
     }
 
-    private void addSegment(
-            String parsedText,
-            int start,
-            int end,
-            List<Heading> headings,
-            int maxTokens,
-            int overlapTokens,
-            List<ChunkSegment> target
-    ) {
-        String content = parsedText.substring(start, end);
-        ChunkSegment segment = new ChunkSegment(
-                content,
-                tokenCounter.count(content),
-                new SourceLocation(start, end, headings.stream().map(Heading::title).toList())
-        );
-        target.addAll(tokenWindowChunker.split(segment, maxTokens, overlapTokens));
+    private Pattern richBlockEnd(String line) {
+        if (HTML_TABLE_START.matcher(line).find()) { return HTML_TABLE_END; }
+        if (line.stripLeading().startsWith("$$")) { return DISPLAY_DOLLARS; }
+        if (line.stripLeading().startsWith("\\[")) { return DISPLAY_BRACKETS; }
+        return null;
+    }
+
+    private int markedBlockEnd(List<Line> lines, int start, Pattern marker) {
+        for (int index = start; index < lines.size(); index++) {
+            var match = marker.matcher(lines.get(index).text().stripLeading());
+            // The first delimiter opens display math. HTML has a different closing tag.
+            int from = index == start && marker != HTML_TABLE_END ? 2 : 0;
+            if (match.find(from)) { return index + 1; }
+        }
+        return lines.size();
     }
 
     private void updateHeadingPath(List<Heading> path, int level, String heading) {
@@ -154,12 +184,13 @@ public final class StructuredChunker {
         return index;
     }
 
-    private int paragraphEnd(List<Line> lines, int start) {
+    private int paragraphEnd(List<Line> lines, int start, boolean protectRichBlocks) {
         int index = start + 1;
         while (index < lines.size()) {
             String text = lines.get(index).text();
             if (text.isBlank() || HEADING.matcher(text).matches() || fenceMarker(text) != null
-                    || LIST_ITEM.matcher(text).matches() || isTableStart(lines, index)) {
+                    || LIST_ITEM.matcher(text).matches() || isTableStart(lines, index)
+                    || (protectRichBlocks && richBlockEnd(text) != null)) {
                 break;
             }
             index++;
@@ -205,4 +236,6 @@ public final class StructuredChunker {
 
     private record Heading(int level, String title) {
     }
+
+    record MarkdownBlock(ChunkSegment segment, boolean atomic) {}
 }

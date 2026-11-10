@@ -100,7 +100,7 @@ public final class TokenWindowChunker {
         return end;
     }
 
-    private void validateWindow(int maxTokens, int overlapTokens) {
+    static void validateWindow(int maxTokens, int overlapTokens) {
         if (maxTokens <= 0) {
             throw new IllegalArgumentException("maxTokens must be positive");
         }
