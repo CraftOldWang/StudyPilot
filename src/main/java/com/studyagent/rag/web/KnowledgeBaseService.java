@@ -1,13 +1,23 @@
 package com.studyagent.rag.web;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.studyagent.common.exception.BusinessException;
 import com.studyagent.mapper.DocumentMapper;
 import com.studyagent.mapper.KnowledgeBaseMapper;
+import com.studyagent.mapper.LogicalDocumentMapper;
 import com.studyagent.model.Document;
 import com.studyagent.model.KnowledgeBase;
+import com.studyagent.model.LogicalDocument;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +28,7 @@ public class KnowledgeBaseService {
 
     private final KnowledgeBaseMapper knowledgeBaseMapper;
     private final DocumentMapper documentMapper;
+    private final LogicalDocumentMapper logicalDocuments;
 
     @Transactional
     public KnowledgeBase create(Long userId, String name) {
@@ -66,13 +77,49 @@ public class KnowledgeBaseService {
         return knowledgeBase;
     }
 
-    public List<Document> listDocuments(Long userId, Long knowledgeBaseId) {
+    @Transactional(readOnly = true)
+    public List<DocumentListing> listDocuments(Long userId, Long knowledgeBaseId) {
         requireOwned(userId, knowledgeBaseId);
-        return documentMapper.selectList(new LambdaQueryWrapper<Document>()
+        var activeByLogicalId = new HashMap<Long, Long>();
+        logicalDocuments.selectList(logicalScope(userId, knowledgeBaseId).select("id", "active_document_id"))
+                .forEach(logical -> activeByLogicalId.put(logical.getId(), logical.getActiveDocumentId()));
+        if (activeByLogicalId.isEmpty()) {
+            return List.of();
+        }
+        List<Document> versions = documentMapper.selectList(new LambdaQueryWrapper<Document>()
                 .eq(Document::getUserId, userId)
                 .eq(Document::getKnowledgeBaseId, knowledgeBaseId)
-                .orderByDesc(Document::getCreatedAt));
+                .orderByDesc(Document::getCreatedAt, Document::getId));
+        var listings = new ArrayList<DocumentListing>();
+        var listedCandidates = new HashSet<Long>();
+        for (Document document : versions) {
+            Long logicalId = document.getLogicalDocumentId();
+            if (!activeByLogicalId.containsKey(logicalId)) {
+                continue;
+            }
+            Long activeId = activeByLogicalId.get(logicalId);
+            if (document.getId().equals(activeId)) {
+                listings.add(new DocumentListing(document, true));
+            } else if (!"INDEXED".equals(document.getPipelineStatus())
+                    && Objects.equals(document.getPreviousDocumentId(), activeId)
+                    && listedCandidates.add(logicalId)) {
+                listings.add(new DocumentListing(document, false));
+            }
+        }
+        return listings;
     }
+
+    public Set<Long> activeDocumentIds(Long userId, Long knowledgeBaseId) {
+        return logicalDocuments.selectList(logicalScope(userId, knowledgeBaseId)
+                        .select("active_document_id").isNotNull("active_document_id"))
+                .stream().map(LogicalDocument::getActiveDocumentId).collect(Collectors.toSet());
+    }
+
+    private QueryWrapper<LogicalDocument> logicalScope(Long userId, Long knowledgeBaseId) {
+        return Wrappers.<LogicalDocument>query().eq("user_id", userId).eq("knowledge_base_id", knowledgeBaseId);
+    }
+
+    public record DocumentListing(Document document, boolean active) { }
 
     private String normalizedName(String name) {
         if (name == null || name.isBlank()) {

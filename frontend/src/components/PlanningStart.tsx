@@ -111,6 +111,7 @@ export function PlanningStart({ knowledgeBase, visible, requestedSessionId, onSe
           await onSession(value)
         })}>{session ? session.status === 'COMPLETED' ? '查看学习记录' : '继续学习' : '开始学习'}</button>}
       </div>
+      {plan.sourcesStale && <Feedback>大纲使用的资料版本已变化。可重新选择资料并生成大纲。</Feedback>}
       {plan.errorMessage && <Feedback error>{plan.errorMessage}</Feedback>}
       {plan.status !== 'SUCCEEDED' && <div className="action-row"><span>{generating ? phaseLabel(plan.stages.at(-1)?.stage || '') : '大纲尚未生成完成'}</span><button disabled={generating} type="button" onClick={() => void action(() => execute(plan.id))}>{generating ? '生成中…' : '继续生成'}</button></div>}
       {plan.result && <LearningOutline nodes={nodes} points={session?.plan || []} completedNodeIds={plan.completedNodeIds} />}

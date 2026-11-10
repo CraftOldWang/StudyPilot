@@ -18,6 +18,7 @@ import com.studyagent.model.Document;
 import com.studyagent.model.DocumentChunk;
 import com.studyagent.model.LearningPlanRun;
 import com.studyagent.model.LearningPlanStage;
+import com.studyagent.rag.web.KnowledgeBaseService;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -27,8 +28,10 @@ import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +47,7 @@ public class LearningPlanningService {
     private final LearningPlanningProperties properties;
     private final ObjectMapper mapper;
     private final com.studyagent.mapper.LearningSessionMapper sessions;
+    private final KnowledgeBaseService knowledgeBases;
 
     public LearningPlanRun create(Long userId, Long kbId, String goal, List<Long> lessonIds, List<Long> exerciseIds, Integer targetPointCount) {
         scopeFactory.validateKnowledgeBaseScope(userId, kbId);
@@ -51,14 +55,18 @@ public class LearningPlanningService {
         if (targetPointCount != null && (targetPointCount < 1 || targetPointCount > 30)) {
             throw new BusinessException("目标知识点数量必须为 1–30");
         }
+        Set<Long> activeIds = knowledgeBases.activeDocumentIds(userId, kbId);
         List<Long> exercises = exerciseIds == null ? List.of() : List.copyOf(exerciseIds);
-        List<Long> lessons = lessonIds == null ? documents.selectList(Wrappers.<Document>query()
-                        .eq("user_id", userId).eq("knowledge_base_id", kbId).eq("pipeline_status", "INDEXED").orderByAsc("id"))
-                .stream().map(Document::getId).filter(id -> !exercises.contains(id)).toList() : List.copyOf(lessonIds);
+        List<Long> lessons = lessonIds == null
+                ? activeIds.stream().filter(id -> !exercises.contains(id)).sorted().toList()
+                : List.copyOf(lessonIds);
         if (lessons.isEmpty()) { throw new BusinessException("请至少选择一份已索引课件"); }
         if (new HashSet<>(lessons).size() != lessons.size() || new HashSet<>(exercises).size() != exercises.size()
                 || lessons.stream().anyMatch(exercises::contains)) {
             throw new BusinessException("资料 ID 不可重复，课件与习题需分别选择");
+        }
+        if (!activeIds.containsAll(lessons) || !activeIds.containsAll(exercises)) {
+            throw new BusinessException("所选资料包含非当前版本，请刷新资料列表后重选");
         }
         Input input = new Input(PlanningModel.VERSION, targetPointCount, sources(userId, kbId, lessons), sources(userId, kbId, exercises));
         return persistence.create(userId, kbId, goal.trim(), json(input));
@@ -66,9 +74,13 @@ public class LearningPlanningService {
 
     public View view(Long userId, Long runId) {
         LearningPlanRun run = persistence.require(userId, runId);
-        if (!PlanningModel.VERSION.equals(decode(run.getInputJson(), Input.class).version())) {
+        Input input = decode(run.getInputJson(), Input.class);
+        if (!PlanningModel.VERSION.equals(input.version())) {
             throw new BusinessException("请重新生成多层学习大纲，旧大纲不再使用");
         }
+        Set<Long> activeIds = knowledgeBases.activeDocumentIds(userId, run.getKnowledgeBaseId());
+        boolean sourcesStale = Stream.concat(input.lessons().stream(), input.exercises().stream())
+                .anyMatch(source -> !activeIds.contains(source.documentId()));
         Result result = null;
         LearningPlanStage tasks = persistence.latest(runId, "TASKS");
         if (tasks != null && "SUCCEEDED".equals(tasks.getStatus())) { result = decode(tasks.getOutputJson(), Result.class); }
@@ -78,7 +90,7 @@ public class LearningPlanningService {
                 .map(s -> new StageView(s.getId(), s.getStageKey(), s.getStatus(), s.getInputHash(), s.getAttemptCount(),
                         s.getTraceId(), s.getErrorMessage(), s.getStartedAt(), s.getCompletedAt(), s.getElapsedMillis(),
                         s.getUsageJson())).toList(), result == null ? null : new OutlineView(result.nodes()),
-                sessions.completedOutlineNodes(userId, runId));
+                sessions.completedOutlineNodes(userId, runId), sourcesStale);
     }
 
     public View execute(Long userId, Long runId) {
@@ -368,5 +380,6 @@ public class LearningPlanningService {
                             String errorMessage, LocalDateTime startedAt, LocalDateTime completedAt, Long elapsedMillis, String usageJson) { }
     public record OutlineView(List<OutlineNode> nodes) { }
     public record View(Long id, Long knowledgeBaseId, String learningGoal, String status, String errorMessage,
-                       Long sessionId, List<StageView> stages, OutlineView result, java.util.Set<Long> completedNodeIds) { }
+                       Long sessionId, List<StageView> stages, OutlineView result, Set<Long> completedNodeIds,
+                       boolean sourcesStale) { }
 }

@@ -1,5 +1,6 @@
 package com.studyagent.rag.web;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.studyagent.common.response.ApiResponse;
 import com.studyagent.identity.CurrentUserContext;
 import com.studyagent.model.Document;
@@ -62,7 +63,8 @@ public class KnowledgeBaseController {
                 knowledgeBase.getUpdatedAt());
     }
 
-    private DocumentResponse toResponse(Document document) {
+    private DocumentResponse toResponse(KnowledgeBaseService.DocumentListing listing) {
+        Document document = listing.document();
         return new DocumentResponse(
                 document.getId(),
                 document.getKnowledgeBaseId(),
@@ -72,7 +74,10 @@ public class KnowledgeBaseController {
                 document.getPipelineStatus(),
                 document.getErrorMessage(),
                 document.getCreatedAt(),
-                document.getUpdatedAt());
+                document.getUpdatedAt(),
+                document.getLogicalDocumentId(),
+                document.getPreviousDocumentId(),
+                listing.active());
     }
 
     public record NameRequest(@NotBlank String name) {
@@ -95,7 +100,10 @@ public class KnowledgeBaseController {
             String pipelineStatus,
             String errorMessage,
             LocalDateTime createdAt,
-            LocalDateTime updatedAt
+            LocalDateTime updatedAt,
+            Long logicalDocumentId,
+            Long previousDocumentId,
+            @JsonProperty("isActive") boolean active
     ) {
     }
 }

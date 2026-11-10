@@ -96,6 +96,7 @@ export interface PlanningView {
   stages: { id: string; stage: string; status: string; errorMessage: string | null; attemptCount: number }[]
   result: { nodes: OutlineNode[] } | null
   completedNodeIds?: string[]
+  sourcesStale?: boolean
 }
 
 export interface SessionEntry {
