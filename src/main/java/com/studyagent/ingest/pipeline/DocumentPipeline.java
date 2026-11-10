@@ -26,7 +26,6 @@ import com.studyagent.rag.index.ElasticsearchIndexer;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -34,7 +33,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +45,6 @@ import org.springframework.stereotype.Service;
 public class DocumentPipeline {
 
     public static final String PARSER_VERSION = "tika-3.3.0";
-    private static final String MARKDOWN_VERSION = "markdown-utf8-v1";
     public static final String CHUNKER_VERSION = "v2-jtokkit1.1.0-cl100k";
 
     private final DocumentPipelinePersistence persistence;
@@ -93,7 +90,12 @@ public class DocumentPipeline {
         PipelineStatus stage = PipelineStatus.PARSING;
         try {
             boolean media = MediaTranscriptionService.isMedia(document.getTitle());
-            String parserVersion = media ? mediaTranscription.processorVersion() : parserVersion(document.getTitle());
+            String parserVersion = PARSER_VERSION;
+            if (media) {
+                parserVersion = mediaTranscription.processorVersion();
+            } else if (mineruParser.supports(document.getTitle())) {
+                parserVersion = MineruDocumentParser.VERSION;
+            }
             boolean reusableParse = parserVersion.equals(document.getParserVersion())
                     && document.getParsedTextKey() != null;
             ParsedDocument parsed;
@@ -150,16 +152,6 @@ public class DocumentPipeline {
         }
     }
 
-    private String parserVersion(String title) {
-        if (mineruParser.supports(title)) {
-            return MineruDocumentParser.VERSION;
-        }
-        if (title != null && title.toLowerCase(Locale.ROOT).matches(".*\\.(md|markdown)$")) {
-            return MARKDOWN_VERSION;
-        }
-        return PARSER_VERSION;
-    }
-
     private void saveParsed(Document document, ParsedDocument parsed, String version) {
         String text = parsed.text();
         if (text.isBlank()) { throw new BusinessException("文档解析结果为空"); }
@@ -179,7 +171,7 @@ public class DocumentPipeline {
                 throw new BusinessException("序列化 MinerU 来源坐标失败: " + ex.getMessage());
             }
         } else {
-            key = base + (MARKDOWN_VERSION.equals(version) ? ".md" : ".txt");
+            key = base + ".txt";
         }
         String contentType = key.endsWith(".md") ? "text/markdown" : "text/plain";
         putParsedObject(key, text.getBytes(StandardCharsets.UTF_8), contentType + "; charset=utf-8");
@@ -219,10 +211,6 @@ public class DocumentPipeline {
         try (InputStream inputStream = objectStorageService.getObject(file.getStorageKey())) {
             if (MineruDocumentParser.VERSION.equals(version)) {
                 return mineruParser.parse(inputStream, document.getTitle(), () -> persistence.renewLease(document));
-            }
-            if (MARKDOWN_VERSION.equals(version)) {
-                String markdown = StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(inputStream.readAllBytes())).toString();
-                return new ParsedDocument(markdown.startsWith("\uFEFF") ? markdown.substring(1) : markdown);
             }
             return new ParsedDocument(documentTextParser.parse(inputStream));
         } catch (IOException ex) {
