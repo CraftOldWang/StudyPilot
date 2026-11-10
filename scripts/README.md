@@ -35,6 +35,8 @@ python scripts/run-rag-cases.py --source-map output/rag-reference/source-map.jso
 
 用 `--case` 单跑指定题，用 `--rerank` 启用重排。JSONL 保存请求、完整响应和耗时，失败保留错误并在重跑时重试。续跑只复用请求、知识库内物理文档映射及配置标签都一致的结果。切换切块配置时，更新 `--configuration` 并使用独立的 `--out`；替换资料后更新映射。页命中比较来源页元数据和 `samplePages`，缺页元数据会单列。原文证据按标注引号内片段匹配，无引号时用整条，归一 Unicode 和空白。覆盖率按匹配片段数计算，无答案题留人工复核。
 
+`pageHitAt5`、`literalEvidenceHitAt5` 和 `literalEvidenceMrrAt5` 只看 `rankedChildren` 的前五条，正式比较请设置 `--top-k` 至少为 5。上下文覆盖看 `hits`，包括父块或相邻块补入的正文。原文匹配用于诊断检索证据，答案正确率需另行评估。无答案题不纳入这些指标的汇总。
+
 ## 研究与历史脚本
 
 - `run-rag-evaluation`、`run-chunk-config`、`run-parent-comparison`、`draft/freeze-rag-gold` 等：更完整的 RAG 数据集和参数实验。

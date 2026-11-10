@@ -37,9 +37,7 @@ def source_pages(provenance):
     return pages
 
 
-def score(case, hits, sources):
-    if not case["answerable"]:
-        return {"manualReview": True}
+def match_evidence(case, hits, sources):
     contexts = [(hit["chunkId"], str(hit["provenance"]["documentId"]),
                  source_pages(hit["provenance"]), normalize(hit["content"])) for hit in hits]
     evidence = []
@@ -56,14 +54,30 @@ def score(case, hits, sources):
         evidence.append({"sourceId": source, "samplePages": sorted(expected),
                          "observedPages": sorted(found), "matchedPages": sorted(expected & found),
                          "pageMetadataAvailable": bool(found), "literals": literals})
+    return evidence
+
+
+def score(case, data, sources):
+    if not case["answerable"]:
+        return {"manualReview": True}
+    evidence = match_evidence(case, data["hits"], sources)
     literals = [literal for entry in evidence for literal in entry["literals"]]
     matched = sum(bool(literal["chunkIds"]) for literal in literals)
+    ranked = data["rankedChildren"][:5]
+    ranked_evidence = match_evidence(case, ranked, sources)
+    matching_children = {chunk for entry in ranked_evidence for literal in entry["literals"]
+                         for chunk in literal["chunkIds"]}
+    reciprocal_rank = next((1 / rank for rank, hit in enumerate(ranked, start=1)
+                            if hit["chunkId"] in matching_children), 0.0)
     return {
         "pageHit": any(entry["matchedPages"] for entry in evidence),
         "literalEvidenceHit": matched > 0,
         "literalEvidenceMatched": matched,
         "literalEvidenceTotal": len(literals),
         "literalEvidenceCoverage": matched / len(literals),
+        "pageHitAt5": any(entry["matchedPages"] for entry in ranked_evidence),
+        "literalEvidenceHitAt5": bool(matching_children),
+        "literalEvidenceMrrAt5": reciprocal_rank,
         "evidence": evidence,
     }
 
@@ -129,8 +143,9 @@ def run_case(http, case, request, timeout):
         row["response"] = envelope
         if not response.ok or not isinstance(envelope, dict) or envelope.get("code") != 0:
             row["error"] = f"Search failed (HTTP {response.status_code})"
-        elif not isinstance(envelope.get("data"), dict) or not isinstance(envelope["data"].get("hits"), list):
-            row["error"] = "Search response has no hits list"
+        elif not isinstance(envelope.get("data"), dict) or not all(
+                isinstance(envelope["data"].get(field), list) for field in ("hits", "rankedChildren")):
+            row["error"] = "Search response must contain hits and rankedChildren lists"
         else:
             row["success"] = True
     except requests.RequestException as ex:
@@ -183,7 +198,7 @@ def main():
             row = cached or run_case(http, case, request, args.timeout)
             if row["success"]:
                 try:
-                    row["metrics"] = score(case, row["response"]["data"]["hits"], sources)
+                    row["metrics"] = score(case, row["response"]["data"], sources)
                 except (KeyError, TypeError, ValueError) as ex:
                     row.update(success=False, error=f"Cannot score response: {ex}")
             if row["success"]:
@@ -202,6 +217,13 @@ def main():
         "manualReview": len(successes) - len(measured),
         "pageHits": sum(entry["pageHit"] for entry in measured),
         "literalEvidenceHits": sum(entry["literalEvidenceHit"] for entry in measured),
+        "pageHitAt5": sum(entry["pageHitAt5"] for entry in measured) / len(measured) if measured else None,
+        "literalEvidenceHitAt5": (
+            sum(entry["literalEvidenceHitAt5"] for entry in measured) / len(measured) if measured else None
+        ),
+        "literalEvidenceMrrAt5": (
+            sum(entry["literalEvidenceMrrAt5"] for entry in measured) / len(measured) if measured else None
+        ),
         "literalEvidenceCoverage": (
             sum(entry["literalEvidenceMatched"] for entry in measured) / literal_count if literal_count else None
         ),
