@@ -4,6 +4,7 @@ import com.studyagent.common.response.ApiResponse;
 import com.studyagent.agent.integration.KnowledgeSearchAgentService;
 import com.studyagent.config.RerankProperties;
 import com.studyagent.identity.CurrentUserContext;
+import com.studyagent.rag.retrieval.ContextMode;
 import com.studyagent.rag.retrieval.KnowledgeRetrievalService;
 import com.studyagent.rag.retrieval.KnowledgeSearchResponse;
 import com.studyagent.rag.retrieval.RetrievalMode;
@@ -36,7 +37,7 @@ public class KnowledgeSearchController {
         Long userId = currentUserContext.userId();
         knowledgeBaseService.requireOwned(userId, knowledgeBaseId);
         return ApiResponse.ok(knowledgeRetrievalService.search(userId, knowledgeBaseId, request.query(), request.mode(),
-                request.topK(), Boolean.TRUE.equals(request.rerank()), request.rerankCandidates()));
+                request.topK(), Boolean.TRUE.equals(request.rerank()), request.rerankCandidates(), request.contextMode()));
     }
 
     @PostMapping("/agent-search")
@@ -51,6 +52,7 @@ public class KnowledgeSearchController {
 
     public record SearchRequest(@NotBlank String query, RetrievalMode mode,
                                 @Min(1) @Max(20) Integer topK, Boolean rerank,
-                                @Min(1) @Max(RerankProperties.MAX_CANDIDATES) Integer rerankCandidates) {
+                                @Min(1) @Max(RerankProperties.MAX_CANDIDATES) Integer rerankCandidates,
+                                ContextMode contextMode) {
     }
 }

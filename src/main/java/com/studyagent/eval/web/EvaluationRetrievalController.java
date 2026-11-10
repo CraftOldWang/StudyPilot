@@ -1,8 +1,10 @@
 package com.studyagent.eval.web;
 
 import com.studyagent.common.response.ApiResponse;
+import com.studyagent.config.RerankProperties;
 import com.studyagent.identity.CurrentUserContext;
 import com.studyagent.rag.retrieval.KnowledgeRetrievalService;
+import com.studyagent.rag.retrieval.RetrievalMode;
 import com.studyagent.rag.web.KnowledgeBaseService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -30,8 +32,10 @@ public class EvaluationRetrievalController {
             @PathVariable Long knowledgeBaseId, @Valid @RequestBody Request request) {
         Long userId = currentUser.userId();
         knowledgeBases.requireOwned(userId, knowledgeBaseId);
-        return ApiResponse.ok(retrieval.compareContexts(userId, knowledgeBaseId, request.query(), request.topK()));
+        return ApiResponse.ok(retrieval.compareContexts(userId, knowledgeBaseId, request.query(), request.topK(),
+                request.mode(), Boolean.TRUE.equals(request.rerank()), request.rerankCandidates()));
     }
 
-    public record Request(@NotBlank String query, @Min(1) @Max(20) Integer topK) { }
+    public record Request(@NotBlank String query, @Min(1) @Max(20) Integer topK, RetrievalMode mode, Boolean rerank,
+                          @Min(1) @Max(RerankProperties.MAX_CANDIDATES) Integer rerankCandidates) { }
 }

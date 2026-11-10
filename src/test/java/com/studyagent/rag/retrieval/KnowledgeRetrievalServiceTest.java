@@ -15,11 +15,12 @@ class KnowledgeRetrievalServiceTest {
     private final EmbeddingService embedding = mock(EmbeddingService.class);
     private final RetrievalService retrieval = mock(RetrievalService.class);
     private final ParentAggregator parents = mock(ParentAggregator.class);
+    private final ContextExpansion expansion = mock(ContextExpansion.class);
     private final RagProperties properties = new RagProperties(2, 800, 80, 2400, 0, 30, 20, 60,
             RagProperties.ChunkStrategy.STRUCTURED, 2400);
     private final KnowledgeRetrievalService service = new KnowledgeRetrievalService(
             embedding, retrieval, properties, parents, String::length,
-            mock(BgeReranker.class), new RerankProperties(null, 30, 1024));
+            mock(BgeReranker.class), new RerankProperties(null, 30, 1024), expansion);
 
     @Test
     void keepsOriginalChildRankAndUsesParentSourceCoordinates() {
@@ -83,7 +84,7 @@ class KnowledgeRetrievalServiceTest {
     }
 
     @Test
-    void comparisonUsesOneRetrievalAndTheSameChildRanksForBothContextViews() {
+    void comparisonUsesOneRetrievalAndKeepsAdmittedChildrenInAllViews() {
         float[] vector = {0.1f, 0.2f};
         var source = new RetrievalHit.Provenance("doc", "Title", "location");
         var first = new RetrievalHit("c1", "p", "a".repeat(1500), source, 0.9, RetrievalStrategy.RRF);
@@ -91,15 +92,20 @@ class KnowledgeRetrievalServiceTest {
         when(embedding.embed("query", EmbeddingPurpose.QUERY)).thenReturn(vector);
         when(retrieval.retrieve(RetrievalMode.RRF, "11", "22", "query", vector, 30, 20, 2, 60))
                 .thenReturn(List.of(first, second));
-        when(parents.aggregate("11", "22", List.of(first, second))).thenReturn(List.of(
-                new KnowledgeSearchResponse.Result("p", "p".repeat(2300), source, 0.9)));
+        when(expansion.expand("11", "22", ContextMode.PARENT, List.of(first), 900))
+                .thenReturn(new ContextExpansion.Expansion(List.of(
+                        new KnowledgeSearchResponse.Result("p", "p".repeat(500), source, 0.9)), List.of(), 500));
+        when(expansion.expand("11", "22", ContextMode.NEIGHBOR, List.of(first), 900))
+                .thenReturn(new ContextExpansion.Expansion(List.of(), List.of(), 0));
         var result = service.compareContexts(11L, 22L, "query", 2);
         assertThat(result.childContext().rankedChildren()).containsExactly(first, second);
         assertThat(result.parentContext().rankedChildren()).isSameAs(result.childContext().rankedChildren());
+        assertThat(result.neighborContext().rankedChildren()).isSameAs(result.childContext().rankedChildren());
         assertThat(result.childContext().hits()).extracting(KnowledgeSearchResponse.Result::chunkId).containsExactly("c1");
-        assertThat(result.parentContext().hits()).extracting(KnowledgeSearchResponse.Result::chunkId).containsExactly("p");
+        assertThat(result.parentContext().hits()).extracting(KnowledgeSearchResponse.Result::chunkId).containsExactly("c1", "p");
+        assertThat(result.neighborContext().hits()).isEqualTo(result.childContext().hits());
         assertThat(result.childContext().contextTokens()).isEqualTo(1500);
-        assertThat(result.parentContext().contextTokens()).isEqualTo(2300);
+        assertThat(result.parentContext().contextTokens()).isEqualTo(2000);
         verify(embedding, times(1)).embed("query", EmbeddingPurpose.QUERY);
         verify(retrieval, times(1)).retrieve(RetrievalMode.RRF, "11", "22", "query", vector, 30, 20, 2, 60);
         verifyNoMoreInteractions(retrieval, embedding);

@@ -11,7 +11,8 @@ public record KnowledgeSearchResponse(
         List<ContextMatch> contextMatches,
         int contextTokens,
         RetrievalMode mode,
-        @JsonInclude(JsonInclude.Include.NON_NULL) List<RerankCandidate> rerankCandidates
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<RerankCandidate> rerankCandidates,
+        @JsonInclude(JsonInclude.Include.NON_NULL) ContextMode contextMode
 ) {
 
     public KnowledgeSearchResponse(String query, String message, List<Result> hits) {
@@ -21,6 +22,12 @@ public record KnowledgeSearchResponse(
     public KnowledgeSearchResponse(String query, String message, List<Result> hits, List<RetrievalHit> rankedChildren,
                                    List<ContextMatch> contextMatches, int contextTokens, RetrievalMode mode) {
         this(query, message, hits, rankedChildren, contextMatches, contextTokens, mode, null);
+    }
+
+    public KnowledgeSearchResponse(String query, String message, List<Result> hits, List<RetrievalHit> rankedChildren,
+                                   List<ContextMatch> contextMatches, int contextTokens, RetrievalMode mode,
+                                   List<RerankCandidate> rerankCandidates) {
+        this(query, message, hits, rankedChildren, contextMatches, contextTokens, mode, rerankCandidates, null);
     }
 
     // Evaluation retains raw child ranks; the model receives each admitted context body only once.

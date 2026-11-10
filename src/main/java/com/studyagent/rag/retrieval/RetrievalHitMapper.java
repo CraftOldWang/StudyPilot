@@ -17,6 +17,9 @@ final class RetrievalHitMapper {
         if (source == null) {
             throw new BusinessException("Elasticsearch 检索命中缺少 _source: id=" + hit.id());
         }
+        RetrievalHit.Position position = source.chunkerVersion() == null || source.createdAt() == null
+                || source.chunkIndex() == null ? null
+                : new RetrievalHit.Position(hit.index(), source.chunkerVersion(), source.createdAt(), source.chunkIndex());
         return new RetrievalHit(
                 source.chunkId(),
                 source.parentChunkId(),
@@ -24,7 +27,8 @@ final class RetrievalHitMapper {
                 new RetrievalHit.Provenance(
                         source.documentId(), source.documentTitle(), source.sourceLocation()),
                 hit.score() == null ? 0.0 : hit.score(),
-                strategy
+                strategy,
+                position
         );
     }
 }

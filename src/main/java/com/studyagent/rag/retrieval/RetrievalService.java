@@ -101,7 +101,8 @@ public class RetrievalService {
                 source.content(),
                 source.provenance(),
                 score,
-                RetrievalStrategy.RRF
+                RetrievalStrategy.RRF,
+                source.position()
         );
     }
 
