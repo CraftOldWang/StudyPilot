@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import os
 import subprocess
 import tempfile
 import zipfile
@@ -18,6 +19,20 @@ from mineru.cli.common import aio_do_parse
 from mineru.utils.enum_class import MakeMode
 from starlette.background import BackgroundTask
 
+def configure_formula_batch():
+    configured = os.getenv("STUDYPILOT_MINERU_MFR_BATCH_SIZE")
+    if configured is None:
+        return
+    size = int(configured)
+    if size < 1 or version("mineru") != "2.5.4":
+        raise RuntimeError("STUDYPILOT_MINERU_MFR_BATCH_SIZE requires MinerU 2.5.4 and a positive batch size")
+    from mineru.backend.pipeline import batch_analyze
+
+    # 2.5.4 exposes page batches through the environment, while MFR uses a module constant.
+    batch_analyze.MFR_BASE_BATCH_SIZE = size
+
+
+configure_formula_batch()
 app = FastAPI(title="StudyPilot MinerU")
 gate = asyncio.Semaphore(1)
 parser_version = f"mineru-{version('mineru')}-pipeline-v1"

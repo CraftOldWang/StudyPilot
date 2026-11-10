@@ -4,6 +4,9 @@ services:
     image: studypilot-mineru:2.5.4
     ports:
       - "127.0.0.1:18001:8000"
+    environment:
+      MINERU_MIN_BATCH_INFERENCE_SIZE: "${MINERU_MIN_BATCH_INFERENCE_SIZE:-1}"
+      STUDYPILOT_MINERU_MFR_BATCH_SIZE: "${STUDYPILOT_MINERU_MFR_BATCH_SIZE:-1}"
     volumes:
       - models:/models
 volumes:
