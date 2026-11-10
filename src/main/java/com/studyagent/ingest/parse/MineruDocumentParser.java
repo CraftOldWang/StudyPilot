@@ -45,10 +45,12 @@ public class MineruDocumentParser {
     public static final String SOURCES = "document.sources.json";
 
     private static final String CLEANER_VERSION = "c1";
-    private static final String VISION_PROMPT_VERSION = "v1";
+    private static final String VISION_PROMPT_VERSION = "v2";
     private static final String VISION_PROMPT = """
             用中文简要描述这张教材图示中实际可见的内容。写出可读的文字和图注、元素间的关系或箭头方向，
-            以及明确标出的坐标轴与单位。只写能从图中读到的值，难以辨认的部分标为看不清。
+            以及明确标出的坐标轴与单位。照录符号、变量、下标和位编号，保留大小写。
+            图中以变量或省略号表示的数量照原样描述，位编号的起止只作为编号范围。
+            难以辨认的部分只注明看不清，不用教材常识补全。
             最多四句，直接输出说明文字。
             """;
     private static final Set<String> CLEANABLE_TYPES = Set.of("text", "title", "index", "list");
