@@ -19,30 +19,42 @@
 - [x] 旧 OS 人工28题主要来自 PPTX；早期 `eval/rag/corpus-v1.json` 是6份PDF、12份PPTX。复用 `scripts/README.md` 指向的脚本与 `docs/implementation/m4-chunk-selection.md`、`os-rag-human-28.md`，分别报告旧课件回归和新PDF题结果。
 - [x] 确认现有 `embedding_artifacts`（V9）已按用户、内容哈希、模型和维度缓存向量。**本轮复用它，不再新增同用途向量表。**
 
+### 2026-11-11 执行进展（压缩后从此续接）
+
+- 已提交 MinerU 接入及 Markdown 编码修正（`07f696b`、`c3907c9`）；独立服务 `deploy/mineru/compose.yml`，端口18001，复用 KnowEngine 模型卷，未修改参考工程。真实上传两页PDF及五页OS PPTX均完成解析、切块，来源API可读页码/bbox/章节；PDF 3父/3子，PPTX 5父/5子。数据保存在知识库 `2120192503601733634`，记录见本地 `output/rag-reference/ingest-smoke.json`。
+- 清洗和图示说明已接入（`a143140`、`9863a78`）：保留公式/表格/代码，重建文本位置；视觉说明按配置启用，复用图片说明缓存，失败明确停在 FAILED/PARSING。实际云端识图尚待执行，MinerU公式仍有字符识别错误，需按原页观察。
+- BGE单模型重排已提交（`8ee84f4`），四道人工OS题真实BM25/BGE API对照完成：三题证据仍第1，EAS证据3→2，第一仍为提问页。20候选CPU重排平均26.4秒，默认仍关闭。B2提交`96f3944`，三道同排名真实API对照完成，父/邻扩展均保留Top3且≤4096 token，具体补充与缺口见唯一实测报告 `docs/implementation/rag-improvement-20261111.md`。
+- RECURSIVE切块与低内存MinerU已提交（`1d734e9`、`dc7ae96`）。原8页CSAPP曾OOM，页/公式推理批次各1后成功137.7秒，10页数据库成功142.2秒；实际较长文本已做FIXED/RECURSIVE/STRUCTURED及size/overlap离线对照，详情本地 `output/rag-reference/chunk-observations.md`。另56页/张保留语料正在本地解析，当前exec会话 **58162**，用write_stdin跟踪，不要盲目重跑。
+- C写入及检索过滤已提交`dd137ae`、`4397906`，资料列表/大纲过期提示提交`c28c7e9`。V20已在study_agent_eval应用；当前documents.id为物理版本，logical_documents指向active，ES刷新后CAS切换。统一clean构建及15个定向用例通过，前端build通过。真实替换上传在合成“纸鹤缓存”KB生成document **2120200040388505601**（STORED、非活动），前驱 **2097508149186064386**仍活动；完整发布/失败恢复/复用计量尚待额度恢复。
+- 题库20 dev+40 test已保存 `eval/rag/improvement-v2-cases.json`，来源映射 `eval/rag/improvement-v2-corpus.json`，共79页/张，均模型起草、待抽查、未正式评测。精简实际API runner由bge worker继续，避免沿旧脚本冻结/全索引断言。
+- **外部阻碍：** 新资料embedding实际返回403 `AllocationQuota.FreeTierOnly`（百炼免费额度耗尽且仅允许免费额度），两样本停在FAILED/CHUNKED之后的向量化阶段。已询问用户恢复额度，未更改付费开关或替换模型。先继续不依赖embedding的本地解析、重排与题目准备。
+- 当前Windows后端以 `SPRING_PROFILES_ACTIVE=local,eval` 启动（会话93125），临时关闭 `study-agent-eval-document-consumer`/`study-agent-eval-document` listener，避免MQ反复请求已耗尽额度；恢复向量化前须去掉此启动覆盖。仅local导入eval配置不会启用eval路由，必须显式active。模型目录为KnowEngine下 `src/main/resources/model/bge-reranker-model`，18001 MinerU及现有Docker中间件运行中。
+- 最新周额度剩余22%；19%收尾、16%暂停规则继续生效。下一步：完成保留语料解析及精简runner，恢复embedding额度后执行新语料各切块/召回策略真实对照与版本更新/恢复；云端识图仍待真实检查。本轮ES-only向量存储仍仅列后续待办。
+
 ### A．资料解析、清洗、结构切分（优先）
 
-- [ ] A1：检查现有 MinerU/BGE 可复用环境和模型。KnowEngine 的 `deploy/mineru/server.py`、Dockerfile、`docs/local-runtime.md` 描述 MinerU 2.5.4 CPU pipeline、`/file_parse`、Word→PDF；服务已启用 formula/table，目前 `return_content_list=False`。按实际部署版本接入，不直接套最新文档接口，不改参考工程。
-- [ ] A2：选取 PDF 书籍章节＋旧 OS PPTX，首批总量约50–100页，先以十余页走通。PDF走MinerU；PPTX补转PDF（需Impress或可用Office），保持幻灯片到页码映射；DOCX入口及转换按需补齐。当前StudyPilot前后端上传类型尚不接受DOCX。
+- [x] A1：检查现有 MinerU/BGE 可复用环境和模型。KnowEngine 的 `deploy/mineru/server.py`、Dockerfile、`docs/local-runtime.md` 描述 MinerU 2.5.4 CPU pipeline、`/file_parse`、Word→PDF；服务已启用 formula/table，目前 `return_content_list=False`。按实际部署版本接入，不直接套最新文档接口，不改参考工程。
+- [x] A2：选取 PDF 书籍章节＋旧 OS PPTX，首批总量约50–100页，先以十余页走通。PDF走MinerU；PPTX补转PDF（需Impress或可用Office），保持幻灯片到页码映射；DOCX入口及转换按需补齐。当前StudyPilot前后端上传类型尚不接受DOCX。
 - [ ] A3：保存 Markdown 与结构化位置（页码、章节、块类型及可用bbox），处理重复空行、排版断行、页眉页脚；保留代码、列表、表格、公式。公式优先MinerU识别为LaTeX并保留原图可追溯；一般图表复用KnowEngine的识图API思路，保留原图及独立文字说明，以字节/Base64或可访问临时URL调用，跳过装饰图、缓存重复图片。识图失败须明确记录。
-- [ ] A4：比较固定窗口、段落/句子递归、标题结构父子切分。先观察实际段落/章节token分布与错误案例再设初值；统一并记录长度单位，使size/overlap配置确实生效，固定其他条件分别比较块长及overlap。提供简洁的原页位置→解析/清洗文本→chunk对照，便于用户阅读。
+- [x] A4：比较固定窗口、段落/句子递归、标题结构父子切分。先观察实际段落/章节token分布与错误案例再设初值；统一并记录长度单位，使size/overlap配置确实生效，固定其他条件分别比较块长及overlap。提供简洁的原页位置→解析/清洗文本→chunk对照，便于用户阅读。
 
 ### B．检索、重排、上下文扩展与评测
 
-- [ ] B1：复用已有BM25、VECTOR、RRF；接入 **一款现有本地BGE ONNX reranker**，先确认模型来源、tokenizer匹配及输入上限。参考权重在KnowEngine `src/main/resources/model/bge-reranker-model/`（约571MB模型＋tokenizer）。只做有/无重排对照，不扩成多模型选型。配置候选数、最终Top K和正文预算；BM25中文分词作为需要观察的因素。
-- [ ] B2：排序后对照 CHILD、PARENT、NEIGHBOR；优先保留已经选定的命中子块，剩余预算用于父块/相邻块扩展，去重并避免跨文档/版本扩展。用同一候选排名及相同正文预算比较，记录实际进入模型的证据。
-- [ ] B3：Sol围绕真实源文档补齐约60题（20调参/40保留评测，近似问法归同组），覆盖精确术语、同义表达、跨段条件、步骤、表格、公式/图示与无答案。标注文件、页/段落、答案要点和原文证据，避免固定旧chunkId；原文标注独立于检索返回，保留人工抽查与模型起草的区别。
+- [x] B1：复用已有BM25、VECTOR、RRF；接入 **一款现有本地BGE ONNX reranker**，先确认模型来源、tokenizer匹配及输入上限。参考权重在KnowEngine `src/main/resources/model/bge-reranker-model/`（约571MB模型＋tokenizer）。只做有/无重排对照，不扩成多模型选型。配置候选数、最终Top K和正文预算；BM25中文分词作为需要观察的因素。
+- [x] B2：排序后对照 CHILD、PARENT、NEIGHBOR；优先保留已经选定的命中子块，剩余预算用于父块/相邻块扩展，去重并避免跨文档/版本扩展。用同一候选排名及相同正文预算比较，记录实际进入模型的证据。
+- [x] B3：Sol围绕真实源文档补齐约60题（20调参/40保留评测，近似问法归同组），覆盖精确术语、同义表达、跨段条件、步骤、表格、公式/图示与无答案。标注文件、页/段落、答案要点和原文证据，避免固定旧chunkId；原文标注独立于检索返回，保留人工抽查与模型起草的区别。
 - [ ] B4：按“具体case→定位解析/切分/召回/排序/组装/生成环节→一次改一个因素→复测”迭代。通过实际API对比BM25、VECTOR、RRF、VECTOR+BGE、RRF+BGE与上下文扩展。先小样本再批量；复用解析、向量和查询结果；只对少数候选跑回答。记录Hit@5、MRR@5、多证据覆盖、无答案表现、上下文token、延迟和embedding调用量，最后选择实际有效的方案，不预设提升数字。
 
 ### C．文档更新与失败恢复
 
-- [ ] C1：实现逻辑文档与版本关系。新版本先重新解析/切块；按实际embedding输入的内容哈希＋模型/维度配置复用既有embedding_artifacts，为新版本建立自己的块、来源及父子关系。第一版优化向量计算复用，不追求PDF二进制增量解析。
+- [x] C1：实现逻辑文档与版本关系。新版本先重新解析/切块；按实际embedding输入的内容哈希＋模型/维度配置复用既有embedding_artifacts，为新版本建立自己的块、来源及父子关系。第一版优化向量计算复用，不追求PDF二进制增量解析。
 - [ ] C2：全部索引成功且可检索后再切换有效版本；查询依据有效版本过滤。新版本失败仍使用旧版，历史引用保留旧版本定位；大纲标记需更新并由用户触发，已有聊天不自动改写。明确旧ES块清理策略，避免新旧版本混查。
 - [ ] C3：只做必要的具体恢复案例：部分向量已保存后失败、ES部分成功后恢复；以及V1→V2末尾追加/中间插入/局部修改，统计向量复用和重算。沿用现有短事务、租约和稳定ES ID，不照搬参考工程的长事务。
 
 ### 收尾与完成标准
 
 - [ ] 当前业务API实际可用，用户能查看原文、chunk和检索结果；留一份精简结果表、代表失败/改进case，以及参数/方案选择说明，能够回应滴滴面试追问。代码按阶段提交，更新当前架构与运行说明；完整教材、权重、密钥和参考项目源码不纳入Git。
-- **压缩后下一步：** 读取本节及最新周额度；给 GPT-6.1 Sol 委派 A1/A2 的最小闭环（现有服务可用性与少量PDF/PPT解析），明确归属 `ingest/parse`、相关config和必要上传入口；完成后再扩展，不一次派发整个Goal。现有12题草稿worker已结束，当前没有在运行的实现worker。
+- **压缩后下一步：** 读取上面的最新执行进展、周额度及worker状态，继续未完成项；不要重跑已完成的解析闭环。
 
 ### 后续待办：向量只存 ES，流水线按小批次推进（仅计划）
 

@@ -47,6 +47,8 @@ flowchart TB
 - `FileUploadService` 是上传入口，`NativeMultipartUploadService` 管分片，`UploadPublicationService` 发布文档。
 - `DocumentIndexConsumer → DocumentPipeline` 驱动处理阶段。当前是一条 MQ 消息驱动管道，不是每个阶段一个队列。
 - 原件和解析文本保存在 RustFS；文本块、处理状态、可复用向量产物保存在 MySQL；ES 是用于搜索的索引副本。
+- 可选 MinerU 2.5.4 解析PDF与转换后的Office文档，保存Markdown、页码/章节/bbox和图片；清洗保留公式、表格和代码。一般图表可调用视觉模型生成独立说明并缓存。切块策略为FIXED、RECURSIVE、STRUCTURED，统一以CL100K_BASE token计长。
+- `logical_documents.active_document_id` 指向有效物理版本，`documents.id`、块与来源均属于该物理版本。更新先构建新版本并复用已有embedding产物，ES写入刷新后在短事务中按预期旧版本切换指针；失败或并发冲突不改变有效版。保留旧块与原件以支持历史引用。向量仅存ES的迁移另列后续待办。
 - 规划复用 MySQL 已解析的父块正文，聊天搜索使用 ES。不是每次聊天重新解析、切块、向量化。
 - SHA-256/唯一键解决重复文件写入；Redis Bitmap 决定续传的已上传/缺失分片，命中时不查询分片明细表；阶段产物复用减少失败后的重复处理。
 - 分片先保存到 RustFS，再持久化 ETag，最后设置位图。`upload:bitmap:v2:{sessionId}` 以原始字节读取；缓存缺失时复用上传会话写锁，从 MySQL 分片记录原子重建，避免与并发上传相互覆盖。上传时用 Lua 仅更新已存在的完整位图，丢失时不创建局部位图，后续查询会重建。TTL 跟随上传会话，完成合并仍检查持久化分片与 ETag。
@@ -133,11 +135,13 @@ stateDiagram-v2
 ```text
 knowledge_search(query)
   → 服务端绑定 userId + knowledgeBaseId
+  → 读取一次活动文档版本集合，作为两路召回的共同过滤条件
   → 查询向量（BM25 模式不需要）
   → ES 子块候选：BM25 / Vector / 两路召回
   → RRF 按排名融合（选用混合时）
+  → 可选 BGE Cross-Encoder 重排候选
   → Top K 子块
-  → 直接使用子块 或 按 parentChunkId 回填并去重
+  → 保留命中子块；可用剩余预算扩展父块或相邻块并按原文位置去重
   → 按正文 token 预算装入上下文 + 来源标识
 ```
 
@@ -150,7 +154,9 @@ knowledge_search(query)
 
 **学习 Agent 与未指定模式的检索 API 默认使用 VECTOR，直接返回向量召回的子块。** BM25、RRF、PARENT 仍可显式选择。默认 Top K=6、两路候选配置各 30、RRF k=60、正文预算 4096；VECTOR 不执行 BM25 或父块回填。本机配置覆盖为子块 800/overlap 0、父块 2400/overlap 0。索引使用 1024 维 cosine 向量。参数以生效 profile 为准。
 
-`compareContexts` 复用同一份 RRF 子块排名，只改变上下文组装，适合比较回填效果。召回命中和最终上下文包含答案是两项不同结果；实验记录见 [OS 28 题](../implementation/os-rag-human-28.md)。
+普通检索接口的 `mode` 选择召回，`rerank=true` 启用外置本地 BGE ONNX，`contextMode=CHILD|PARENT|NEIGHBOR` 选择排序后的组装方式。新扩展先保留预算内命中子块，再补同一文档版本/切块批次中的内容；旧的单独 `mode=PARENT` 调用保持RRF后整父块替换语义。
+
+`compareContexts` 复用同一次召回及可选重排名次，在相同正文预算下返回三种组装结果。召回命中和最终上下文包含答案分别观察；[当前改进记录](../implementation/rag-improvement-20261111.md)保留具体case和延迟，旧数据见 [OS 28 题](../implementation/os-rag-human-28.md)。
 
 Agent 也可以用 `knowledge_read` 直接读取已知来源，不要求每轮重新搜索。提供出处只保证可定位资料，不等于已经自动判定回答正确。
 

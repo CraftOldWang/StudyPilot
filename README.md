@@ -84,8 +84,9 @@ StudyPilot 是面向课程学习与期末备考的 AI 学习助手。上传课�
 
 - 续传进度直接读取 Redis Bitmap 得到已上传/缺失分片；位图丢失时从 MySQL 的分片与 ETag 记录重建。合并仍依据持久化 ETag，并校验整文件 SHA-256；唯一索引约束并发重复写入。
 - 文档阶段状态、中间产物复用、幂等写入与重试支持处理任务恢复，减少重复解析和向量化。
-- 原文件与解析 TXT 保存在 RustFS，文本块与向量复用产物保存在 MySQL，Elasticsearch 承担检索。
-- 学习 Agent 与未指定模式的检索 API 默认使用 VECTOR，返回向量召回的子块正文；BM25、RRF 和 PARENT 保留为显式可选的实验方案，父块对照仍复用同一份 RRF 排名。
+- 原文件与解析文本保存在 RustFS，文本块与向量复用产物保存在 MySQL，Elasticsearch 承担检索。可启用 [MinerU](deploy/mineru/README.md) 解析 PDF 和转为 PDF 的 PPTX/DOCX，保存 Markdown、公式、图片和页码位置。
+- 切块可选固定窗口、段落/句子递归、标题结构；size/overlap 使用 CL100K_BASE token。学习 Agent 默认 VECTOR；检索 API 可选 BM25/RRF、本地 BGE 重排及子块/父块/相邻块上下文，实验按同一预算比较。[当前实测与限制](docs/implementation/rag-improvement-20261111.md)
+- 文档更新生成独立版本，索引完成并可搜索后切换活动版本；失败继续使用旧版，历史引用保留。替换上传传 `logicalDocumentId`，大纲来源更新后显示提示，由用户重新生成。
 
 普通检索、Agent 检索、Trace、评测和 Hello 诊断集中在独立的**测试工具**页面。评测接口需要启用 `eval` profile；未启用时页面明确提示不可用。
 

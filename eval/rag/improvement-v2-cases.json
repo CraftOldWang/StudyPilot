@@ -1,0 +1,1984 @@
+{
+  "schemaVersion": 1,
+  "status": "model-drafted-pending-human-review",
+  "evaluated": false,
+  "numberingBase": 1,
+  "questions": [
+    {
+      "id": "VM-01",
+      "split": "dev",
+      "question": "CPU 访问内存时，MMU 内用于保存页表项的高速缓冲叫什么？它以哪部分地址做查找，每行保存什么？",
+      "expectedAnswer": "翻译后备缓冲器（TLB，translation lookaside buffer）。它用虚拟页号（VPN）的位形成组索引与标记，每行保存一个页表项（PTE）。",
+      "answerable": true,
+      "type": "definition",
+      "category": "术语与同义表述",
+      "evidence": [
+        {
+          "sourceId": "csapp-address-translation",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-address-translation.pdf",
+          "samplePages": [
+            1
+          ],
+          "sourcePdfPages": [
+            854
+          ],
+          "printedPages": [
+            853
+          ],
+          "quote": "“A TLB is a small, virtually addressed cache where each line holds a block consisting of a single PTE.” 后一段用 VPN 划分 TLBI 与 TLBT。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-address-translation",
+      "group": "tlb-definition"
+    },
+    {
+      "id": "VM-02",
+      "split": "dev",
+      "question": "按图 9.16 的例子，从 CPU 发出虚拟地址开始，TLB 命中时怎样拿到数据？TLB 未命中时，MMU 获取页表项的步骤如何变化？",
+      "expectedAnswer": "CPU 发出虚拟地址，MMU 从 TLB 取 PTE，生成物理地址后交给缓存或主存，后者返回数据。在图示未命中路径中，MMU 到 L1 缓存取 PTE，并将新取到的 PTE 放入 TLB，可能覆盖旧项。",
+      "answerable": true,
+      "type": "multi_evidence",
+      "category": "跨页流程",
+      "evidence": [
+        {
+          "sourceId": "csapp-address-translation",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-address-translation.pdf",
+          "samplePages": [
+            2,
+            3
+          ],
+          "sourcePdfPages": [
+            855,
+            856
+          ],
+          "printedPages": [
+            854,
+            855
+          ],
+          "quote": "“Steps 2 and 3. The MMU fetches the appropriate PTE from the TLB.” 下一页从 Step 4 续写，随后给出 “The newly fetched PTE is stored in the TLB”。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-address-translation",
+      "group": "tlb-hit-miss"
+    },
+    {
+      "id": "VM-03",
+      "split": "dev",
+      "question": "在书中的 32 位两级页表示例里，一个 4 MB 区间什么时候需要二级页表？这个设计通过哪两种方式节省主存？",
+      "expectedAnswer": "该区间至少有一页已分配时，一级 PTE 指向二级页表。整段未分配时，一级 PTE 为空，二级页表可以省掉。一级页表需要一直驻留主存，二级页表可按需创建和换入换出。",
+      "answerable": true,
+      "type": "conditional",
+      "category": "跨段条件",
+      "evidence": [
+        {
+          "sourceId": "csapp-address-translation",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-address-translation.pdf",
+          "samplePages": [
+            3
+          ],
+          "sourcePdfPages": [
+            856
+          ],
+          "printedPages": [
+            855
+          ],
+          "quote": "“if at least one page in chunk i is allocated, then level 1 PTE i points to the base of a level 2 page table.” 后一段列出空表省略与按需换页两项。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-address-translation",
+      "group": "two-level-page-table-space"
+    },
+    {
+      "id": "VM-04",
+      "split": "dev",
+      "question": "给定一个有 k 级页表的系统，按图 9.18 说明从虚拟地址查到物理页号的过程，并指出物理页内偏移取自哪里。",
+      "expectedAnswer": "虚拟地址分为 k 段 VPN 与一段 VPO。VPNᵢ 索引第 i 级页表，中间级 PTE 指向下一级表，末级 PTE 给出物理页号 PPN 或磁盘块地址。书中描述的页表遍历需访问 k 个 PTE 才确定 PPN，物理页内偏移 PPO 与 VPO 相同。",
+      "answerable": true,
+      "type": "multi_evidence",
+      "category": "图示与跨页流程",
+      "evidence": [
+        {
+          "sourceId": "csapp-address-translation",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-address-translation.pdf",
+          "samplePages": [
+            4,
+            5
+          ],
+          "sourcePdfPages": [
+            857,
+            858
+          ],
+          "printedPages": [
+            856,
+            857
+          ],
+          "quote": "“Each VPN i, 1 ≤ i ≤ k, is an index into a page table at level i.” “the PPO is identical to the VPO.”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-address-translation",
+      "group": "k-level-walk"
+    },
+    {
+      "id": "VM-05",
+      "split": "dev",
+      "question": "图 9.19 的小系统使用 14 位虚拟地址、12 位物理地址与 64 字节页。四个字段 VPN、VPO、PPN、PPO 各占几位？说明位数如何得到。",
+      "expectedAnswer": "64 = 2⁶，VPO 与 PPO 都取低 6 位。VPN 取虚拟地址剩余的高 8 位，PPN 取物理地址剩余的高 6 位。",
+      "answerable": true,
+      "type": "formula",
+      "category": "公式与位段图",
+      "evidence": [
+        {
+          "sourceId": "csapp-address-translation",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-address-translation.pdf",
+          "samplePages": [
+            5
+          ],
+          "sourcePdfPages": [
+            858
+          ],
+          "printedPages": [
+            857
+          ],
+          "quote": "“the low-order 6 bits of the virtual and physical addresses serve as the VPO and PPO, respectively.” 图 9.19 将虚拟地址拆成 13–6 位和 5–0 位，将物理地址拆成 11–6 位和 5–0 位。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-address-translation",
+      "group": "small-system-address-fields"
+    },
+    {
+      "id": "VM-06",
+      "split": "dev",
+      "question": "书中的小系统读取虚拟地址 0x03D4 时，TLB 查哪一组、用哪个 tag？若按示例命中，得到哪个物理地址？",
+      "expectedAnswer": "VPN 为 0x0F，VPO 为 0x14。VPN 的低 2 位得组索引 0x3，其余位得 tag 0x3。命中后得到 PPN 0x0D，与 6 位 VPO 0x14 拼接，物理地址为 0x354。",
+      "answerable": true,
+      "type": "worked_example",
+      "category": "示例计算",
+      "evidence": [
+        {
+          "sourceId": "csapp-address-translation",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-address-translation.pdf",
+          "samplePages": [
+            7
+          ],
+          "sourcePdfPages": [
+            860
+          ],
+          "printedPages": [
+            859
+          ],
+          "quote": "“hits on a valid match in the second entry of set 0x3” 与 “which forms the physical address (0x354).” 同页 VA 位段图标出各字段。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-address-translation",
+      "group": "small-system-tlb-worked"
+    },
+    {
+      "id": "VM-07",
+      "split": "dev",
+      "question": "系统用物理地址访问 SRAM 数据缓存时，地址翻译和数据缓存查找是什么顺序？在翻译过程中读取的页表项能否也进普通缓存？",
+      "expectedAnswer": "先将待访问地址翻译成物理地址，再用该物理地址查数据缓存。页表项本身可以像普通数据一样进入缓存。",
+      "answerable": true,
+      "type": "relation",
+      "category": "跨段关系",
+      "evidence": [
+        {
+          "sourceId": "csapp-address-translation",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-address-translation.pdf",
+          "samplePages": [
+            1
+          ],
+          "sourcePdfPages": [
+            854
+          ],
+          "printedPages": [
+            853
+          ],
+          "quote": "“the address translation occurs before the cache lookup.” “page table entries can be cached, just like any other data words.”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-address-translation",
+      "group": "physical-cache-order"
+    },
+    {
+      "id": "IX-01",
+      "split": "dev",
+      "question": "书中怎样区分 clustering index 和 secondary index？这里又把 clustering index 叫什么？它可以基于哪些搜索键？",
+      "expectedAnswer": "聚簇索引的搜索键决定数据文件的顺序，书中也称 primary index，可以建立在定义文件顺序的任意搜索键上。二级索引也称 nonclustering index，其搜索键对应的顺序与文件顺序不同。",
+      "answerable": true,
+      "type": "definition",
+      "category": "术语与同义表述",
+      "evidence": [
+        {
+          "sourceId": "database-ordered-indices",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-ordered-indices.pdf",
+          "samplePages": [
+            1
+          ],
+          "sourcePdfPages": [
+            654
+          ],
+          "printedPages": [
+            625
+          ],
+          "quote": "“also defines the sequential order of the file. Clustering indices are also called primary indices” 与 “nonclustering indices, or secondary indices.”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-ordered-indices",
+      "group": "clustering-index-definition"
+    },
+    {
+      "id": "IX-02",
+      "split": "dev",
+      "question": "如果有序索引只为一部分键保留入口，使用它对数据文件的排列有什么要求？用书中查找教师 ID 22222 的例子说明怎样找到记录。",
+      "expectedAnswer": "这是稀疏索引，要求数据按搜索键排序。选择不大于目标键的最大索引键；示例中为 10101。从该条目指向的记录开始顺序扫描，直到找到 22222。",
+      "answerable": true,
+      "type": "procedure",
+      "category": "条件与操作步骤",
+      "evidence": [
+        {
+          "sourceId": "database-ordered-indices",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-ordered-indices.pdf",
+          "samplePages": [
+            2
+          ],
+          "sourcePdfPages": [
+            655
+          ],
+          "printedPages": [
+            626
+          ],
+          "quote": "“the largest search-key value that is less than or equal to the search-key value for which we are looking.” 后段列出 “22222” 和 “10101”。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-ordered-indices",
+      "group": "sparse-lookup"
+    },
+    {
+      "id": "IX-03",
+      "split": "dev",
+      "question": "看图 14.4 的教师文件，使用 History 的索引入口会先访问哪条记录？下一条同键记录是谁？一个入口为什么够用？",
+      "expectedAnswer": "先到 ID 32343 的 El Said，再顺序到 ID 58583 的 Califieri。文件按院系排列，同院系记录相邻，所以稠密聚簇索引对该搜索键只需保存第一条记录的指针。",
+      "answerable": true,
+      "type": "figure",
+      "category": "图表读取",
+      "evidence": [
+        {
+          "sourceId": "database-ordered-indices",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-ordered-indices.pdf",
+          "samplePages": [
+            2,
+            4
+          ],
+          "sourcePdfPages": [
+            655,
+            657
+          ],
+          "printedPages": [
+            626,
+            628
+          ],
+          "quote": "“we follow the pointer directly to the first History record.” 图 14.4 的 History 箭头指向 32343，下一行是 58583，两行的院系均为 History。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-ordered-indices",
+      "group": "dense-index-figure"
+    },
+    {
+      "id": "IX-04",
+      "split": "dev",
+      "question": "书中直接二分查找有 b 个块的磁盘索引时，给出的索引块读取次数上界是什么？按 10,000 个块、平均每次随机读 10 ms 计算，示例中的查找耗时多少？",
+      "expectedAnswer": "按书中例子，最多读取 ⌈log₂(b)⌉ 个索引块。b = 10,000 时向上取整得 14 次随机读，约耗时 140 ms。",
+      "answerable": true,
+      "type": "formula",
+      "category": "公式与跨页计算",
+      "evidence": [
+        {
+          "sourceId": "database-ordered-indices",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-ordered-indices.pdf",
+          "samplePages": [
+            4,
+            5
+          ],
+          "sourcePdfPages": [
+            657,
+            658
+          ],
+          "printedPages": [
+            628,
+            629
+          ],
+          "quote": "“binary search requires as many as ⌈log₂(b)⌉ blocks to be read.” 下一页给出 “14 random block reads” 和 “140 milliseconds”。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-ordered-indices",
+      "group": "disk-index-binary-cost"
+    },
+    {
+      "id": "IX-05",
+      "split": "dev",
+      "question": "两级稀疏索引为什么能用稀疏的外层索引？按书中流程，从外层怎么走到数据块？",
+      "expectedAnswer": "内层索引条目已经排序，可在其上建稀疏外层索引。对外层二分查找不大于目标键的最大键，沿指针找到内层索引块。在该块内扫描，用同样的取键规则找到条目，再沿其指针访问数据块。",
+      "answerable": true,
+      "type": "multi_evidence",
+      "category": "跨页流程",
+      "evidence": [
+        {
+          "sourceId": "database-ordered-indices",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-ordered-indices.pdf",
+          "samplePages": [
+            5,
+            6
+          ],
+          "sourcePdfPages": [
+            658,
+            659
+          ],
+          "printedPages": [
+            629,
+            630
+          ],
+          "quote": "“the index entries are always in sorted order, allowing the outer index to be sparse.” 下一页接着写 “The pointer points to a block of the inner index.”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-ordered-indices",
+      "group": "multilevel-sparse-index"
+    },
+    {
+      "id": "IX-06",
+      "split": "dev",
+      "question": "对每个数据块保留一个入口的稀疏索引，插入记录时，创建新块、落在原块且成为最小键、落在原块且未成为最小键，分别要怎样维护索引？",
+      "expectedAnswer": "创建新块时，以新块的最小键插入一个索引条目。落入原块并成为该块最小键时，更新指向该块的条目。落入原块且未成为最小键时，该块的索引条目保持原值。",
+      "answerable": true,
+      "type": "conditional",
+      "category": "条件分支",
+      "evidence": [
+        {
+          "sourceId": "database-ordered-indices",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-ordered-indices.pdf",
+          "samplePages": [
+            7
+          ],
+          "sourcePdfPages": [
+            660
+          ],
+          "printedPages": [
+            631
+          ],
+          "quote": "“If the system creates a new block, it inserts the first search-key value (in search-key order) appearing in the new block into the index.” 紧接着比较新记录是否为块内最小键。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-ordered-indices",
+      "group": "sparse-index-insert"
+    },
+    {
+      "id": "IX-07",
+      "split": "dev",
+      "question": "依照书中复合搜索键的排序公式，将 (2, 10)、(1, 90)、(2, 3) 从小到大排序，并解释为什么 90 不会让第一项为 1 的记录排到后面。",
+      "expectedAnswer": "(1, 90) < (2, 3) < (2, 10)。字典序先比第一项，第一项相等才比第二项。",
+      "answerable": true,
+      "type": "formula",
+      "category": "公式与排序规则",
+      "evidence": [
+        {
+          "sourceId": "database-ordered-indices",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-ordered-indices.pdf",
+          "samplePages": [
+            9,
+            10
+          ],
+          "sourcePdfPages": [
+            662,
+            663
+          ],
+          "printedPages": [
+            633,
+            634
+          ],
+          "endBoundary": "Before the section 14.3 heading on source PDF page 663",
+          "quote": "§14.2.5 定义 composite search key 为多个属性构成的键。下一页给出 “(a1, a2) < (b1, b2) if either a1 < b1 or a1 = b1 and a2 < b2.”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-ordered-indices",
+      "group": "composite-lexicographic"
+    },
+    {
+      "id": "OS-01",
+      "split": "dev",
+      "question": "把课件中的“二级页表实例”与“X86 页表结构”对照起来，32 位逻辑地址的三段分别是什么，各占几位？哪一段用于选择二级页表中的条目？",
+      "expectedAnswer": "从高到低是页目录索引 Dir 10 位、二级页表索引 Table 10 位、页内偏移 Offset 12 位。中间 10 位对应 p₂，选择二级页表中的条目。",
+      "answerable": true,
+      "type": "multi_evidence",
+      "category": "多证据与位段图",
+      "evidence": [
+        {
+          "sourceId": "os-paging-slides-50-54",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-paging-slides-50-54.pptx",
+          "samplePages": [
+            2
+          ],
+          "sourceSlides": [
+            51
+          ],
+          "quote": "原幻灯片 51“二级页表实例”的 p₂ 连到第二级页表。"
+        },
+        {
+          "sourceId": "os-paging-slides-50-54",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-paging-slides-50-54.pptx",
+          "samplePages": [
+            3
+          ],
+          "sourceSlides": [
+            52
+          ],
+          "quote": "原幻灯片 52 的逻辑地址位段图依次标为 Dir、Table、Offset，对应 10、10、12 位。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "os-paging-slides-50-54",
+      "group": "x86-address-fields"
+    },
+    {
+      "id": "OS-02",
+      "split": "dev",
+      "question": "课件以页大小 2ˣ 字节、每个页表项 2² 字节为例，怎样推得每级页表索引需要 X−2 位？在课件给出的 32 位两级地址拆分中，解出的页大小是多少？",
+      "expectedAnswer": "每页可容纳 2ˣ ÷ 2² = 2^(X−2) 个条目，索引需要 X−2 位。X + (X−2) + (X−2) = 32，得到 X = 12，页大小为 4096 字节。",
+      "answerable": true,
+      "type": "formula",
+      "category": "公式推导",
+      "evidence": [
+        {
+          "sourceId": "os-paging-slides-50-54",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-paging-slides-50-54.pptx",
+          "samplePages": [
+            4
+          ],
+          "sourceSlides": [
+            53
+          ],
+          "quote": "“(PageSize / PageTableEntrySize) 可以得出一页（一个二级页表）中可以容纳的页表项数”，同页给出 X + (X−2) + (X−2) = 32。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "os-paging-slides-50-54",
+      "group": "x86-page-size"
+    },
+    {
+      "id": "OS-03",
+      "split": "dev",
+      "question": "按课件的 x86 页表项示意图，哪一位是访问位，哪一位是修改位？修改位在一级页表项中如何处理？",
+      "expectedAnswer": "A 是访问位，D 是修改位。该示意图与说明将一级页表项的 D 位写为 0。",
+      "answerable": true,
+      "type": "figure",
+      "category": "位域图与条件",
+      "evidence": [
+        {
+          "sourceId": "os-paging-slides-50-54",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-paging-slides-50-54.pptx",
+          "samplePages": [
+            5
+          ],
+          "sourceSlides": [
+            54
+          ],
+          "quote": "“A - 访问位”“D - 修改位 (一级页表项为 0)”。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "os-paging-slides-50-54",
+      "group": "x86-entry-access-dirty"
+    },
+    {
+      "id": "OS-04",
+      "split": "dev",
+      "question": "课件的 x86 页表结构图里，一、二级页表各有多少条目？图中一个条目内的 PPN 和 Flags 分别占多少位？",
+      "expectedAnswer": "每级都有从 0 到 1023 的 1024 个条目。每个条目中 PPN 占 20 位，Flags 占 12 位。",
+      "answerable": true,
+      "type": "figure",
+      "category": "条目位域图",
+      "evidence": [
+        {
+          "sourceId": "os-paging-slides-50-54",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-paging-slides-50-54.pptx",
+          "samplePages": [
+            3
+          ],
+          "sourceSlides": [
+            52
+          ],
+          "quote": "“Case Study: X86 页表结构”图中两级表旁均标有 “0”“1”“1023”。两级表的条目格式均标出 PPN 20 位与 Flags 12 位。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "os-paging-slides-50-54",
+      "group": "x86-entry-layout"
+    },
+    {
+      "id": "NA-01",
+      "split": "dev",
+      "question": "仅依据本次选取的地址翻译书页和分页课件，能确定 Intel Core i7 上 PCID 字段的位宽和所在的具体位段吗？",
+      "expectedAnswer": "资料不足，无法从当前资料确定。",
+      "answerable": false,
+      "type": "unanswerable",
+      "category": "范围外实现参数",
+      "evidence": [],
+      "review": "model-drafted-pending-human-review",
+      "insufficiencyReason": "CSAPP 选段中的位宽来自假想小系统。课件给出 CR3 和页表项的图示，未给出 PCID 字段位置或位宽。",
+      "checkedScope": [
+        {
+          "sourceId": "csapp-address-translation",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-address-translation.pdf",
+          "samplePages": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "sourcePdfPages": [
+            854,
+            855,
+            856,
+            857,
+            858,
+            859,
+            860,
+            861
+          ],
+          "printedPages": [
+            853,
+            854,
+            855,
+            856,
+            857,
+            858,
+            859,
+            860
+          ]
+        },
+        {
+          "sourceId": "os-paging-slides-50-54",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-paging-slides-50-54.pptx",
+          "samplePages": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "sourceSlides": [
+            50,
+            51,
+            52,
+            53,
+            54
+          ]
+        }
+      ],
+      "group": "pcid-field-absent"
+    },
+    {
+      "id": "NA-02",
+      "split": "dev",
+      "question": "仅依据本次选取的有序索引书页，能定位 PostgreSQL 17 执行 B 树叶页分裂的具体 C 源文件和函数名吗？",
+      "expectedAnswer": "资料不足，无法从当前资料确定。",
+      "answerable": false,
+      "type": "unanswerable",
+      "category": "范围外产品源码",
+      "evidence": [],
+      "review": "model-drafted-pending-human-review",
+      "insufficiencyReason": "§14.2 讲有序索引的组织、查找与更新，未列 PostgreSQL 17 源码位置或内部函数。",
+      "checkedScope": [
+        {
+          "sourceId": "database-ordered-indices",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-ordered-indices.pdf",
+          "samplePages": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "sourcePdfPages": [
+            654,
+            655,
+            656,
+            657,
+            658,
+            659,
+            660,
+            661,
+            662,
+            663
+          ],
+          "printedPages": [
+            625,
+            626,
+            627,
+            628,
+            629,
+            630,
+            631,
+            632,
+            633,
+            634
+          ],
+          "endBoundary": "Before the section 14.3 heading on source PDF page 663"
+        }
+      ],
+      "group": "postgres-source-absent"
+    },
+    {
+      "id": "VM-T01",
+      "split": "test",
+      "group": "vm-layout",
+      "question": "独立页表如何让不同进程使用同样的虚拟内存布局？这给链接器带来什么便利？",
+      "expectedAnswer": "每个进程有独立页表，同一虚拟地址可映射到不同物理页。统一布局使链接器可生成与最终物理装载位置无关的可执行文件。",
+      "answerable": true,
+      "type": "definition",
+      "category": "术语",
+      "evidence": [
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            1,
+            2
+          ],
+          "sourcePdfPages": [
+            848,
+            849
+          ],
+          "printedPages": [
+            847,
+            848
+          ],
+          "quote": "“independent of the ultimate location of the code and data in physical memory”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-vm-mapping-holdout"
+    },
+    {
+      "id": "VM-T02",
+      "split": "test",
+      "group": "vm-permission",
+      "question": "Core i7 图中的用户/内核权限在中间级 PTE 与叶级 PTE 各约束什么？",
+      "expectedAnswer": "中间级约束从该项可达的所有页面，叶级约束该项映射的实际页面。",
+      "answerable": true,
+      "type": "multi_evidence",
+      "category": "多证据",
+      "evidence": [
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            5
+          ],
+          "sourcePdfPages": [
+            864
+          ],
+          "printedPages": [
+            863
+          ],
+          "quote": "Figure 9.23: user or supervisor mode access permission for all reachable pages."
+        },
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            6
+          ],
+          "sourcePdfPages": [
+            865
+          ],
+          "printedPages": [
+            864
+          ],
+          "quote": "Figure 9.24: user or supervisor mode access permission for child page."
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-vm-mapping-holdout"
+    },
+    {
+      "id": "VM-T03",
+      "split": "test",
+      "group": "vm-overlapped-cache",
+      "question": "书中的 Core i7 如何在翻译尚未完成时先定位 L1 缓存组？用页大小、组数和块大小说明。",
+      "expectedAnswer": "4 KB 页内偏移有 12 位，64 组需 6 位组索引，64 字节块需 6 位块偏移，两者都来自不随翻译变化的页内偏移。L1 可先定位，随后用物理标记核对。",
+      "answerable": true,
+      "type": "formula",
+      "category": "公式与推导",
+      "evidence": [
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            8
+          ],
+          "sourcePdfPages": [
+            867
+          ],
+          "printedPages": [
+            866
+          ],
+          "quote": "“These 12 bits fit exactly in the 12-bit VPO of a virtual address”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-vm-mapping-holdout"
+    },
+    {
+      "id": "VM-T04",
+      "split": "test",
+      "group": "linux-mm-struct",
+      "question": "按书中 Linux 例子，mm_struct 的 pgd 和 mmap 各指向什么？",
+      "expectedAnswer": "pgd 指向最高级页表（页全局目录），mmap 指向描述当前虚拟地址空间各区域的 vm_area_struct 列表。",
+      "answerable": true,
+      "type": "definition",
+      "category": "术语",
+      "evidence": [
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            9
+          ],
+          "sourcePdfPages": [
+            868
+          ],
+          "printedPages": [
+            867
+          ],
+          "quote": "“pgd, which points to the base of the level 1 table” 与 “mmap, which points to a list of vm_area_structs”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-vm-mapping-holdout"
+    },
+    {
+      "id": "VM-T05",
+      "split": "test",
+      "group": "linux-fault-checks",
+      "question": "按书中的 Linux 缺页处理，一个访存地址合法但违反区域权限时会怎样？地址和权限均合法且页面不驻留时呢？",
+      "expectedAnswer": "前者触发保护异常并终止进程。后者处理实际缺页，调入页面并更新页表，随后重启触发异常的指令。",
+      "answerable": true,
+      "type": "multi_evidence",
+      "category": "多证据",
+      "evidence": [
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            10
+          ],
+          "sourcePdfPages": [
+            869
+          ],
+          "printedPages": [
+            868
+          ],
+          "quote": "Is the attempted memory access legal? If the attempted access is not legal, then the fault handler triggers a protection exception, which terminates the process."
+        },
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            11
+          ],
+          "sourcePdfPages": [
+            870
+          ],
+          "printedPages": [
+            869
+          ],
+          "quote": "When the page fault handler returns, the CPU restarts the faulting instruction."
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-vm-mapping-holdout"
+    },
+    {
+      "id": "VM-T06",
+      "split": "test",
+      "group": "file-mapping-demand",
+      "question": "映射普通文件的一段时，虚拟页何时装入物理内存？映射区域长于文件段的部分如何初始化？",
+      "expectedAnswer": "首次访问对应页时按需装入，映射区域超过文件段的部分用零填充。",
+      "answerable": true,
+      "type": "conditional",
+      "category": "条件",
+      "evidence": [
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            11
+          ],
+          "sourcePdfPages": [
+            870
+          ],
+          "printedPages": [
+            869
+          ],
+          "quote": "“until the CPU first touches the page” 和 “the area is padded with zeros”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-vm-mapping-holdout"
+    },
+    {
+      "id": "VM-T07",
+      "split": "test",
+      "group": "anonymous-zero",
+      "question": "首次访问映射到匿名文件的页时，系统为什么能提供初值而无需读文件数据？",
+      "expectedAnswer": "内核找可用物理页，按需将其清零并映射。匿名对象没有需从磁盘读入的初始文件数据。",
+      "answerable": true,
+      "type": "definition",
+      "category": "术语",
+      "evidence": [
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            11
+          ],
+          "sourcePdfPages": [
+            870
+          ],
+          "printedPages": [
+            869
+          ],
+          "quote": "§9.8 “Anonymous file” 段描述 demand-zero 页面及初次访问时的清零。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-vm-mapping-holdout"
+    },
+    {
+      "id": "VM-T08",
+      "split": "test",
+      "group": "shared-mapping",
+      "question": "两个进程把同一个共享对象映射在不同虚拟地址时，需要为对象保留几份物理副本？一方写入对另一方可见吗？",
+      "expectedAnswer": "一个物理副本即可，两个进程的页表可指向相同物理页，共享映射的写入对另一方可见。",
+      "answerable": true,
+      "type": "multi_evidence",
+      "category": "多证据",
+      "evidence": [
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            12
+          ],
+          "sourcePdfPages": [
+            871
+          ],
+          "printedPages": [
+            870
+          ],
+          "quote": "any writes that the process makes to that area are visible to any other processes that have also mapped the shared object"
+        },
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            13
+          ],
+          "sourcePdfPages": [
+            872
+          ],
+          "printedPages": [
+            871
+          ],
+          "quote": "only a single copy of the shared object needs to be stored in physical memory"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-vm-mapping-holdout"
+    },
+    {
+      "id": "VM-T09",
+      "split": "test",
+      "group": "private-cow",
+      "question": "两个进程共同持有同一对象的私有写时复制映射。一方首次写某页时，内核如何让另一方仍看到旧内容？",
+      "expectedAnswer": "共享原页时页表项只读。写引起保护异常，内核复制该页，将写入者的页表项改指新副本并恢复写权限，然后重试指令。另一方仍映射旧页。",
+      "answerable": true,
+      "type": "procedure",
+      "category": "操作步骤",
+      "evidence": [
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            13,
+            14
+          ],
+          "sourcePdfPages": [
+            872,
+            873
+          ],
+          "printedPages": [
+            871,
+            872
+          ],
+          "quote": "PDF 873 写 “the write triggers a protection fault”，之后描述 “creates a new copy of the page”。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-vm-mapping-holdout"
+    },
+    {
+      "id": "VM-T10",
+      "split": "test",
+      "group": "fork-vm",
+      "question": "在书中的 fork 模型里，内核为子进程复制哪些虚拟内存元数据？刚创建时为什么能复用物理页？",
+      "expectedAnswer": "复制 mm_struct、区域结构和页表。父子页表中的页先设为只读，区域设为私有写时复制，未写前共享物理页。",
+      "answerable": true,
+      "type": "procedure",
+      "category": "操作步骤",
+      "evidence": [
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            14
+          ],
+          "sourcePdfPages": [
+            873
+          ],
+          "printedPages": [
+            872
+          ],
+          "quote": "“exact copies of the current process’s mm_struct, area structs, and page tables”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-vm-mapping-holdout"
+    },
+    {
+      "id": "VM-T11",
+      "split": "test",
+      "group": "execve-areas",
+      "question": "调用 execve 后旧用户区域如何处理？新程序的代码和数据从何处建立映射，首次执行的 PC 又如何决定？",
+      "expectedAnswer": "删除现有用户区域描述，按新程序可执行文件的 .text/.data 建立私有映射，并将 PC 指到新代码的入口点。",
+      "answerable": true,
+      "type": "multi_evidence",
+      "category": "多证据",
+      "evidence": [
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            14,
+            15
+          ],
+          "sourcePdfPages": [
+            873,
+            874
+          ],
+          "printedPages": [
+            872,
+            873
+          ],
+          "quote": "PDF 874 步骤 “Delete existing user areas”“Map private areas”“Set the program counter (PC)”。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-vm-mapping-holdout"
+    },
+    {
+      "id": "VM-T12",
+      "split": "test",
+      "group": "mmap-hint",
+      "question": "调用 mmap 时，start 与 offset 各描述哪边的地址？系统是否一定按 start 安排映射？",
+      "expectedAnswer": "start 是希望使用的虚拟起始地址，在书中普通调用里仅作提示。offset 是被映射文件块相对于文件开头的字节偏移。",
+      "answerable": true,
+      "type": "conditional",
+      "category": "条件",
+      "evidence": [
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            16
+          ],
+          "sourcePdfPages": [
+            875
+          ],
+          "printedPages": [
+            874
+          ],
+          "quote": "“The start address is merely a hint” 与 “offset bytes from the beginning of the file”。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "csapp-vm-mapping-holdout"
+    },
+    {
+      "id": "VM-T13",
+      "split": "test",
+      "group": "vm-huge-page-latency-absent",
+      "question": "仅依据选段，Core i7 在 2 MiB 页与 4 KiB 页之间切换后，实际应用的平均访存延迟减少多少纳秒？",
+      "expectedAnswer": "资料不足，无法从当前资料确定。",
+      "answerable": false,
+      "type": "unanswerable",
+      "category": "无答案",
+      "evidence": [],
+      "review": "model-drafted-pending-human-review",
+      "checkedScope": [
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            8
+          ],
+          "sourcePdfPages": [
+            867
+          ],
+          "printedPages": [
+            866
+          ]
+        }
+      ],
+      "insufficiencyReason": "该段说明 4 KB 页下翻译与缓存查找的重叠关系，未给特定应用的大页对照延迟。"
+    },
+    {
+      "id": "VM-T14",
+      "split": "test",
+      "group": "vm-copy-write-back-absent",
+      "question": "仅凭这里的私有映射说明，能确定进程首次写入后，复制页将落到 swap 的哪一个磁盘扇区吗？",
+      "expectedAnswer": "资料不足，无法从当前资料确定。",
+      "answerable": false,
+      "type": "unanswerable",
+      "category": "无答案",
+      "evidence": [],
+      "review": "model-drafted-pending-human-review",
+      "checkedScope": [
+        {
+          "sourceId": "csapp-vm-mapping-holdout",
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "samplePath": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+          "samplePages": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "sourcePdfPages": [
+            871,
+            872,
+            873,
+            874
+          ],
+          "printedPages": [
+            870,
+            871,
+            872,
+            873
+          ]
+        }
+      ],
+      "insufficiencyReason": "选段描述写时复制的物理页处理和映射关系，未提供 swap 扇区分配规则或运行状态。"
+    },
+    {
+      "id": "IX-T01",
+      "split": "test",
+      "group": "bplus-leaf-links",
+      "question": "图 14.8 的叶节点里，普通指针 Pᵢ 和最后一个指针 Pₙ 分别指向哪里？",
+      "expectedAnswer": "普通指针指向相应搜索键的记录，最后一个指针指向下一片叶子，用于按键顺序遍历。",
+      "answerable": true,
+      "type": "figure",
+      "category": "图表",
+      "evidence": [
+        {
+          "sourceId": "database-bplus-tree-holdout",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-bplus-tree-holdout.pdf",
+          "samplePages": [
+            1
+          ],
+          "sourcePdfPages": [
+            664
+          ],
+          "printedPages": [
+            635
+          ],
+          "quote": "“pointer Pi points to a file record with search-key value Ki”；Pₙ 是图中叶节点间的特殊指针。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-bplus-tree-holdout"
+    },
+    {
+      "id": "IX-T02",
+      "split": "test",
+      "group": "bplus-inner-ranges",
+      "question": "内部节点里，与分隔键 Kᵢ 相等的搜索值会落在指针 Pᵢ 对应的区间吗？它向哪边继续？",
+      "expectedAnswer": "相等值走右侧 Pᵢ₊₁。Pᵢ 指向的范围下含前一个分隔键、上不含 Kᵢ。",
+      "answerable": true,
+      "type": "conditional",
+      "category": "条件",
+      "evidence": [
+        {
+          "sourceId": "database-bplus-tree-holdout",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-bplus-tree-holdout.pdf",
+          "samplePages": [
+            2
+          ],
+          "sourcePdfPages": [
+            665
+          ],
+          "printedPages": [
+            636
+          ],
+          "quote": "“less than Ki and greater than or equal to Ki − 1”，这里 Ki − 1 指前一个键 Kᵢ₋₁。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-bplus-tree-holdout"
+    },
+    {
+      "id": "IX-T03",
+      "split": "test",
+      "group": "bplus-leaf-occupancy",
+      "question": "按书中的 B+ 树规则，n=8 时非根叶节点至少、至多各存几个键？",
+      "expectedAnswer": "至少 ⌈(8−1)/2⌉=4 个，最多 8−1=7 个。",
+      "answerable": true,
+      "type": "formula",
+      "category": "公式与推导",
+      "evidence": [
+        {
+          "sourceId": "database-bplus-tree-holdout",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-bplus-tree-holdout.pdf",
+          "samplePages": [
+            1
+          ],
+          "sourcePdfPages": [
+            664
+          ],
+          "printedPages": [
+            635
+          ],
+          "quote": "叶节点最多 “n − 1 values”，并给出最低 ⌈(n−1)/2⌉ 个键。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-bplus-tree-holdout"
+    },
+    {
+      "id": "IX-T04",
+      "split": "test",
+      "group": "bplus-range-scan",
+      "question": "按 findRange 伪代码，找到范围下界所在叶子后，怎样收集闭区间内的记录并判断结束？",
+      "expectedAnswer": "从第一个不小于下界的键开始，记录不超过上界的条目。走到当前叶末则沿后继指针访问下一叶，键超过上界或右侧无叶时结束。",
+      "answerable": true,
+      "type": "procedure",
+      "category": "操作步骤",
+      "evidence": [
+        {
+          "sourceId": "database-bplus-tree-holdout",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-bplus-tree-holdout.pdf",
+          "samplePages": [
+            5
+          ],
+          "sourcePdfPages": [
+            668
+          ],
+          "printedPages": [
+            639
+          ],
+          "quote": "“lb ≤ V ≤ ub” 与 “Move to next leaf”，循环检查 C.Kᵢ ≤ ub。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-bplus-tree-holdout"
+    },
+    {
+      "id": "IX-T05",
+      "split": "test",
+      "group": "bplus-height-bound",
+      "question": "书中 n=100、搜索键有 100 万个时，为什么根到叶最多访问 4 个节点？根已缓存时磁盘块读取通常至多几次？",
+      "expectedAnswer": "每个非根内部节点最低扇出为 50，向上取整 ⌈log₅₀(1,000,000)⌉=4。根在缓冲区时通常再读 3 块或更少。",
+      "answerable": true,
+      "type": "formula",
+      "category": "公式与推导",
+      "evidence": [
+        {
+          "sourceId": "database-bplus-tree-holdout",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-bplus-tree-holdout.pdf",
+          "samplePages": [
+            5,
+            6
+          ],
+          "sourcePdfPages": [
+            668,
+            669
+          ],
+          "printedPages": [
+            639,
+            640
+          ],
+          "quote": "“a lookup requires only ⌈log50(1,000,000)⌉ = 4 nodes to be accessed”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-bplus-tree-holdout"
+    },
+    {
+      "id": "IX-T06",
+      "split": "test",
+      "group": "bplus-leaf-split",
+      "question": "按书中插入 Califieri 的例子，叶子分裂后用什么键向父节点登记新叶？该键是否还在新叶中？",
+      "expectedAnswer": "用新右叶最小键 Califieri 向父节点插入分隔项。Califieri 仍在新叶中。",
+      "answerable": true,
+      "type": "multi_evidence",
+      "category": "多证据",
+      "evidence": [
+        {
+          "sourceId": "database-bplus-tree-holdout",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-bplus-tree-holdout.pdf",
+          "samplePages": [
+            7,
+            8
+          ],
+          "sourcePdfPages": [
+            670,
+            671
+          ],
+          "printedPages": [
+            641,
+            642
+          ],
+          "quote": "“the new node has ‘Califieri’ as its smallest search-key value” 后给出把该键和新叶指针加入父节点的动作。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-bplus-tree-holdout"
+    },
+    {
+      "id": "IX-T07",
+      "split": "test",
+      "group": "bplus-inner-split",
+      "question": "Lamport 插入导致内部节点分裂时，夹在两边指针间的 Gold 最后放到哪里？",
+      "expectedAnswer": "Gold 向父节点提升，左右两个分裂后的内部节点均不保留该分隔键。",
+      "answerable": true,
+      "type": "conditional",
+      "category": "条件",
+      "evidence": [
+        {
+          "sourceId": "database-bplus-tree-holdout",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-bplus-tree-holdout.pdf",
+          "samplePages": [
+            9
+          ],
+          "sourcePdfPages": [
+            672
+          ],
+          "printedPages": [
+            643
+          ],
+          "quote": "“The value ‘Gold’ is not added to either of the split nodes.”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-bplus-tree-holdout"
+    },
+    {
+      "id": "IX-T08",
+      "split": "test",
+      "group": "bplus-leaf-merge",
+      "question": "删除 Srinivasan 后，包含 Wu 的叶子为什么需要修复？示例最终选择哪种修复？",
+      "expectedAnswer": "原例 n=4，非根叶子至少有 2 个键。删除后只剩 Wu，低于下限。示例将该叶与左兄弟合并。",
+      "answerable": true,
+      "type": "worked_example",
+      "category": "例题",
+      "evidence": [
+        {
+          "sourceId": "database-bplus-tree-holdout",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-bplus-tree-holdout.pdf",
+          "samplePages": [
+            11
+          ],
+          "sourcePdfPages": [
+            674
+          ],
+          "printedPages": [
+            645
+          ],
+          "quote": "“the node is left with only one entry, ‘Wu’” 与 “can be merged with its left sibling node”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-bplus-tree-holdout"
+    },
+    {
+      "id": "IX-T09",
+      "split": "test",
+      "group": "bplus-inner-redistribution",
+      "question": "删除后示例的两个内部节点为什么无法合并？书中用哪种调整恢复下限？",
+      "expectedAnswer": "两节点合计 5 个指针，单节点最多 4 个。把左兄弟最右指针移给不足的右节点，并经父节点调整分隔键，使两边至少各有 2 个孩子。",
+      "answerable": true,
+      "type": "worked_example",
+      "category": "例题",
+      "evidence": [
+        {
+          "sourceId": "database-bplus-tree-holdout",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-bplus-tree-holdout.pdf",
+          "samplePages": [
+            12
+          ],
+          "sourcePdfPages": [
+            675
+          ],
+          "printedPages": [
+            646
+          ],
+          "quote": "“five pointers, against a maximum of four”；随后写 “move the rightmost pointer from the left sibling”。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-bplus-tree-holdout"
+    },
+    {
+      "id": "IX-T10",
+      "split": "test",
+      "group": "bplus-root-shrink",
+      "question": "删除条目后若根节点只剩一个孩子，伪代码怎样处理树高？",
+      "expectedAnswer": "将这个孩子提升为新根，删除原根，树高降低一级。",
+      "answerable": true,
+      "type": "procedure",
+      "category": "操作步骤",
+      "evidence": [
+        {
+          "sourceId": "database-bplus-tree-holdout",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-bplus-tree-holdout.pdf",
+          "samplePages": [
+            14
+          ],
+          "sourcePdfPages": [
+            677
+          ],
+          "printedPages": [
+            648
+          ],
+          "quote": "“make the child of N the new root of the tree and delete N”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-bplus-tree-holdout"
+    },
+    {
+      "id": "IX-T11",
+      "split": "test",
+      "group": "bplus-file-leaves",
+      "question": "把 B+ 树用作文件组织时，叶子中放什么？为什么与普通 B+ 树索引相比，叶子的容量设置可能不同？",
+      "expectedAnswer": "叶子直接保存实际记录，普通索引叶子保存记录指针。实际记录通常更大，因此一个叶块可存的条目可能更少。",
+      "answerable": true,
+      "type": "relation",
+      "category": "关系",
+      "evidence": [
+        {
+          "sourceId": "database-bplus-tree-holdout",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-bplus-tree-holdout.pdf",
+          "samplePages": [
+            17
+          ],
+          "sourcePdfPages": [
+            680
+          ],
+          "printedPages": [
+            651
+          ],
+          "quote": "“leaf nodes of the tree store records, instead of storing pointers to records”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-bplus-tree-holdout"
+    },
+    {
+      "id": "IX-T12",
+      "split": "test",
+      "group": "bplus-secondary-stable-keys",
+      "question": "为了让叶分裂造成的记录搬移无需更新二级索引，书中建议二级索引叶端保存什么？查到实际记录要经过哪两步？",
+      "expectedAnswer": "保存对应记录的主索引搜索键。先通过二级索引取得这些键，再查主索引找到记录。",
+      "answerable": true,
+      "type": "procedure",
+      "category": "操作步骤",
+      "evidence": [
+        {
+          "sourceId": "database-bplus-tree-holdout",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-bplus-tree-holdout.pdf",
+          "samplePages": [
+            19
+          ],
+          "sourcePdfPages": [
+            682
+          ],
+          "printedPages": [
+            653
+          ],
+          "quote": "“first use the secondary index to find the primary-index search-key values” 后说明通过主索引定位实际记录。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "database-bplus-tree-holdout"
+    },
+    {
+      "id": "IX-T13",
+      "split": "test",
+      "group": "bplus-concurrent-locking-absent",
+      "question": "仅依据这里的分裂和删除伪代码，两个写线程同时分裂相邻叶节点时，应按什么顺序获取闩锁以避免死锁？",
+      "expectedAnswer": "资料不足，无法从当前资料确定。",
+      "answerable": false,
+      "type": "unanswerable",
+      "category": "无答案",
+      "evidence": [],
+      "review": "model-drafted-pending-human-review",
+      "checkedScope": [
+        {
+          "sourceId": "database-bplus-tree-holdout",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-bplus-tree-holdout.pdf",
+          "samplePages": [
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14
+          ],
+          "sourcePdfPages": [
+            670,
+            671,
+            672,
+            673,
+            674,
+            675,
+            676,
+            677
+          ],
+          "printedPages": [
+            641,
+            642,
+            643,
+            644,
+            645,
+            646,
+            647,
+            648
+          ]
+        }
+      ],
+      "insufficiencyReason": "该段给出树结构修改与再平衡，选中伪代码未给并发闩锁协议。"
+    },
+    {
+      "id": "IX-T14",
+      "split": "test",
+      "group": "bplus-comparator-latency-absent",
+      "question": "仅依据这里的索引扩展，能计算把指定查询切换到某个语言区域的字符串比较器后，平均 CPU 时间增加多少微秒吗？",
+      "expectedAnswer": "资料不足，无法从当前资料确定。",
+      "answerable": false,
+      "type": "unanswerable",
+      "category": "无答案",
+      "evidence": [],
+      "review": "model-drafted-pending-human-review",
+      "checkedScope": [
+        {
+          "sourceId": "database-bplus-tree-holdout",
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "samplePath": "output/rag-reference/samples/database-bplus-tree-holdout.pdf",
+          "samplePages": [
+            18,
+            19
+          ],
+          "sourcePdfPages": [
+            681,
+            682
+          ],
+          "printedPages": [
+            652,
+            653
+          ]
+        }
+      ],
+      "insufficiencyReason": "扩展选段未给具体比较器、数据分布、查询负载或计时数据。"
+    },
+    {
+      "id": "OS-T01",
+      "split": "test",
+      "group": "os-eat",
+      "question": "课件例子中，正常访存 10 ns、缺页处理 5 ms。若缺页率为 0.001，按给出的公式有效访问时间是多少？",
+      "expectedAnswer": "5 ms=5,000,000 ns。EAT=10×0.999+5,000,000×0.001=5009.99 ns，约 5.01 μs。",
+      "answerable": true,
+      "type": "formula",
+      "category": "公式与推导",
+      "evidence": [
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            1
+          ],
+          "sourceSlides": [
+            9
+          ],
+          "quote": "“EAT = 10(1–p) + 5,000,000p”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "os-page-replacement-holdout"
+    },
+    {
+      "id": "OS-T02",
+      "split": "test",
+      "group": "os-opt-oracle",
+      "question": "为什么 OPT 可当页面置换算法的性能基准？课件如何让模拟器获得实际系统当下看不到的输入？",
+      "expectedAnswer": "OPT 选择未来最长时间不会访问的页，作为缺页次数最少的基准。模拟器先运行一次记录访问序列，第二遍用已知序列算 OPT。",
+      "answerable": true,
+      "type": "multi_evidence",
+      "category": "多证据",
+      "evidence": [
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            3
+          ],
+          "sourceSlides": [
+            11
+          ],
+          "quote": "选择未来最长时间不访问的页面"
+        },
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            5
+          ],
+          "sourceSlides": [
+            13
+          ],
+          "quote": "记录每一次的页面访问情况；第二遍运行时使用最优算法"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "os-page-replacement-holdout"
+    },
+    {
+      "id": "OS-T03",
+      "split": "test",
+      "group": "os-fifo-queue",
+      "question": "FIFO 维护的页面队列按什么排序？缺页换入时从哪里选出受害页，又把新页放在哪里？",
+      "expectedAnswer": "按进入内存的先后排序，驻留最久的页位于队首。缺页时淘汰队首，把新页放到队尾。",
+      "answerable": true,
+      "type": "procedure",
+      "category": "操作步骤",
+      "evidence": [
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            7
+          ],
+          "sourceSlides": [
+            15
+          ],
+          "quote": "“出现缺页时，选择链首页面进行置换，新页面加到链尾”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "os-page-replacement-holdout"
+    },
+    {
+      "id": "OS-T04",
+      "split": "test",
+      "group": "os-belady-counts",
+      "question": "对课件给定的访问序列，FIFO 的 3 页框和 4 页框实验分别发生多少次缺页？该反常结果叫什么？",
+      "expectedAnswer": "3 页框时 9 次，4 页框时 10 次。增加页框反而增加缺页是 Belady 异常。",
+      "answerable": true,
+      "type": "multi_evidence",
+      "category": "多证据",
+      "evidence": [
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            8
+          ],
+          "sourceSlides": [
+            16
+          ],
+          "quote": "物理页面数: 3；缺页次数: 9"
+        },
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            9
+          ],
+          "sourceSlides": [
+            17
+          ],
+          "quote": "物理页面数: 4；缺页次数: 10"
+        },
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            10
+          ],
+          "sourceSlides": [
+            18
+          ],
+          "quote": "分配的物理页面数增加，缺页次数反而升高的异常现象"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "os-page-replacement-holdout"
+    },
+    {
+      "id": "OS-T05",
+      "split": "test",
+      "group": "os-lru-linked-list",
+      "question": "课件的 LRU 链表实现中，命中某个页面时如何更新链表？需要置换时选哪一端？",
+      "expectedAnswer": "把访问页移到链表首部。链表尾部是最久未访问的页，缺页时选尾节点。",
+      "answerable": true,
+      "type": "procedure",
+      "category": "操作步骤",
+      "evidence": [
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            13
+          ],
+          "sourceSlides": [
+            21
+          ],
+          "quote": "“访问内存时，找到相应页面，并把它移到链表之首”“缺页时，置换链表尾节点的页面”。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "os-page-replacement-holdout"
+    },
+    {
+      "id": "OS-T06",
+      "split": "test",
+      "group": "os-lru-inclusion",
+      "question": "为什么按课件的 LRU 分析，增加页框后原先的某次命中仍会命中？",
+      "expectedAnswer": "按访问新旧排序保留页面。较大容量所保留的页集合包含原来的集合，所以原本驻留的页仍在内存中。",
+      "answerable": true,
+      "type": "conditional",
+      "category": "条件",
+      "evidence": [
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            15
+          ],
+          "sourceSlides": [
+            23
+          ],
+          "quote": "“留在内存中的页面，一定是增加之前页面集合的超集”"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "os-page-replacement-holdout"
+    },
+    {
+      "id": "OS-T07",
+      "split": "test",
+      "group": "os-lru-matrix",
+      "question": "课件给出基于位矩阵的 LRU。访问页框 k 时更新矩阵的哪一行、哪一列，怎么选择最久未使用页？",
+      "expectedAnswer": "把第 k 行置 1，再把第 k 列置 0。将行视为二进制数，最小的行对应最久未使用的页框。",
+      "answerable": true,
+      "type": "procedure",
+      "category": "操作步骤",
+      "evidence": [
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            16
+          ],
+          "sourceSlides": [
+            24
+          ],
+          "quote": "“set the row k in the matrix to be 1, while set the column k in the matrix to be 0”；同页说明取二进制值最小的行。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "os-page-replacement-holdout"
+    },
+    {
+      "id": "OS-T08",
+      "split": "test",
+      "group": "os-lfu-aging",
+      "question": "LFU 为什么可能长期留下一个早期经常使用、后来闲置的页面？课件给出的修正是什么？",
+      "expectedAnswer": "累计计数较高，即使后来闲置仍不容易成为最小值。定期右移计数可降低早期访问的影响。",
+      "answerable": true,
+      "type": "conditional",
+      "category": "条件",
+      "evidence": [
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            17
+          ],
+          "sourceSlides": [
+            25
+          ],
+          "quote": "“开始时频繁使用，但以后不使用的页面很难置换”“计数定期右移”。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "os-page-replacement-holdout"
+    },
+    {
+      "id": "OS-T09",
+      "split": "test",
+      "group": "os-lfu-vs-lru",
+      "question": "某一刻只能淘汰 A 或 B。A 历史访问 20 次但比 B 更久没访问，B 历史访问 2 次。按课件基本规则，LRU 和 LFU 分别淘汰谁？",
+      "expectedAnswer": "LRU 按上次访问时间淘汰 A。LFU 按访问次数淘汰 B。",
+      "answerable": true,
+      "type": "relation",
+      "category": "关系",
+      "evidence": [
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            17
+          ],
+          "sourceSlides": [
+            25
+          ],
+          "quote": "“LRU 关注 多久未访问”“LFU 关注 访问次数”。"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "os-page-replacement-holdout"
+    },
+    {
+      "id": "OS-T10",
+      "split": "test",
+      "group": "os-clock-state",
+      "question": "时钟算法在页表项中记录哪个字段？缺页时从哪里开始查找受害页，按什么结构移动？",
+      "expectedAnswer": "记录访问位；从当前指针开始在环形链表顺序查找，选择未被访问的页。",
+      "answerable": true,
+      "type": "multi_evidence",
+      "category": "多证据",
+      "evidence": [
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            20
+          ],
+          "sourceSlides": [
+            28
+          ],
+          "quote": "时钟置换算法图示标出访问位。"
+        },
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            21
+          ],
+          "sourceSlides": [
+            29
+          ],
+          "quote": "各页面组织成环形链表；从指针处开始顺序查找未被访问的页面"
+        }
+      ],
+      "review": "model-drafted-pending-human-review",
+      "sourceId": "os-page-replacement-holdout"
+    },
+    {
+      "id": "OS-T11",
+      "split": "test",
+      "group": "os-lfu-config-absent",
+      "question": "依据这份课件，能确定某个生产系统的 LFU 访问计数采用多少位以及每隔多少次访问清零吗？",
+      "expectedAnswer": "资料不足，无法从当前资料确定。",
+      "answerable": false,
+      "type": "unanswerable",
+      "category": "无答案",
+      "evidence": [],
+      "review": "model-drafted-pending-human-review",
+      "checkedScope": [
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            17,
+            18,
+            19
+          ],
+          "sourceSlides": [
+            25,
+            26,
+            27
+          ]
+        }
+      ],
+      "insufficiencyReason": "幻灯片 27 将“计数器使用多少个 bit”“什么时机适合计数器清 0”作为问题，未指定实现参数。"
+    },
+    {
+      "id": "OS-T12",
+      "split": "test",
+      "group": "os-clock-write-latency-absent",
+      "question": "根据这两张时钟算法幻灯片，能算出实际设备把一个被选中的脏页写回所需的毫秒数吗？",
+      "expectedAnswer": "资料不足，无法从当前资料确定。",
+      "answerable": false,
+      "type": "unanswerable",
+      "category": "无答案",
+      "evidence": [],
+      "review": "model-drafted-pending-human-review",
+      "checkedScope": [
+        {
+          "sourceId": "os-page-replacement-holdout",
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "samplePath": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+          "samplePages": [
+            20,
+            21
+          ],
+          "sourceSlides": [
+            28,
+            29
+          ]
+        }
+      ],
+      "insufficiencyReason": "课件说明访问位与受害页选择，未给写回设备性能或实测时间。"
+    }
+  ],
+  "holdoutPlan": {
+    "total": 40,
+    "questionsDrafted": true,
+    "groups": [
+      {
+        "source": "CSAPP",
+        "candidateSections": [
+          "9.3",
+          "9.5",
+          "9.7"
+        ],
+        "answerable": 12,
+        "unanswerable": 2
+      },
+      {
+        "source": "Database System Concepts",
+        "candidateSections": [
+          "14.3",
+          "14.4"
+        ],
+        "answerable": 12,
+        "unanswerable": 2
+      },
+      {
+        "source": "OS slides",
+        "candidateSections": [
+          "4.3",
+          "4.4"
+        ],
+        "answerable": 10,
+        "unanswerable": 2
+      }
+    ]
+  },
+  "splits": {
+    "dev": 20,
+    "test": 40
+  }
+}

@@ -1,0 +1,622 @@
+{
+  "pageNumbering": "页码均从 1 开始。样本页序按 PDF 物理页或 PPTX 正常播放顺序计。",
+  "samples": [
+    {
+      "path": "output/rag-reference/samples/smoke-formula-index-2p.pdf",
+      "pages": [
+        {
+          "samplePage": 1,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 858,
+          "printedPage": 857
+        },
+        {
+          "samplePage": 2,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 657,
+          "printedPage": 628
+        }
+      ],
+      "checkpoints": [
+        {
+          "samplePage": 1,
+          "feature": "formula_and_diagram",
+          "expected": "2⁶ = 64 字节，图 9.19 的 VPN/VPO 是 8/6 位，PPN/PPO 是 6/6 位。"
+        },
+        {
+          "samplePage": 2,
+          "feature": "figure_and_formula",
+          "expected": "图 14.4 中 History 箭头指向 32343 El Said，下一行是 58583 Califieri；页底二分查找上界写作 ⌈log₂(b)⌉。"
+        }
+      ]
+    },
+    {
+      "path": "output/rag-reference/samples/csapp-address-translation.pdf",
+      "pages": [
+        {
+          "samplePage": 1,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 854,
+          "printedPage": 853
+        },
+        {
+          "samplePage": 2,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 855,
+          "printedPage": 854
+        },
+        {
+          "samplePage": 3,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 856,
+          "printedPage": 855
+        },
+        {
+          "samplePage": 4,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 857,
+          "printedPage": 856
+        },
+        {
+          "samplePage": 5,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 858,
+          "printedPage": 857
+        },
+        {
+          "samplePage": 6,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 859,
+          "printedPage": 858
+        },
+        {
+          "samplePage": 7,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 860,
+          "printedPage": 859
+        },
+        {
+          "samplePage": 8,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 861,
+          "printedPage": 860
+        }
+      ],
+      "checkpoints": [
+        {
+          "samplePage": 4,
+          "feature": "diagram",
+          "expected": "图 9.18 用分段 VPN 索引逐级页表，PPN 与原 VPO 拼接。"
+        },
+        {
+          "samplePage": 5,
+          "feature": "formula_and_diagram",
+          "expected": "2⁶ = 64 字节，图 9.19 的 VPN/VPO 是 8/6 位，PPN/PPO 是 6/6 位。"
+        },
+        {
+          "samplePage": 6,
+          "feature": "table_and_diagram",
+          "expected": "图 9.20 包含 TLB、页表、L1 缓存快照，行值以十六进制标出。"
+        }
+      ]
+    },
+    {
+      "path": "output/rag-reference/samples/database-ordered-indices.pdf",
+      "pages": [
+        {
+          "samplePage": 1,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 654,
+          "printedPage": 625
+        },
+        {
+          "samplePage": 2,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 655,
+          "printedPage": 626
+        },
+        {
+          "samplePage": 3,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 656,
+          "printedPage": 627
+        },
+        {
+          "samplePage": 4,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 657,
+          "printedPage": 628
+        },
+        {
+          "samplePage": 5,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 658,
+          "printedPage": 629
+        },
+        {
+          "samplePage": 6,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 659,
+          "printedPage": 630
+        },
+        {
+          "samplePage": 7,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 660,
+          "printedPage": 631
+        },
+        {
+          "samplePage": 8,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 661,
+          "printedPage": 632
+        },
+        {
+          "samplePage": 9,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 662,
+          "printedPage": 633
+        },
+        {
+          "samplePage": 10,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 663,
+          "printedPage": 634
+        }
+      ],
+      "checkpoints": [
+        {
+          "samplePage": 4,
+          "feature": "figure_and_formula",
+          "expected": "图 14.4 中 History 箭头指向 32343 El Said，下一行是 58583 Califieri；页底二分查找上界写作 ⌈log₂(b)⌉。"
+        },
+        {
+          "samplePage": 5,
+          "feature": "diagram",
+          "expected": "图 14.5 的外层索引指向内层索引块，内层索引指向数据块。"
+        }
+      ]
+    },
+    {
+      "path": "output/rag-reference/samples/os-paging-slides-50-54.pptx",
+      "pages": [
+        {
+          "samplePage": 1,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+          "sourceSlide": 50
+        },
+        {
+          "samplePage": 2,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+          "sourceSlide": 51
+        },
+        {
+          "samplePage": 3,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+          "sourceSlide": 52
+        },
+        {
+          "samplePage": 4,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+          "sourceSlide": 53
+        },
+        {
+          "samplePage": 5,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.2OS_MemoryManagement-分页机制-2024.pptx",
+          "sourceSlide": 54
+        }
+      ],
+      "checkpoints": [
+        {
+          "samplePage": 1,
+          "feature": "diagram",
+          "expected": "多级页表的 p1、p2、p3 三段对应三级页表。"
+        },
+        {
+          "samplePage": 2,
+          "feature": "diagram",
+          "expected": "二级页表示例含 CR3、PTBR、两级页表和内存连线。"
+        },
+        {
+          "samplePage": 3,
+          "feature": "diagram",
+          "expected": "x86 逻辑地址按 Dir、Table、Offset 拆成 10、10、12 位。"
+        },
+        {
+          "samplePage": 4,
+          "feature": "formula",
+          "expected": "PageSize / PageTableEntrySize，2 的上标，以及 X + (X−2) + (X−2) = 32。"
+        },
+        {
+          "samplePage": 5,
+          "feature": "bit_field",
+          "expected": "页表项的 P、W、U、WT、CD、A、D、AVL 和物理页帧号。"
+        }
+      ]
+    },
+    {
+      "path": "output/rag-reference/samples/csapp-vm-mapping-holdout.pdf",
+      "split": "test",
+      "pages": [
+        {
+          "samplePage": 1,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 848,
+          "printedPage": 847
+        },
+        {
+          "samplePage": 2,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 849,
+          "printedPage": 848
+        },
+        {
+          "samplePage": 3,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 862,
+          "printedPage": 861
+        },
+        {
+          "samplePage": 4,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 863,
+          "printedPage": 862
+        },
+        {
+          "samplePage": 5,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 864,
+          "printedPage": 863
+        },
+        {
+          "samplePage": 6,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 865,
+          "printedPage": 864
+        },
+        {
+          "samplePage": 7,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 866,
+          "printedPage": 865
+        },
+        {
+          "samplePage": 8,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 867,
+          "printedPage": 866
+        },
+        {
+          "samplePage": 9,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 868,
+          "printedPage": 867
+        },
+        {
+          "samplePage": 10,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 869,
+          "printedPage": 868
+        },
+        {
+          "samplePage": 11,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 870,
+          "printedPage": 869
+        },
+        {
+          "samplePage": 12,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 871,
+          "printedPage": 870
+        },
+        {
+          "samplePage": 13,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 872,
+          "printedPage": 871
+        },
+        {
+          "samplePage": 14,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 873,
+          "printedPage": 872
+        },
+        {
+          "samplePage": 15,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 874,
+          "printedPage": 873
+        },
+        {
+          "samplePage": 16,
+          "sourcePath": "D:/Others/E_books/(英文)深入理解计算机系统_CSAPP英文第三版.pdf",
+          "sourcePdfPage": 875,
+          "printedPage": 874
+        }
+      ],
+      "checkpoints": [
+        {
+          "samplePage": 8,
+          "feature": "holdout_evidence",
+          "expected": "Core i7 L1 的 6 位索引、6 位块偏移和 12 位 VPO。"
+        },
+        {
+          "samplePage": 14,
+          "feature": "holdout_evidence",
+          "expected": "私有映射写时复制及 fork 元数据。"
+        }
+      ]
+    },
+    {
+      "path": "output/rag-reference/samples/database-bplus-tree-holdout.pdf",
+      "split": "test",
+      "pages": [
+        {
+          "samplePage": 1,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 664,
+          "printedPage": 635
+        },
+        {
+          "samplePage": 2,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 665,
+          "printedPage": 636
+        },
+        {
+          "samplePage": 3,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 666,
+          "printedPage": 637
+        },
+        {
+          "samplePage": 4,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 667,
+          "printedPage": 638
+        },
+        {
+          "samplePage": 5,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 668,
+          "printedPage": 639
+        },
+        {
+          "samplePage": 6,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 669,
+          "printedPage": 640
+        },
+        {
+          "samplePage": 7,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 670,
+          "printedPage": 641
+        },
+        {
+          "samplePage": 8,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 671,
+          "printedPage": 642
+        },
+        {
+          "samplePage": 9,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 672,
+          "printedPage": 643
+        },
+        {
+          "samplePage": 10,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 673,
+          "printedPage": 644
+        },
+        {
+          "samplePage": 11,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 674,
+          "printedPage": 645
+        },
+        {
+          "samplePage": 12,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 675,
+          "printedPage": 646
+        },
+        {
+          "samplePage": 13,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 676,
+          "printedPage": 647
+        },
+        {
+          "samplePage": 14,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 677,
+          "printedPage": 648
+        },
+        {
+          "samplePage": 15,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 678,
+          "printedPage": 649
+        },
+        {
+          "samplePage": 16,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 679,
+          "printedPage": 650
+        },
+        {
+          "samplePage": 17,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 680,
+          "printedPage": 651
+        },
+        {
+          "samplePage": 18,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 681,
+          "printedPage": 652
+        },
+        {
+          "samplePage": 19,
+          "sourcePath": "D:/Others/E_books/Database System Concepts (Abraham Silberschatz, Henry Korth, S. Sudarshan) (Z-Library).pdf",
+          "sourcePdfPage": 682,
+          "printedPage": 653
+        }
+      ],
+      "checkpoints": [
+        {
+          "samplePage": 6,
+          "feature": "holdout_evidence",
+          "expected": "对数底数 50 和向上取整，根缓冲时块读取次数。"
+        },
+        {
+          "samplePage": 9,
+          "feature": "holdout_evidence",
+          "expected": "内部节点分裂示例 Gold 上提。"
+        }
+      ]
+    },
+    {
+      "path": "output/rag-reference/samples/os-page-replacement-holdout.pptx",
+      "split": "test",
+      "pages": [
+        {
+          "samplePage": 1,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 9
+        },
+        {
+          "samplePage": 2,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 10
+        },
+        {
+          "samplePage": 3,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 11
+        },
+        {
+          "samplePage": 4,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 12
+        },
+        {
+          "samplePage": 5,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 13
+        },
+        {
+          "samplePage": 6,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 14
+        },
+        {
+          "samplePage": 7,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 15
+        },
+        {
+          "samplePage": 8,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 16
+        },
+        {
+          "samplePage": 9,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 17
+        },
+        {
+          "samplePage": 10,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 18
+        },
+        {
+          "samplePage": 11,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 19
+        },
+        {
+          "samplePage": 12,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 20
+        },
+        {
+          "samplePage": 13,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 21
+        },
+        {
+          "samplePage": 14,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 22
+        },
+        {
+          "samplePage": 15,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 23
+        },
+        {
+          "samplePage": 16,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 24
+        },
+        {
+          "samplePage": 17,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 25
+        },
+        {
+          "samplePage": 18,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 26
+        },
+        {
+          "samplePage": 19,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 27
+        },
+        {
+          "samplePage": 20,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 28
+        },
+        {
+          "samplePage": 21,
+          "sourcePath": "D:/Download/BDNetdisk_DL/操作系统/课件/4.3OS_MemoryManagement-换页-2024.pptx",
+          "sourceSlide": 29
+        }
+      ],
+      "checkpoints": [
+        {
+          "samplePage": 1,
+          "feature": "holdout_evidence",
+          "expected": "EAT 公式混合 ns/ms，图示单位换算。"
+        },
+        {
+          "samplePage": 8,
+          "feature": "holdout_evidence",
+          "expected": "FIFO 三页框 9 次缺页。"
+        },
+        {
+          "samplePage": 9,
+          "feature": "holdout_evidence",
+          "expected": "FIFO 四页框 10 次缺页。"
+        },
+        {
+          "samplePage": 20,
+          "feature": "holdout_evidence",
+          "expected": "Clock 示意图的访问位。"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "数据库章节样本最后一页同时含 §14.3 开头；评测候选的内容边界为该标题之前。",
+    "PPTX 仅修改演示播放列表。原始幻灯片、布局、母版、媒体和关系保留；按 ZIP 中 slideN.xml 文件名枚举会看到原始全集，解析时应按播放列表，或用 PowerPoint 导出 PDF。",
+    "PowerPoint 导出时选择标准幻灯片版式，每页一张；PDF 页 1–5 对应原课件幻灯片 50–54。公式中的上标可能是文本格式，提取结果需对照渲染版面。"
+  ]
+}
