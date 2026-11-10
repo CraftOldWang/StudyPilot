@@ -90,26 +90,27 @@ public class DocumentPipeline {
         PipelineStatus stage = PipelineStatus.PARSING;
         try {
             boolean media = MediaTranscriptionService.isMedia(document.getTitle());
+            boolean mineru = !media && mineruParser.supports(document.getTitle());
             String parserVersion = PARSER_VERSION;
             if (media) {
                 parserVersion = mediaTranscription.processorVersion();
-            } else if (mineruParser.supports(document.getTitle())) {
-                parserVersion = MineruDocumentParser.VERSION;
+            } else if (mineru) {
+                parserVersion = mineruParser.artifactVersion();
             }
             boolean reusableParse = parserVersion.equals(document.getParserVersion())
                     && document.getParsedTextKey() != null;
             ParsedDocument parsed;
             if (reusableParse) {
-                parsed = loadParsed(document, parserVersion);
+                parsed = loadParsed(document, mineru);
             } else if (media) {
                 stage = PipelineStatus.TRANSCRIBING;
                 persistence.startStage(document, stage);
                 parsed = new ParsedDocument(mediaTranscription.transcribe(document));
             } else {
-                parsed = parse(document, parserVersion);
+                parsed = parse(document, mineru);
             }
             if (!reusableParse) {
-                saveParsed(document, parsed, parserVersion);
+                saveParsed(document, parsed, parserVersion, mineru);
             }
 
             stage = PipelineStatus.CHUNKING;
@@ -152,13 +153,13 @@ public class DocumentPipeline {
         }
     }
 
-    private void saveParsed(Document document, ParsedDocument parsed, String version) {
+    private void saveParsed(Document document, ParsedDocument parsed, String version, boolean mineru) {
         String text = parsed.text();
         if (text.isBlank()) { throw new BusinessException("文档解析结果为空"); }
         String hash = sha256(text);
         String base = "parsed/" + document.getUserId() + "/" + document.getId() + "/" + version + "/" + hash;
         String key;
-        if (MineruDocumentParser.VERSION.equals(version)) {
+        if (mineru) {
             String prefix = base + "/";
             key = prefix + MineruDocumentParser.MARKDOWN;
             for (var image : parsed.images().entrySet()) {
@@ -182,14 +183,14 @@ public class DocumentPipeline {
         objectStorageService.putObject(key, new ByteArrayInputStream(bytes), bytes.length, contentType);
     }
 
-    private ParsedDocument loadParsed(Document document, String version) {
+    private ParsedDocument loadParsed(Document document, boolean mineru) {
         try (InputStream stream = objectStorageService.getObject(document.getParsedTextKey())) {
             String text = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
             if (!sha256(text).equals(document.getParsedTextHash())) {
                 throw new BusinessException("规范文本产物哈希不匹配: documentId=" + document.getId());
             }
             log.info("复用规范文本: documentId={}", document.getId());
-            if (MineruDocumentParser.VERSION.equals(version)) {
+            if (mineru) {
                 String key = document.getParsedTextKey();
                 String sourcesKey = key.substring(0, key.lastIndexOf('/') + 1) + MineruDocumentParser.SOURCES;
                 try (InputStream sources = objectStorageService.getObject(sourcesKey)) {
@@ -203,14 +204,15 @@ public class DocumentPipeline {
         }
     }
 
-    private ParsedDocument parse(Document document, String version) {
+    private ParsedDocument parse(Document document, boolean mineru) {
         FileRecord file = persistence.loadFile(document.getFileRecordId());
         if (file == null) {
             throw new BusinessException("文件记录不存在: " + document.getFileRecordId());
         }
         try (InputStream inputStream = objectStorageService.getObject(file.getStorageKey())) {
-            if (MineruDocumentParser.VERSION.equals(version)) {
-                return mineruParser.parse(inputStream, document.getTitle(), () -> persistence.renewLease(document));
+            if (mineru) {
+                return mineruParser.parse(inputStream, document.getTitle(), document.getUserId(),
+                        () -> persistence.renewLease(document));
             }
             return new ParsedDocument(documentTextParser.parse(inputStream));
         } catch (IOException ex) {

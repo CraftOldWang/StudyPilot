@@ -47,6 +47,14 @@ study-agent:
       enabled: ${STUDY_AGENT_INGEST_MINERU_ENABLED:false}
       endpoint: "${STUDY_AGENT_INGEST_MINERU_ENDPOINT:http://127.0.0.1:18001/file_parse}"
       timeout: ${STUDY_AGENT_INGEST_MINERU_TIMEOUT:30m}
+      vision:
+        enabled: ${STUDY_AGENT_INGEST_VISION_ENABLED:false}
+        endpoint: "${STUDY_AGENT_INGEST_VISION_ENDPOINT:https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions}"
+        model: ${STUDY_AGENT_INGEST_VISION_MODEL:qwen3-vl-plus}
+        api-key: ${STUDY_AGENT_INGEST_VISION_API_KEY:${AI_DASHSCOPE_API_KEY:${bailian_for_embedding:}}}
+        timeout: ${STUDY_AGENT_INGEST_VISION_TIMEOUT:60s}
+        min-side-permille: ${STUDY_AGENT_INGEST_VISION_MIN_SIDE_PERMILLE:35}
+        max-tokens: ${STUDY_AGENT_INGEST_VISION_MAX_TOKENS:512}
   agentscope:
     workspace: ${AGENTSCOPE_WORKSPACE:${user.dir}/.agentscope/workspace}
     model:
