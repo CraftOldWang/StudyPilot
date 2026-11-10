@@ -9,6 +9,7 @@ import zipfile
 from importlib.metadata import version
 from pathlib import Path
 
+import pypdfium2 as pdfium
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from mineru.backend.pipeline.pipeline_middle_json_mkcontent import (
@@ -37,6 +38,9 @@ app = FastAPI(title="StudyPilot MinerU")
 gate = asyncio.Semaphore(1)
 parser_version = f"mineru-{version('mineru')}-pipeline-v1"
 limit = 100 * 1024 * 1024
+page_window = int(os.getenv("STUDYPILOT_MINERU_PAGE_WINDOW", "4"))
+if page_window < 1:
+    raise RuntimeError("STUDYPILOT_MINERU_PAGE_WINDOW must be positive")
 
 
 @app.get("/health")
@@ -44,24 +48,29 @@ def health():
     return {"status": "ready", "parserVersion": parser_version}
 
 
-def image_paths(block):
+def image_spans(block):
     for child in block.get("blocks", []):
-        yield from image_paths(child)
+        yield from image_spans(child)
     for line in block.get("lines", []):
         for span in line["spans"]:
             if span.get("image_path"):
-                yield "images/" + span["image_path"]
+                yield span
 
 
-def render(pages):
-    paragraphs, sources, headings = [], [], []
-    offset = 0
+def render(pages, headings, first_page, offset, image_prefix):
+    paragraphs, sources, images = [], [], {}
     for page in pages:
         width, height = page["page_size"]
         for block in page.get("para_blocks") or []:
+            block_images = {}
+            for span in image_spans(block):
+                original = span["image_path"]
+                span["image_path"] = image_prefix + original
+                block_images["images/" + span["image_path"]] = "images/" + original
             rendered = make_blocks_to_markdown([block], MakeMode.MM_MD, "images")
             if not rendered:
                 continue
+            images.update(block_images)
             paragraph = rendered[0]
             kind = block["type"]
             if kind == "title":
@@ -78,14 +87,52 @@ def render(pages):
             sources.append({
                 "startOffset": start,
                 "endOffset": offset,
-                "pageIndex": page["page_idx"],
+                "pageIndex": first_page + page["page_idx"],
                 "headingPath": [title for _, title in headings],
                 "type": kind,
                 "bbox": [int(value * 1000 / extent)
                          for value, extent in zip(bbox, (width, height, width, height))] if bbox else [],
-                "imagePaths": list(dict.fromkeys(image_paths(block))),
+                "imagePaths": list(block_images),
             })
-    return "\n\n".join(paragraphs), sources
+    return "\n\n".join(paragraphs), sources, images
+
+
+async def parse_document(data, archive):
+    pdf = pdfium.PdfDocument(data)
+    try:
+        page_count = len(pdf)
+    finally:
+        pdf.close()
+
+    sections, sources, headings = [], [], []
+    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as output:
+        for first in range(0, page_count, page_window):
+            end = min(first + page_window, page_count)
+            with tempfile.TemporaryDirectory(dir=archive.parent, prefix="window-") as batch:
+                await aio_do_parse(
+                    output_dir=batch, pdf_file_names=["document"], pdf_bytes_list=[data],
+                    p_lang_list=["ch"], backend="pipeline", parse_method="auto",
+                    formula_enable=True, table_enable=True, server_url=None,
+                    f_draw_layout_bbox=False, f_draw_span_bbox=False, f_dump_md=False,
+                    f_dump_middle_json=True, f_dump_model_output=False, f_dump_orig_pdf=False,
+                    f_dump_content_list=False, start_page_id=first, end_page_id=end - 1,
+                )
+                result = Path(batch) / "document" / "auto"
+                pages = json.loads((result / "document_middle.json").read_text(encoding="utf-8"))["pdf_info"]
+                if [page["page_idx"] for page in pages] != list(range(end - first)):
+                    raise HTTPException(422, f"MinerU returned invalid page indices for pages {first + 1}–{end}")
+                offset = sources[-1]["endOffset"] + 2 if sources else 0
+                prefix = f"p{first + 1:05d}-" if page_count > page_window else ""
+                markdown, blocks, images = render(pages, headings, first, offset, prefix)
+                if markdown:
+                    sections.append(markdown)
+                    sources.extend(blocks)
+                for name, original in images.items():
+                    output.write(result / original, name)
+        if not sections:
+            raise HTTPException(422, "MinerU returned an empty document")
+        output.writestr("document.md", "\n\n".join(sections))
+        output.writestr("document.sources.json", json.dumps(sources, ensure_ascii=False))
 
 
 def convert_office(root, suffix, data):
@@ -121,25 +168,8 @@ async def file_parse(files: list[UploadFile] = File(...)):
         try:
             if suffix != ".pdf":
                 data = await asyncio.to_thread(convert_office, root, suffix, data)
-            await aio_do_parse(
-                output_dir=str(root), pdf_file_names=["document"], pdf_bytes_list=[data],
-                p_lang_list=["ch"], backend="pipeline", parse_method="auto",
-                formula_enable=True, table_enable=True, server_url=None,
-                f_draw_layout_bbox=False, f_draw_span_bbox=False, f_dump_md=False,
-                f_dump_middle_json=True, f_dump_model_output=False, f_dump_orig_pdf=False,
-                f_dump_content_list=False, start_page_id=0, end_page_id=99999,
-            )
-            result = root / "document" / "auto"
-            middle = json.loads((result / "document_middle.json").read_text(encoding="utf-8"))
-            markdown, sources = render(middle["pdf_info"])
-            if not markdown.strip():
-                raise HTTPException(422, "MinerU returned an empty document")
             archive = root / "document.zip"
-            with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as output:
-                output.writestr("document.md", markdown)
-                output.writestr("document.sources.json", json.dumps(sources, ensure_ascii=False))
-                for image in sorted({image for block in sources for image in block["imagePaths"]}):
-                    output.write(result / image, image)
+            await parse_document(data, archive)
             return FileResponse(
                 archive, media_type="application/zip", filename=archive.name,
                 headers={"X-Parser-Version": parser_version}, background=BackgroundTask(work.cleanup),
