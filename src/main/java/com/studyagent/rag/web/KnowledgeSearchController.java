@@ -2,11 +2,14 @@ package com.studyagent.rag.web;
 
 import com.studyagent.common.response.ApiResponse;
 import com.studyagent.agent.integration.KnowledgeSearchAgentService;
+import com.studyagent.config.RerankProperties;
 import com.studyagent.identity.CurrentUserContext;
 import com.studyagent.rag.retrieval.KnowledgeRetrievalService;
 import com.studyagent.rag.retrieval.KnowledgeSearchResponse;
 import com.studyagent.rag.retrieval.RetrievalMode;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,7 +35,8 @@ public class KnowledgeSearchController {
     ) {
         Long userId = currentUserContext.userId();
         knowledgeBaseService.requireOwned(userId, knowledgeBaseId);
-        return ApiResponse.ok(knowledgeRetrievalService.search(userId, knowledgeBaseId, request.query(), request.mode(), request.topK()));
+        return ApiResponse.ok(knowledgeRetrievalService.search(userId, knowledgeBaseId, request.query(), request.mode(),
+                request.topK(), Boolean.TRUE.equals(request.rerank()), request.rerankCandidates()));
     }
 
     @PostMapping("/agent-search")
@@ -46,6 +50,7 @@ public class KnowledgeSearchController {
     }
 
     public record SearchRequest(@NotBlank String query, RetrievalMode mode,
-                                @jakarta.validation.constraints.Min(1) @jakarta.validation.constraints.Max(20) Integer topK) {
+                                @Min(1) @Max(20) Integer topK, Boolean rerank,
+                                @Min(1) @Max(RerankProperties.MAX_CANDIDATES) Integer rerankCandidates) {
     }
 }

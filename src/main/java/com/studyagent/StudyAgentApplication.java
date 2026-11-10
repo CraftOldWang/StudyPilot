@@ -5,6 +5,7 @@ import com.studyagent.config.CanalProperties;
 import com.studyagent.config.ElasticsearchProperties;
 import com.studyagent.config.ObjectStorageProperties;
 import com.studyagent.config.RagProperties;
+import com.studyagent.config.RerankProperties;
 import com.studyagent.config.StudyRocketMqProperties;
 import com.studyagent.config.UploadProperties;
 import org.mybatis.spring.annotation.MapperScan;
@@ -22,6 +23,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
         ObjectStorageProperties.class,
         ElasticsearchProperties.class,
         RagProperties.class,
+        RerankProperties.class,
         StudyRocketMqProperties.class,
         UploadProperties.class,
         com.studyagent.config.AnkiProperties.class,

@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import com.studyagent.config.RagProperties;
+import com.studyagent.config.RerankProperties;
 import com.studyagent.rag.embedding.EmbeddingPurpose;
 import com.studyagent.rag.embedding.EmbeddingService;
+import com.studyagent.rag.rerank.BgeReranker;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +18,8 @@ class KnowledgeRetrievalServiceTest {
     private final RagProperties properties = new RagProperties(2, 800, 80, 2400, 0, 30, 20, 60,
             RagProperties.ChunkStrategy.STRUCTURED, 2400);
     private final KnowledgeRetrievalService service = new KnowledgeRetrievalService(
-            embedding, retrieval, properties, parents, String::length);
+            embedding, retrieval, properties, parents, String::length,
+            mock(BgeReranker.class), new RerankProperties(null, 30, 1024));
 
     @Test
     void keepsOriginalChildRankAndUsesParentSourceCoordinates() {
