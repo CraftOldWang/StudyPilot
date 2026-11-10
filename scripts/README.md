@@ -30,10 +30,10 @@
 `{"csapp-address-translation":{"documentId":"101","knowledgeBaseId":"20"}}`。一道题标注的来源须在同一知识库，包括无答案题的 `checkedScope`。
 
 ```powershell
-python scripts/run-rag-cases.py --cases eval/rag/improvement-v2-cases.json --source-map output/rag-reference/source-map.json --split dev --mode BM25 --context-mode CHILD --out output/rag-reference/dev-bm25.jsonl --resume
+python scripts/run-rag-cases.py --source-map output/rag-reference/source-map.json --split dev --mode BM25 --context-mode CHILD --configuration structured-c800-o80 --out output/rag-reference/dev-bm25-structured-c800-o80.jsonl --resume
 ```
 
-用 `--case` 单跑指定题，用 `--rerank` 启用重排。JSONL 保存请求、完整响应和耗时，失败保留错误并在重跑时重试。续跑会重新汇总已保存响应，语料重新索引后用新输出文件。页命中比较来源页元数据和 `samplePages`，缺页元数据会单列。原文证据按标注引号内片段匹配，无引号时用整条，归一 Unicode 和空白。覆盖率按匹配片段数计算，无答案题留人工复核。
+用 `--case` 单跑指定题，用 `--rerank` 启用重排。JSONL 保存请求、完整响应和耗时，失败保留错误并在重跑时重试。续跑只复用请求、知识库内物理文档映射及配置标签都一致的结果。切换切块配置时，更新 `--configuration` 并使用独立的 `--out`；替换资料后更新映射。页命中比较来源页元数据和 `samplePages`，缺页元数据会单列。原文证据按标注引号内片段匹配，无引号时用整条，归一 Unicode 和空白。覆盖率按匹配片段数计算，无答案题留人工复核。
 
 ## 研究与历史脚本
 

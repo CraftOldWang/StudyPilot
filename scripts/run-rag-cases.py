@@ -93,8 +93,14 @@ def request_for(case, args, sources):
     }
     if args.rerank_candidates is not None:
         payload["rerankCandidates"] = args.rerank_candidates
-    return {"url": f"{args.base_url.rstrip('/')}/api/knowledge-bases/{kb}/search",
-            "userId": args.user_id, "body": payload}
+    return {
+        "url": f"{args.base_url.rstrip('/')}/api/knowledge-bases/{kb}/search",
+        "userId": args.user_id,
+        "body": payload,
+        "documentIdsBySource": {source: str(mapped["documentId"]) for source, mapped in sources.items()
+                                if str(mapped["knowledgeBaseId"]) == kb},
+        "configuration": args.configuration,
+    }
 
 
 def request_key(case_id, request):
@@ -136,7 +142,7 @@ def run_case(http, case, request, timeout):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--cases", type=Path, default=Path("output/rag-reference/eval-candidates-v1.json"))
+    parser.add_argument("--cases", type=Path, default=Path("eval/rag/improvement-v2-cases.json"))
     parser.add_argument("--source-map", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True, help="Append results to this JSONL file")
     parser.add_argument("--split", choices=["dev", "test"], required=True)
@@ -148,6 +154,7 @@ def main():
     parser.add_argument("--context-mode", choices=["CHILD", "PARENT", "NEIGHBOR"], default="CHILD")
     parser.add_argument("--rerank", action="store_true")
     parser.add_argument("--rerank-candidates", type=int)
+    parser.add_argument("--configuration", help="Optional label for the indexed chunker version and settings")
     parser.add_argument("--timeout", type=float, default=120)
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
