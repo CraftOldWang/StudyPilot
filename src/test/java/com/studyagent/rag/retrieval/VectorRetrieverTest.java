@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 class VectorRetrieverTest {
+    private static final List<String> ACTIVE_DOCUMENT_IDS = List.of("42");
 
     private ElasticsearchClient client;
     private VectorRetriever retriever;
@@ -49,7 +50,8 @@ class VectorRetrieverTest {
                 "user-4",
                 "kb-7",
                 new float[]{0.1f, 0.2f, 0.3f},
-                2
+                2,
+                ACTIVE_DOCUMENT_IDS
         );
 
         ArgumentCaptor<SearchRequest> requestCaptor = ArgumentCaptor.forClass(SearchRequest.class);
@@ -61,7 +63,7 @@ class VectorRetrieverTest {
         assertThat(request.knn().getFirst().field()).isEqualTo("embedding");
         assertThat(request.knn().getFirst().queryVector()).containsExactly(0.1f, 0.2f, 0.3f);
         assertThat(request.knn().getFirst().k()).isEqualTo(2);
-        assertThat(request.knn().getFirst().filter()).hasSize(3);
+        assertThat(request.knn().getFirst().filter()).hasSize(4);
         assertThat(request.knn().getFirst().filter().get(0).term().field()).isEqualTo("user_id");
         assertThat(request.knn().getFirst().filter().get(0).term().value().stringValue())
                 .isEqualTo("user-4");
@@ -72,6 +74,9 @@ class VectorRetrieverTest {
         assertThat(request.knn().getFirst().filter().get(2).term().field()).isEqualTo("chunk_type");
         assertThat(request.knn().getFirst().filter().get(2).term().value().stringValue())
                 .isEqualTo("CHILD");
+        var documents = request.knn().getFirst().filter().get(3).terms();
+        assertThat(documents.field()).isEqualTo("document_id");
+        assertThat(documents.terms().value().getFirst().stringValue()).isEqualTo("42");
         assertThat(hits).containsExactly(new RetrievalHit(
                 "chunk-9",
                 "parent-2",
@@ -84,7 +89,7 @@ class VectorRetrieverTest {
 
     @Test
     void rejectsWrongVectorDimensionsBeforeCallingElasticsearch() throws IOException {
-        assertThatThrownBy(() -> retriever.retrieve("user-4", "kb-7", new float[]{0.1f, 0.2f}, 2))
+        assertThatThrownBy(() -> retriever.retrieve("user-4", "kb-7", new float[]{0.1f, 0.2f}, 2, ACTIVE_DOCUMENT_IDS))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("actual=2, expected=3");
 

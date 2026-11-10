@@ -1,6 +1,7 @@
 package com.studyagent.rag.retrieval;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import com.studyagent.common.exception.BusinessException;
@@ -25,9 +26,14 @@ public class VectorRetriever {
             String userId,
             String knowledgeBaseId,
             float[] queryVector,
-            int candidateLimit
+            int candidateLimit,
+            List<String> activeDocumentIds
     ) {
         validateRequest(userId, knowledgeBaseId, queryVector, candidateLimit);
+        if (activeDocumentIds.isEmpty()) {
+            return List.of();
+        }
+        var documentIds = activeDocumentIds.stream().map(FieldValue::of).toList();
         List<Float> vector = toBoxedVector(queryVector);
         SearchRequest request = SearchRequest.of(search -> search
                 .index(properties.readAlias())
@@ -44,7 +50,9 @@ public class VectorRetriever {
                                 .value(knowledgeBaseId)))
                         .filter(filter -> filter.term(term -> term
                                 .field("chunk_type")
-                                .value("CHILD")))));
+                                .value("CHILD")))
+                        .filter(filter -> filter.terms(terms -> terms.field("document_id")
+                                .terms(values -> values.value(documentIds))))));
         try {
             SearchResponse<ElasticsearchChunkDocument> response =
                     client.search(request, ElasticsearchChunkDocument.class);

@@ -60,6 +60,9 @@ public class ParentAggregator {
                 if (parent == null) {
                     throw new BusinessException("命中子块对应的 parent 缺失: " + child.parentChunkId());
                 }
+                if (!Objects.equals(child.provenance().documentId(), parent.documentId())) {
+                    throw new BusinessException("命中子块对应的 parent 属于其他文档版本: " + child.parentChunkId());
+                }
                 contexts.putIfAbsent(parent.chunkId(), new KnowledgeSearchResponse.Result(
                         parent.chunkId(), parent.content(), new RetrievalHit.Provenance(
                                 parent.documentId(), parent.documentTitle(), parent.sourceLocation()), child.score()));

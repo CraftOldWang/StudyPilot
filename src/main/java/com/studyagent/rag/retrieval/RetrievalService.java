@@ -27,14 +27,16 @@ public class RetrievalService {
             int bm25Limit,
             int vectorLimit,
             int topK,
-            int rankConstant
+            int rankConstant,
+            List<String> activeDocumentIds
     ) {
         validateRequest(mode, userId, knowledgeBaseId, Math.min(bm25Limit, vectorLimit), topK);
         if (rankConstant <= 0) { throw new BusinessException("RRF rank constant 必须大于 0"); }
         List<RetrievalHit> hits = switch (mode) {
-            case BM25 -> bm25Retriever.retrieve(userId, knowledgeBaseId, query, bm25Limit);
-            case VECTOR -> vectorRetriever.retrieve(userId, knowledgeBaseId, queryVector, vectorLimit);
-            case RRF, PARENT -> fusedHits(userId, knowledgeBaseId, query, queryVector, bm25Limit, vectorLimit, rankConstant);
+            case BM25 -> bm25Retriever.retrieve(userId, knowledgeBaseId, query, bm25Limit, activeDocumentIds);
+            case VECTOR -> vectorRetriever.retrieve(userId, knowledgeBaseId, queryVector, vectorLimit, activeDocumentIds);
+            case RRF, PARENT -> fusedHits(userId, knowledgeBaseId, query, queryVector, bm25Limit, vectorLimit,
+                    rankConstant, activeDocumentIds);
         };
         return hits.stream().limit(topK).toList();
     }
@@ -46,12 +48,13 @@ public class RetrievalService {
             float[] queryVector,
             int bm25Limit,
             int vectorLimit,
-            int rankConstant
+            int rankConstant,
+            List<String> activeDocumentIds
     ) {
         List<RetrievalHit> bm25Hits =
-                bm25Retriever.retrieve(userId, knowledgeBaseId, query, bm25Limit);
+                bm25Retriever.retrieve(userId, knowledgeBaseId, query, bm25Limit, activeDocumentIds);
         List<RetrievalHit> vectorHits =
-                vectorRetriever.retrieve(userId, knowledgeBaseId, queryVector, vectorLimit);
+                vectorRetriever.retrieve(userId, knowledgeBaseId, queryVector, vectorLimit, activeDocumentIds);
 
         Map<String, Long> surrogateIdByChunkId = new LinkedHashMap<>();
         Map<Long, RetrievalHit> hitBySurrogateId = new LinkedHashMap<>();

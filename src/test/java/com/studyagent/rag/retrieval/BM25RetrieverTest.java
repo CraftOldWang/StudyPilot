@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 class BM25RetrieverTest {
+    private static final List<String> ACTIVE_DOCUMENT_IDS = List.of("42");
 
     private ElasticsearchClient client;
     private BM25Retriever retriever;
@@ -46,7 +47,7 @@ class BM25RetrieverTest {
         when(client.search(any(SearchRequest.class), eq(ElasticsearchChunkDocument.class)))
                 .thenReturn(response);
 
-        List<RetrievalHit> hits = retriever.retrieve("user-4", "kb-7", "什么是多态", 3);
+        List<RetrievalHit> hits = retriever.retrieve("user-4", "kb-7", "什么是多态", 3, ACTIVE_DOCUMENT_IDS);
 
         ArgumentCaptor<SearchRequest> requestCaptor = ArgumentCaptor.forClass(SearchRequest.class);
         verify(client).search(requestCaptor.capture(), eq(ElasticsearchChunkDocument.class));
@@ -56,7 +57,7 @@ class BM25RetrieverTest {
         assertThat(request.query().bool().must().getFirst().match().field()).isEqualTo("content");
         assertThat(request.query().bool().must().getFirst().match().query().stringValue())
                 .isEqualTo("什么是多态");
-        assertThat(request.query().bool().filter()).hasSize(3);
+        assertThat(request.query().bool().filter()).hasSize(4);
         assertThat(request.query().bool().filter().get(0).term().field()).isEqualTo("user_id");
         assertThat(request.query().bool().filter().get(0).term().value().stringValue())
                 .isEqualTo("user-4");
@@ -67,6 +68,9 @@ class BM25RetrieverTest {
         assertThat(request.query().bool().filter().get(2).term().field()).isEqualTo("chunk_type");
         assertThat(request.query().bool().filter().get(2).term().value().stringValue())
                 .isEqualTo("CHILD");
+        var documents = request.query().bool().filter().get(3).terms();
+        assertThat(documents.field()).isEqualTo("document_id");
+        assertThat(documents.terms().value().getFirst().stringValue()).isEqualTo("42");
         assertThat(request.sort().getFirst().score().order()).isEqualTo(SortOrder.Desc);
         assertThat(hits).containsExactly(new RetrievalHit(
                 "chunk-11",
@@ -80,10 +84,10 @@ class BM25RetrieverTest {
 
     @Test
     void rejectsMissingIsolationScopeBeforeCallingElasticsearch() throws IOException {
-        assertThatThrownBy(() -> retriever.retrieve(" ", "kb-7", "多态", 3))
+        assertThatThrownBy(() -> retriever.retrieve(" ", "kb-7", "多态", 3, ACTIVE_DOCUMENT_IDS))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("用户范围不能为空");
-        assertThatThrownBy(() -> retriever.retrieve("user-4", " ", "多态", 3))
+        assertThatThrownBy(() -> retriever.retrieve("user-4", " ", "多态", 3, ACTIVE_DOCUMENT_IDS))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("知识库范围不能为空");
 

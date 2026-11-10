@@ -1,6 +1,7 @@
 package com.studyagent.rag.retrieval;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
@@ -22,8 +23,13 @@ public class BM25Retriever {
     private final ElasticsearchClient client;
     private final ElasticsearchProperties properties;
 
-    public List<RetrievalHit> retrieve(String userId, String knowledgeBaseId, String query, int candidateLimit) {
+    public List<RetrievalHit> retrieve(String userId, String knowledgeBaseId, String query, int candidateLimit,
+                                       List<String> activeDocumentIds) {
         validateRequest(userId, knowledgeBaseId, query, candidateLimit);
+        if (activeDocumentIds.isEmpty()) {
+            return List.of();
+        }
+        var documentIds = activeDocumentIds.stream().map(FieldValue::of).toList();
         SearchRequest request = SearchRequest.of(search -> search
                 .index(properties.readAlias())
                 .size(candidateLimit)
@@ -39,7 +45,9 @@ public class BM25Retriever {
                                 .value(knowledgeBaseId)))
                         .filter(filter -> filter.term(term -> term
                                 .field("chunk_type")
-                                .value("CHILD")))))
+                                .value("CHILD")))
+                        .filter(filter -> filter.terms(terms -> terms.field("document_id")
+                                .terms(values -> values.value(documentIds))))))
                 .sort(sort -> sort.score(score -> score.order(SortOrder.Desc))));
         try {
             SearchResponse<ElasticsearchChunkDocument> response =

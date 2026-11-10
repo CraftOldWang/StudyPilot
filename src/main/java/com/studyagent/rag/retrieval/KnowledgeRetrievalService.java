@@ -1,9 +1,12 @@
 package com.studyagent.rag.retrieval;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.studyagent.algo.chunk.TokenCounter;
 import com.studyagent.common.exception.BusinessException;
 import com.studyagent.config.RagProperties;
 import com.studyagent.config.RerankProperties;
+import com.studyagent.mapper.LogicalDocumentMapper;
+import com.studyagent.model.LogicalDocument;
 import com.studyagent.rag.embedding.EmbeddingPurpose;
 import com.studyagent.rag.embedding.EmbeddingService;
 import com.studyagent.rag.rerank.BgeReranker;
@@ -30,6 +33,7 @@ public class KnowledgeRetrievalService {
     private final BgeReranker reranker;
     private final RerankProperties rerankProperties;
     private final ContextExpansion contextExpansion;
+    private final LogicalDocumentMapper logicalDocuments;
 
     public KnowledgeSearchResponse search(Long userId, Long knowledgeBaseId, String query) {
         return search(userId, knowledgeBaseId, query, RetrievalMode.VECTOR, ragProperties.topK());
@@ -57,6 +61,16 @@ public class KnowledgeRetrievalService {
         int limit = topK == null ? ragProperties.topK() : topK;
         if (limit <= 0 || limit > 20) { throw new BusinessException("topK 必须在 1 到 20 之间"); }
         int candidateLimit = rerank ? rerankCandidateLimit(limit, rerankCandidates) : limit;
+        List<String> activeDocumentIds = logicalDocuments.selectList(Wrappers.<LogicalDocument>query()
+                        .select("active_document_id")
+                        .eq("user_id", userId)
+                        .eq("knowledge_base_id", knowledgeBaseId)
+                        .isNotNull("active_document_id"))
+                .stream().map(document -> document.getActiveDocumentId().toString()).toList();
+        if (activeDocumentIds.isEmpty()) {
+            return contextView(userId, knowledgeBaseId, normalizedQuery, effectiveMode,
+                    List.of(), rerank ? List.of() : null, contextMode);
+        }
         int bm25Limit = ragProperties.bm25CandidateSize();
         int vectorLimit = ragProperties.vectorCandidateSize();
         if (rerank) {
@@ -71,7 +85,7 @@ public class KnowledgeRetrievalService {
                         knowledgeBaseId.toString(),
                         normalizedQuery,
                         queryVector,
-                        bm25Limit, vectorLimit, candidateLimit, ragProperties.rrfK());
+                        bm25Limit, vectorLimit, candidateLimit, ragProperties.rrfK(), activeDocumentIds);
         if (!rerank) {
             return contextView(userId, knowledgeBaseId, normalizedQuery, effectiveMode, rankedChildren, null, contextMode);
         }
