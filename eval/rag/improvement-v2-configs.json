@@ -1,0 +1,71 @@
+{
+  "status": "planned-not-executed",
+  "lengthUnit": "CL100K_BASE tokens",
+  "selectionSplit": "dev",
+  "finalEvaluationSplit": "test",
+  "notes": [
+    "Compare strategies at 800/0, then vary only child size or overlap.",
+    "Use the same parsed source artifacts and embedding model/dimensions across configurations.",
+    "Use a separate physical index per chunk configuration so BM25 corpus statistics do not mix configurations.",
+    "Evaluate retrieval modes and context assembly using the same indexed chunks; reuse embeddings and saved query vectors where applicable.",
+    "Select on dev cases; inspect the test results only after selecting the final configuration."
+  ],
+  "configs": [
+    {
+      "id": "fixed-800-o0",
+      "chunkStrategy": "FIXED",
+      "childSize": 800,
+      "childOverlap": 0,
+      "parentSize": 2400,
+      "parentOverlap": 0
+    },
+    {
+      "id": "recursive-800-o0",
+      "chunkStrategy": "RECURSIVE",
+      "childSize": 800,
+      "childOverlap": 0,
+      "parentSize": 2400,
+      "parentOverlap": 0
+    },
+    {
+      "id": "structured-800-o0",
+      "chunkStrategy": "STRUCTURED",
+      "childSize": 800,
+      "childOverlap": 0,
+      "parentSize": 2400,
+      "parentOverlap": 0
+    },
+    {
+      "id": "recursive-400-o0",
+      "chunkStrategy": "RECURSIVE",
+      "childSize": 400,
+      "childOverlap": 0,
+      "parentSize": 2400,
+      "parentOverlap": 0
+    },
+    {
+      "id": "recursive-1200-o0",
+      "chunkStrategy": "RECURSIVE",
+      "childSize": 1200,
+      "childOverlap": 0,
+      "parentSize": 2400,
+      "parentOverlap": 0
+    },
+    {
+      "id": "recursive-800-o80",
+      "chunkStrategy": "RECURSIVE",
+      "childSize": 800,
+      "childOverlap": 80,
+      "parentSize": 2400,
+      "parentOverlap": 0
+    },
+    {
+      "id": "recursive-800-o160",
+      "chunkStrategy": "RECURSIVE",
+      "childSize": 800,
+      "childOverlap": 160,
+      "parentSize": 2400,
+      "parentOverlap": 0
+    }
+  ]
+}

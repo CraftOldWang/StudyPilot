@@ -22,14 +22,14 @@
 ### 2026-11-11 执行进展（压缩后从此续接）
 
 - 已提交 MinerU 接入及 Markdown 编码修正（`07f696b`、`c3907c9`）；独立服务 `deploy/mineru/compose.yml`，端口18001，复用 KnowEngine 模型卷，未修改参考工程。真实上传两页PDF及五页OS PPTX均完成解析、切块，来源API可读页码/bbox/章节；PDF 3父/3子，PPTX 5父/5子。数据保存在知识库 `2120192503601733634`，记录见本地 `output/rag-reference/ingest-smoke.json`。
-- 清洗和图示说明已接入（`a143140`、`9863a78`）：保留公式/表格/代码，重建文本位置；视觉说明按配置启用，复用图片说明缓存，失败明确停在 FAILED/PARSING。实际云端识图尚待执行，MinerU公式仍有字符识别错误，需按原页观察。
+- 清洗和图示说明已接入（`a143140`、`9863a78`）：保留公式/表格/代码，重建文本位置；视觉说明按配置启用，复用图片说明缓存，失败明确停在 FAILED/PARSING。实际单图云端识图两次200，提示词改进提交`ac2b926`，位编号表述改善但仍有变量段数/箭头误读；上传缓存与索引整链尚待执行。MinerU公式仍有字符识别错误，需按原页观察。
 - BGE单模型重排已提交（`8ee84f4`），四道人工OS题真实BM25/BGE API对照完成：三题证据仍第1，EAS证据3→2，第一仍为提问页。20候选CPU重排平均26.4秒，默认仍关闭。B2提交`96f3944`，三道同排名真实API对照完成，父/邻扩展均保留Top3且≤4096 token，具体补充与缺口见唯一实测报告 `docs/implementation/rag-improvement-20261111.md`。
-- RECURSIVE切块与低内存MinerU已提交（`1d734e9`、`dc7ae96`）。原8页CSAPP曾OOM，页/公式推理批次各1后成功137.7秒，10页数据库成功142.2秒；实际较长文本已做FIXED/RECURSIVE/STRUCTURED及size/overlap离线对照，详情本地 `output/rag-reference/chunk-observations.md`。另56页/张保留语料正在本地解析，当前exec会话 **58162**，用write_stdin跟踪，不要盲目重跑。
+- RECURSIVE切块与低内存MinerU已提交（`1d734e9`、`dc7ae96`）。原8页CSAPP曾OOM，页/公式推理批次各1后成功137.7秒，10页数据库成功142.2秒；实际较长文本已做FIXED/RECURSIVE/STRUCTURED及size/overlap离线对照，详情本地 `output/rag-reference/chunk-observations.md`。16页保留CSAPP在4页窗口模式下，与中间件同开仍OOM；暂停本轮六个Docker中间件后，同文件成功154.4秒，16页/107块/17图的全局页码、偏移和图片引用通过检查。19页数据库与21页OS随后均成功（433.3秒、114.1秒），全局页码/偏移/图片引用检查通过，结果在本地holdout-parse-summary.json。解析会话40378已完成，六个中间件、MinerU及后端已恢复（后端会话25085）。8GB Docker下长文档与所有中间件并行仍有内存风险，后续完整链路需解决资源/解析复用后再跑，勿盲目重试。
 - C写入及检索过滤已提交`dd137ae`、`4397906`，资料列表/大纲过期提示提交`c28c7e9`。V20已在study_agent_eval应用；当前documents.id为物理版本，logical_documents指向active，ES刷新后CAS切换。统一clean构建及15个定向用例通过，前端build通过。真实替换上传在合成“纸鹤缓存”KB生成document **2120200040388505601**（STORED、非活动），前驱 **2097508149186064386**仍活动；完整发布/失败恢复/复用计量尚待额度恢复。
-- 题库20 dev+40 test已保存 `eval/rag/improvement-v2-cases.json`，来源映射 `eval/rag/improvement-v2-corpus.json`，共79页/张，均模型起草、待抽查、未正式评测。精简实际API runner由bge worker继续，避免沿旧脚本冻结/全索引断言。
+- 题库20 dev+40 test已保存 `eval/rag/improvement-v2-cases.json`，来源映射 `eval/rag/improvement-v2-corpus.json`，共79页/张，均模型起草、待抽查、未正式评测。精简实际API runner已提交`c6aebf5`、`b73f1d7`、`2a61605`，真实旧MLFQ烟测通过，分页/字面证据Hit@5与MRR@5、最终context覆盖分开，resume按物理版本映射/配置区分。
 - **外部阻碍：** 新资料embedding实际返回403 `AllocationQuota.FreeTierOnly`（百炼免费额度耗尽且仅允许免费额度），两样本停在FAILED/CHUNKED之后的向量化阶段。已询问用户恢复额度，未更改付费开关或替换模型。先继续不依赖embedding的本地解析、重排与题目准备。
-- 当前Windows后端以 `SPRING_PROFILES_ACTIVE=local,eval` 启动（会话93125），临时关闭 `study-agent-eval-document-consumer`/`study-agent-eval-document` listener，避免MQ反复请求已耗尽额度；恢复向量化前须去掉此启动覆盖。仅local导入eval配置不会启用eval路由，必须显式active。模型目录为KnowEngine下 `src/main/resources/model/bge-reranker-model`，18001 MinerU及现有Docker中间件运行中。
-- 最新周额度剩余22%；19%收尾、16%暂停规则继续生效。下一步：完成保留语料解析及精简runner，恢复embedding额度后执行新语料各切块/召回策略真实对照与版本更新/恢复；云端识图仍待真实检查。本轮ES-only向量存储仍仅列后续待办。
+- Windows后端使用 `SPRING_PROFILES_ACTIVE=local,eval`，解析结束后已恢复服务；继续临时关闭 `study-agent-eval-document-consumer`/`study-agent-eval-document` listener，避免MQ反复请求已耗尽额度；恢复向量化前须去掉此启动覆盖。仅local导入eval配置不会启用eval路由，必须显式active。模型目录为KnowEngine下 `src/main/resources/model/bge-reranker-model`，18001 MinerU及MySQL/Redis/ES/RustFS/RocketMQ namesrv/broker已恢复；为释放解析模型内存重启过MinerU，当前为待命状态。
+- 最新周额度剩余21%；19%收尾、16%暂停规则继续生效。下一步：新旧语料解析、60题草稿和runner已准备。恢复embedding额度后执行7组切块/召回策略真实对照与版本更新/恢复；云端识图API已观察过两次，上传/缓存整链仍待实际检查。待运行配置见eval/rag/improvement-v2-configs.json。本轮ES-only向量存储仍仅列后续待办。
 
 ### A．资料解析、清洗、结构切分（优先）
 
