@@ -45,8 +45,9 @@ public class FileUploadController {
     @PostMapping("/upload")
     public ApiResponse<UploadResultResponse> uploadSingle(
             @RequestParam @NotNull Long knowledgeBaseId,
+            @RequestParam(required = false) Long logicalDocumentId,
             @RequestParam("file") MultipartFile file) {
-        return ApiResponse.ok(fileUploadService.uploadSingle(currentUserContext.userId(), knowledgeBaseId, file));
+        return ApiResponse.ok(fileUploadService.uploadSingle(currentUserContext.userId(), knowledgeBaseId, file, logicalDocumentId));
     }
 
     /**

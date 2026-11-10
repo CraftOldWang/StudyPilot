@@ -18,6 +18,7 @@ public class UploadSession {
     private Long id;
     private Long userId;
     private Long knowledgeBaseId;
+    private Long logicalDocumentId;
     @TableField("file_hash")
     private String fileHash;
     private String filename;

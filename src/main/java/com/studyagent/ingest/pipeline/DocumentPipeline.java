@@ -145,6 +145,8 @@ public class DocumentPipeline {
                     throw new BusinessException("部分 chunk 索引失败: " + result.failures());
                 }
             }
+            persistence.renewLease(document);
+            elasticsearchIndexer.refresh();
             persistence.markCompleted(document);
             return true;
         } catch (RuntimeException ex) {
@@ -223,18 +225,22 @@ public class DocumentPipeline {
     private List<DocumentChunk> buildChunks(Document document, ParsedDocument parsed) {
         String parsedText = parsed.text();
         List<DocumentChunk> chunks = new ArrayList<>();
-        List<ChunkSegment> parents = ragProperties.chunkStrategy() == RagProperties.ChunkStrategy.STRUCTURED
-                ? structuredChunker.parentChunks(parsedText, ragProperties.parentChunkSize())
-                : tokenWindowChunker.split(parsedText, ragProperties.parentChunkSize(), ragProperties.parentChunkOverlap());
+        List<ChunkSegment> parents = switch (ragProperties.chunkStrategy()) {
+            case STRUCTURED -> structuredChunker.parentChunks(parsedText, ragProperties.parentChunkSize());
+            case FIXED -> tokenWindowChunker.split(parsedText, ragProperties.parentChunkSize(), ragProperties.parentChunkOverlap());
+            case RECURSIVE -> structuredChunker.recursiveChunks(parsedText, ragProperties.parentChunkSize(), ragProperties.parentChunkOverlap());
+        };
         int childIndex = 0;
         LocalDateTime createdAt = LocalDateTime.now();
         for (int parentIndex = 0; parentIndex < parents.size(); parentIndex++) {
             ChunkSegment parentSegment = parents.get(parentIndex);
             DocumentChunk parent = chunk(document.getId(), "PARENT", parentIndex, parentSegment, null, createdAt, parsed.blocks());
             chunks.add(parent);
-            List<ChunkSegment> children = ragProperties.chunkStrategy() == RagProperties.ChunkStrategy.STRUCTURED
-                    ? tokenWindowChunker.splitStructured(parentSegment, ragProperties.chunkSize(), ragProperties.chunkOverlap())
-                    : tokenWindowChunker.split(parentSegment, ragProperties.chunkSize(), ragProperties.chunkOverlap());
+            List<ChunkSegment> children = switch (ragProperties.chunkStrategy()) {
+                case STRUCTURED -> tokenWindowChunker.splitStructured(parentSegment, ragProperties.chunkSize(), ragProperties.chunkOverlap());
+                case FIXED -> tokenWindowChunker.split(parentSegment, ragProperties.chunkSize(), ragProperties.chunkOverlap());
+                case RECURSIVE -> structuredChunker.recursiveChunks(parentSegment, ragProperties.chunkSize(), ragProperties.chunkOverlap());
+            };
             for (ChunkSegment childSegment : children) {
                 chunks.add(chunk(
                         document.getId(),

@@ -87,8 +87,9 @@ def main():
       START TRANSACTION;
       INSERT INTO file_records(id,user_id,knowledge_base_id,filename,file_size,file_hash,storage_key,status,created_at)
         VALUES({fid},1,{kid},'Anki合成验收.txt',{len(source.encode())},{encoded(digest)},'fixtures/anki-not-uploaded','FAILED',UTC_TIMESTAMP());
-      INSERT INTO documents(id,file_record_id,user_id,knowledge_base_id,title,content_type,pipeline_status,error_message,created_at,updated_at)
-        VALUES({did},{fid},1,{kid},'Anki合成验收.txt','text/plain','FAILED','Authored fixture: ingestion intentionally not executed',UTC_TIMESTAMP(),UTC_TIMESTAMP());
+      INSERT INTO logical_documents(id,user_id,knowledge_base_id) VALUES({did},1,{kid});
+      INSERT INTO documents(id,file_record_id,user_id,knowledge_base_id,logical_document_id,title,content_type,pipeline_status,error_message,created_at,updated_at)
+        VALUES({did},{fid},1,{kid},{did},'Anki合成验收.txt','text/plain','FAILED','Authored fixture: ingestion intentionally not executed',UTC_TIMESTAMP(),UTC_TIMESTAMP());
       INSERT INTO document_chunks(id,document_id,chunk_id,chunk_type,chunk_index,content,content_hash,source_location,created_at)
         VALUES({cid},{did},{encoded(chunk)},'CHILD',0,{encoded(source)},{encoded(digest)},{encoded({'kind':'authored-fixture','lineStart':1,'lineEnd':1})},UTC_TIMESTAMP());
       INSERT INTO learning_sessions(id,user_id,knowledge_base_id,learning_goal,agentscope_session_id,status,created_at,updated_at)

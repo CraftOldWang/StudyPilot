@@ -47,16 +47,17 @@ class FileUploadServiceTest {
         existing.setStorageKey("old-key");
         when(publication.find(1L, 1L, hash)).thenReturn(existing);
         when(redis.getLock(UploadFileSupport.dedupLock(1L, 1L, hash))).thenReturn(lock);
-        when(publication.publish(eq(1L), eq(1L), eq(hash), eq("old-key"), eq(filename), eq(5L), eq(type), isNull()))
+        when(publication.publish(eq(1L), eq(1L), eq(hash), eq("old-key"), eq(filename), eq(5L), eq(type), isNull(), isNull()))
                 .thenReturn(new UploadResultResponse(22L, 33L, "DUPLICATED"));
         var result = service.uploadSingle(1L, 1L,
-                new MockMultipartFile("file", filename, type, "hello".getBytes(StandardCharsets.UTF_8)));
+                new MockMultipartFile("file", filename, type, "hello".getBytes(StandardCharsets.UTF_8)), null);
         assertThat(result.documentId()).isEqualTo(33L);
         verifyNoInteractions(storage);
         var order = inOrder(publication, lock);
         order.verify(lock).lock();
         order.verify(publication).find(1L, 1L, hash);
-        order.verify(publication).publish(eq(1L), eq(1L), eq(hash), eq("old-key"), eq(filename), eq(5L), eq(type), isNull());
+        order.verify(publication).publish(eq(1L), eq(1L), eq(hash), eq("old-key"), eq(filename), eq(5L), eq(type),
+                isNull(), isNull());
         order.verify(lock).unlock();
     }
 
@@ -64,7 +65,7 @@ class FileUploadServiceTest {
     @CsvSource({"notes.docx,text/plain", "notes.zip,application/zip", "notes.pdf,text/plain"})
     void unsupportedTypeIsRejectedBeforeStorage(String filename, String type) {
         assertThatThrownBy(() -> service.uploadSingle(1L, 1L,
-                new MockMultipartFile("file", filename, type, new byte[]{1}))).isInstanceOf(BusinessException.class);
+                new MockMultipartFile("file", filename, type, new byte[]{1}), null)).isInstanceOf(BusinessException.class);
         verifyNoInteractions(storage, publication);
     }
 }

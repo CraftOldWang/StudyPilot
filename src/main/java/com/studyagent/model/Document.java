@@ -24,6 +24,9 @@ public class Document {
     @TableField("knowledge_base_id")
     private Long knowledgeBaseId;
 
+    private Long logicalDocumentId;
+    private Long previousDocumentId;
+
     @TableField("title")
     private String title;
 

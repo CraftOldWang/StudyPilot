@@ -88,7 +88,7 @@ class NativeMultipartUploadServiceTest {
 
     void publicationSetup() {
         when(locks.getLock(anyString())).thenReturn(keyed);
-        when(publication.publish(1L, 2L, HASH, "unique-key", "test.txt", 5L, "text/plain", 10L))
+        when(publication.publish(1L, 2L, HASH, "unique-key", "test.txt", 5L, "text/plain", 10L, null))
                 .thenReturn(new UploadResultResponse(30L, 40L, "UPLOADED"));
     }
 
@@ -222,7 +222,7 @@ class NativeMultipartUploadServiceTest {
 
     @Test
     void rejectsTooSmallNonFinalPartAtInit() {
-        assertThatThrownBy(() -> service.init(1L, new InitMultipartUploadRequest(2L, "test.txt", "text/plain", HASH, 10L, 5, 2)))
+        assertThatThrownBy(() -> service.init(1L, new InitMultipartUploadRequest(2L, "test.txt", "text/plain", HASH, 10L, 5, 2, null)))
                 .hasMessageContaining("5 MiB");
         verifyNoInteractions(storage, publication, sessions);
     }

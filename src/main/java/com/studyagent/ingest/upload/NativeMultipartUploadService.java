@@ -56,6 +56,9 @@ public class NativeMultipartUploadService {
 
     public InitMultipartUploadResponse init(Long userId, InitMultipartUploadRequest request) {
         knowledgeBases.requireOwned(userId, request.knowledgeBaseId());
+        if (request.logicalDocumentId() != null) {
+            publication.requireReplacementTarget(userId, request.knowledgeBaseId(), request.logicalDocumentId());
+        }
         UploadFileSupport.validateType(request.filename(), request.contentType());
         String hash = UploadFileSupport.normalizeHash(request.sha256());
         validateLayout(request);
@@ -65,11 +68,13 @@ public class NativeMultipartUploadService {
             FileRecord existing = publication.find(userId, request.knowledgeBaseId(), hash);
             if (existing != null) {
                 UploadResultResponse result = publication.publish(userId, request.knowledgeBaseId(), hash,
-                        existing.getStorageKey(), existing.getFilename(), existing.getFileSize(), request.contentType(), null);
+                        existing.getStorageKey(), existing.getFilename(), existing.getFileSize(), request.contentType(),
+                        null, request.logicalDocumentId());
                 return new InitMultipartUploadResponse(null, true, result.fileId(), result.documentId(),
                         "DUPLICATED", 0, request.totalChunks());
             }
-            UploadSession session = sessions.selectActiveSession(userId, request.knowledgeBaseId(), hash, LocalDateTime.now());
+            UploadSession session = sessions.selectActiveSession(userId, request.knowledgeBaseId(),
+                    request.logicalDocumentId(), hash, LocalDateTime.now());
             if (session != null && (session.getFileSize() != request.fileSize()
                     || session.getChunkSize() != request.chunkSize() || session.getTotalChunks() != request.totalChunks())) {
                 throw new BusinessException("已有上传会话的分片布局不同，请先取消该上传");
@@ -78,6 +83,7 @@ public class NativeMultipartUploadService {
                 session = new UploadSession();
                 session.setUserId(userId);
                 session.setKnowledgeBaseId(request.knowledgeBaseId());
+                session.setLogicalDocumentId(request.logicalDocumentId());
                 session.setFilename(UploadFileSupport.filename(request.filename()));
                 session.setContentType(UploadFileSupport.contentType(request.contentType()));
                 session.setFileHash(hash);
@@ -215,7 +221,8 @@ public class NativeMultipartUploadService {
                 dedupLock.lock();
                 try {
                     UploadResultResponse result = publication.publish(userId, kbId, session.getFileHash(), session.getStorageKey(),
-                            session.getFilename(), session.getFileSize(), session.getContentType(), sessionId);
+                            session.getFilename(), session.getFileSize(), session.getContentType(), sessionId,
+                            session.getLogicalDocumentId());
                     if ("DUPLICATED".equals(result.status())) storage.deleteObject(session.getStorageKey());
                     return result;
                 } finally {

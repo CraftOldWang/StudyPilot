@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 import com.studyagent.ingest.sync.DocumentIndexProducer;
 import com.studyagent.mapper.DocumentMapper;
 import com.studyagent.mapper.FileRecordMapper;
+import com.studyagent.mapper.LogicalDocumentMapper;
 import com.studyagent.mapper.UploadSessionMapper;
 import com.studyagent.model.Document;
 import com.studyagent.model.FileRecord;
@@ -25,8 +26,8 @@ class UploadPublicationServiceTest {
         document.setId(4L);
         when(files.selectOne(any())).thenReturn(file);
         when(documents.selectOne(any())).thenReturn(document);
-        var result = new UploadPublicationService(files, documents, sessions, producer)
-                .publish(1L, 2L, "hash", "key", "test.txt", 5L, "text/plain", 10L);
+        var result = new UploadPublicationService(files, documents, sessions, producer, mock(LogicalDocumentMapper.class))
+                .publish(1L, 2L, "hash", "key", "test.txt", 5L, "text/plain", 10L, null);
         assertThat(result.documentId()).isEqualTo(4L);
         assertThat(result.status()).isEqualTo("DUPLICATED");
         verify(files, never()).insert(any(FileRecord.class));

@@ -86,6 +86,17 @@ public class ElasticsearchIndexer {
 
     public record BulkIndexResult(List<String> succeededIds, List<String> failures) { }
 
+    public void refresh() {
+        try {
+            var response = client.indices().refresh(request -> request.index(properties.physicalIndex()));
+            if (response.shards().failed().longValue() > 0) {
+                throw new BusinessException("Elasticsearch 索引刷新失败: " + response.shards().failures());
+            }
+        } catch (IOException ex) {
+            throw new BusinessException("Elasticsearch 索引刷新请求失败: " + ex.getMessage());
+        }
+    }
+
     private void validateDimensions(ElasticsearchChunkDocument document) {
         if (document.userId() == null || document.userId().isBlank()) {
             throw new BusinessException("Elasticsearch chunk 缺少服务端 userId: chunkId=" + document.chunkId());

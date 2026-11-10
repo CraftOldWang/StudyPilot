@@ -7,9 +7,11 @@ import com.studyagent.config.DocumentPipelineProperties;
 import com.studyagent.mapper.DocumentChunkMapper;
 import com.studyagent.mapper.DocumentMapper;
 import com.studyagent.mapper.FileRecordMapper;
+import com.studyagent.mapper.LogicalDocumentMapper;
 import com.studyagent.model.Document;
 import com.studyagent.model.DocumentChunk;
 import com.studyagent.model.FileRecord;
+import com.studyagent.model.LogicalDocument;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -27,6 +29,7 @@ public class DocumentPipelinePersistence {
     private final FileRecordMapper fileRecordMapper;
     private final DocumentChunkMapper documentChunkMapper;
     private final DocumentPipelineProperties properties;
+    private final LogicalDocumentMapper logicalDocuments;
 
     @Transactional
     public Document claim(Long documentId, boolean allowFailedRetry) {
@@ -135,6 +138,19 @@ public class DocumentPipelinePersistence {
         Long pending = documentChunkMapper.selectCount(Wrappers.<DocumentChunk>query()
                 .eq("document_id", document.getId()).isNull("indexed_at"));
         if (pending != 0) { throw new BusinessException("尚有未确认索引成功的 chunk: " + pending); }
+        var activation = Wrappers.<LogicalDocument>update()
+                .eq("id", document.getLogicalDocumentId())
+                .eq("user_id", document.getUserId())
+                .eq("knowledge_base_id", document.getKnowledgeBaseId())
+                .set("active_document_id", document.getId());
+        if (document.getPreviousDocumentId() == null) {
+            activation.isNull("active_document_id");
+        } else {
+            activation.eq("active_document_id", document.getPreviousDocumentId());
+        }
+        if (logicalDocuments.update(null, activation) != 1) {
+            throw new BusinessException(409, "文档的有效版本已变化，请重新提交替换");
+        }
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

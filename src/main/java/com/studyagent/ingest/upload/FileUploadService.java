@@ -34,8 +34,9 @@ public class FileUploadService {
                 : new FileDedupCheckResponse(true, file.getId(), file.getStatus());
     }
 
-    public UploadResultResponse uploadSingle(Long userId, Long kbId, MultipartFile file) {
+    public UploadResultResponse uploadSingle(Long userId, Long kbId, MultipartFile file, Long logicalDocumentId) {
         knowledgeBases.requireOwned(userId, kbId);
+        if (logicalDocumentId != null) publication.requireReplacementTarget(userId, kbId, logicalDocumentId);
         UploadFileSupport.validateType(file.getOriginalFilename(), file.getContentType());
         if (file.isEmpty()) throw new BusinessException("文件不能为空");
         String hash;
@@ -57,7 +58,8 @@ public class FileUploadService {
                     throw new BusinessException("读取上传文件失败");
                 }
             }
-            return publication.publish(userId, kbId, hash, key, file.getOriginalFilename(), file.getSize(), file.getContentType(), null);
+            return publication.publish(userId, kbId, hash, key, file.getOriginalFilename(), file.getSize(),
+                    file.getContentType(), null, logicalDocumentId);
         } finally {
             lock.unlock();
         }

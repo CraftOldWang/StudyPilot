@@ -20,6 +20,8 @@ public interface UploadSessionMapper extends BaseMapper<UploadSession> {
             FROM upload_sessions
             WHERE user_id = #{userId}
               AND knowledge_base_id = #{knowledgeBaseId}
+              AND (logical_document_id = #{logicalDocumentId,jdbcType=BIGINT}
+                   OR (logical_document_id IS NULL AND #{logicalDocumentId,jdbcType=BIGINT} IS NULL))
               AND file_hash = #{fileHash}
               AND status IN ('INITIALIZING', 'UPLOADING', 'MERGING', 'VERIFYING', 'VERIFIED')
               AND storage_key IS NOT NULL
@@ -30,6 +32,7 @@ public interface UploadSessionMapper extends BaseMapper<UploadSession> {
     UploadSession selectActiveSession(
             @Param("userId") Long userId,
             @Param("knowledgeBaseId") Long knowledgeBaseId,
+            @Param("logicalDocumentId") Long logicalDocumentId,
             @Param("fileHash") String fileHash,
             @Param("now") LocalDateTime now
     );

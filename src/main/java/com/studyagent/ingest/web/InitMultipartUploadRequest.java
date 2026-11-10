@@ -14,6 +14,7 @@ public record InitMultipartUploadRequest(
         @NotBlank String sha256,
         @Min(1) long fileSize,
         @Min(1) int chunkSize,
-        @Min(1) int totalChunks
+        @Min(1) int totalChunks,
+        Long logicalDocumentId
 ) {
 }
